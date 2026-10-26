@@ -8,9 +8,10 @@ on:
     # Weekly RustSec check, since advisories change without any commit.
     - cron: '0 6 * * 1'
 
+# Jobs that can update the layer cache ask for write access themselves.
 permissions:
   contents: read
-  packages: write
+  packages: read
 
 env:
   CACHE_REPO: ghcr.io/silent-wolf-labs/osmocore-rs-ci-cache
@@ -24,6 +25,9 @@ defaults:
 jobs:
   lint:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Log in to cache registry
@@ -55,6 +59,9 @@ jobs:
       matrix:
         features: ['', tracing, net, 'net,tracing', runtime, 'runtime,tracing', 'runtime,net', 'runtime,net,tracing']
     name: test (${{ matrix.features || 'none' }})
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Log in to cache registry
@@ -70,6 +77,9 @@ jobs:
   package-validation:
     needs: [lint, test]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - name: Log in to cache registry
