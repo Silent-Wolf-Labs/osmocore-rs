@@ -86,10 +86,12 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  release-readiness:
+  release:
     if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     needs: [package-validation]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -100,17 +102,70 @@ jobs:
           REF_PROTECTED: ${{ github.ref_protected }}
           RELEASE_BRANCH: ${{ vars.RELEASE_BRANCH || github.event.repository.default_branch }}
         run: scripts/ci/release-gate.sh
+      - name: Prepare the release notes
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          # Release files stay outside the checkout so cargo publish sees a
+          # clean working tree.
+          echo "ARTIFACTS=$RUNNER_TEMP/release" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/release"
+          # The changelog section for this version, with its relative links
+          # pointed at the tagged sources.
+          export base="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/blob/$GITHUB_REF_NAME"
+          awk -v heading="## [$version]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md | perl -pe 's{\]\((?!https?://|#)}{]($ENV{base}/}g' > "$RUNNER_TEMP/release/NOTES.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/release/NOTES.md"; then
+            echo "CHANGELOG.md has no section for $version" >&2
+            exit 1
+          fi
+
+      - uses: taiki-e/install-action@cargo-cyclonedx
+      - name: Write the SBOM
+        working-directory: osmocore-rs
+        run: |
+          cargo cyclonedx --format json --all-features
+          mv osmocore-rs.cdx.json "$ARTIFACTS/"
+
+      # Publishing starts here; every step can be rerun after a partial release.
       - name: Publish to crates.io
         working-directory: osmocore-rs
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-          RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          version=${RELEASE_TAG#v}
-          # A re-run skips the upload once this version is on crates.io.
           if curl --fail --silent --user-agent "osmocore-rs release ($GITHUB_REPOSITORY)" \
-              "https://crates.io/api/v1/crates/osmocore-rs/$version" > /dev/null; then
-            echo "osmocore-rs $version is already on crates.io"
+              "https://crates.io/api/v1/crates/osmocore-rs/$VERSION" > /dev/null; then
+            echo "osmocore-rs $VERSION is already on crates.io"
           else
             cargo publish --locked
+          fi
+      - name: Download the published crate
+        working-directory: ${{ env.ARTIFACTS }}
+        run: |
+          crate=osmocore-rs-$VERSION.crate
+          curl --fail --silent --show-error --location --retry 10 --retry-delay 15 --retry-all-errors \
+            --user-agent "osmocore-rs release ($GITHUB_REPOSITORY)" \
+            --output "$crate" "https://static.crates.io/crates/osmocore-rs/$crate"
+          # The registry index records the checksum of the uploaded file.
+          expected=$(curl --fail --silent --show-error --retry 10 --retry-delay 15 --retry-all-errors \
+              --user-agent "osmocore-rs release ($GITHUB_REPOSITORY)" \
+              https://index.crates.io/os/mo/osmocore-rs \
+            | jq -r --arg v "$VERSION" 'select(.vers == $v) | .cksum')
+          echo "$expected  $crate" | sha256sum --check -
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        working-directory: ${{ env.ARTIFACTS }}
+        run: |
+          sha256sum "osmocore-rs-$VERSION.crate" osmocore-rs.cdx.json > SHA256SUMS.txt
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists"
+          else
+            gh release create "$GITHUB_REF_NAME" --verify-tag \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "osmocore-rs $VERSION" --notes-file NOTES.md \
+              "osmocore-rs-$VERSION.crate" osmocore-rs.cdx.json SHA256SUMS.txt
           fi
