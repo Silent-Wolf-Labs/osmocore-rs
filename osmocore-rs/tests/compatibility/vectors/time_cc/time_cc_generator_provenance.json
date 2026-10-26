@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "reference_manifest_sha256": "782c22f7112724bac91f6132bdf2e21ed679b09af57b70be950419078d98a2d7",
+  "sha256": {
+    "time_cc_vector.c": "9e9459a38821be1f30862f8caf075352564e3ab4d500d89ce4509628522a4a1e",
+    "run_time_cc_vector.sh": "e13eb8008c1c1bf627a6ed3bd34d9d59230e5b6f192ed4cdc7993cf10f650cc5"
+  }
+}

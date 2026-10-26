@@ -1,0 +1,18 @@
+libosmocore/
+.idea
+.agents/
+.codex/
+# Local agent guidance (may contain machine-specific or private context)
+AGENT.md
+AGENTS.md
+target/
+
+# Local release/compliance audit archive
+/docs/archive/
+
+# Pipeline artifacts
+/dist/
+*.oci.tar
+
+# Local MCP server configuration
+/.mcp.json

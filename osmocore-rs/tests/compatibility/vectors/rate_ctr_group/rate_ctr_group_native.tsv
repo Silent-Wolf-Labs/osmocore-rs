@@ -1,0 +1,4 @@
+meta	1	exact-source	unknown	78d88e94f93f5340cd658716a12acfdf384b3fcdca514a48b426c27559c7226c	1ecb801d0cf0f58133daf1fa6d875c084ad1415bab2aca01f4c26ec5ebf9174f	64	64	32
+native	init-ok	0	0	1	1	2048	1	1
+native	init-create-fail	-1	-1	0	1	2048	0	0
+native	init-schedule-fail	0	0	1	1	2048	1	1

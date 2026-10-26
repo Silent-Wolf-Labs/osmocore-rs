@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "upstream_git_revision": "unknown",
+  "reference_manifest_sha256": "dcc2ab8e2341b5c8ccd7942ac79b34f977d477cdd1c4a95a949a666a963d8067",
+  "sha256": {
+    "conv_vector.c": "f4ba52b97c1dc2ed12eb620a17cea07e3ee9020edb88be19f6fd4dda76fc9203",
+    "run_conv_vector.sh": "7145c28c8681aa7bc08b83c3728bd6af369429593dcb4bf0535c5168156f84a5"
+  },
+  "evidence_schema": "Flat NDJSON; integer numbers, lowercase byte hex strings, semicolon-delimited integer lists; records scoped by backend",
+  "code_keys": "type;id;backend;n;k;len;term;next_output;next_state;next_term_output;next_term_state;puncture_present;puncture",
+  "op_common_keys": "type;case;code;seq;api;backend",
+  "op_buffer_keys": "input_before;input_after;output_before;output_after;ret",
+  "encoder_state_keys": "state;i_idx;p_idx",
+  "decoder_state_keys": "len;n_states;o_idx;p_idx;ae;ae_next_valid;ae_next;history",
+  "argument_keys": "length_arg;start_state;n;has_flush;end_state;soft_mode",
+  "deinit_keys": "len;n_states;o_idx;p_idx;storage_released",
+  "history_rule": "Row-major o_idx*n_states entries; -1 denotes invalid/unread history; only initialized predecessor bytes are observed. ae_next is empty before the first nonempty scan/flush, otherwise its complete initialized array is observed, including retention across reset/rewind.",
+  "buffer_rule": "Byte hex preserves signed soft-bit bit patterns. Outputs begin as a5 bytes and include four untouched suffix bytes (raw/flush buffers also retain unwritten capacity). Empty strings represent absent buffers. Void operations omit ret except load_state, which records ret=0 as a harness placeholder, not a C return.",
+  "sequence_rule": "Each backend/case has consecutive operation seq starting at zero; descriptor keys are backend/id. Generic state is post-operation. Arrays are semantic data, never object memory. Only valid forced/auto traceback is emitted. Non-tail no-survivor auto output returns -1 before accessing history.",
+  "soft_modes": "0=clean +/-127;1=zeros;2=every-fifth sign flip, otherwise +/-31;3=clean with -128 for encoded one;4=cyclic -1,0,1 ties;5=all -128",
+  "golden_exclusions": "Unsafe shift/sizing probes emit diagnostics only in --audit. Short fixed-start tail-biting fallback is omitted below K; empty non-flush fallback is omitted. Zero-length flush fallback and short non-tail calls are observed. K>9 generic snapshots and one-shot tail-biting are omitted because byte states leave unreachable history; K=10 encoding/load-state and safe non-tail fallback are observed.",
+  "coverage": {
+    "selected_exports": 17,
+    "rates": "1;2;3;4;5;8;9",
+    "constraints": "2;3;5;7;9;10",
+    "terminations": "0;1;2;42",
+    "exhaustive": "Every length-0..4 bit pattern for N=2,K=3; tail-biting begins at length 2",
+    "punctures": "NULL;empty;every-third;endpoint/out-of-endpoint;all symbols;synthetic length-97 every-third",
+    "patterns": "zero;one;alternating;impulse;LCG seed 0x12345678;replacement LCG seed 0x8f32d6a1",
+    "recursion": "Explicit systematic and nonsystematic descriptors, including -EPROTO",
+    "normalization": "N=2..4,K=5/7; total trellis lengths interval-1,interval,interval+1,3*interval+1; recursion absent/systematic/nonsystematic; six soft modes",
+    "generic_stateful_cases": 332,
+    "distinct_case_ids": 1707,
+    "all_records": 36256,
+    "all_operations": 35186,
+    "all_descriptors": 1066,
+    "linked_operations": 25133,
+    "isolated_operations_each": 3351,
+    "backend_names": "linked-dispatch;scalar;sse;avx",
+    "neon_executed": 0
+  },
+  "replacement_parameters": {
+    "selection": "Independently selected for this synthetic test from the existing local generation rule; not copied from upstream or a standard vector, and not selected to recreate removed tables.",
+    "n": 2,
+    "k": 7,
+    "len": 97,
+    "masks": [
+      "0x45",
+      "0x43"
+    ],
+    "termination": "flush",
+    "punctures": "NULL or every third raw symbol, starting at 0; -1 sentinel",
+    "state_rule": "next_state = ((state << 1) | input) & 63",
+    "output_rule": "output = (parity(register & 0x45) << 1) | parity(register & 0x43), register = (state << 1) | input",
+    "input_rule": "For each paired case: uint32 seed=0x8f32d6a1; seed=(1664525*seed+1013904223) mod 2^32; input=seed>>31, repeated 97 times.",
+    "oracle": "Encoding, decoding, status, metric, history and buffer observations come from direct local C-reference calls. Rust is only the system under test."
+  }
+}

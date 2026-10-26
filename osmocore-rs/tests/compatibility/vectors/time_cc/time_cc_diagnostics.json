@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "reference": "782c22f7112724bac91f6132bdf2e21ed679b09af57b70be950419078d98a2d7",
+  "generator": "2b35e42c040f38b86bce8c2a7b04514936c755025592f4df14c8ee1da3082226",
+  "probes": [
+    {
+      "probe": "null-init",
+      "category": "null-pointer"
+    },
+    {
+      "probe": "null-set",
+      "category": "null-pointer"
+    },
+    {
+      "probe": "null-cleanup",
+      "category": "null-pointer"
+    },
+    {
+      "probe": "invalid-tdef-unit",
+      "category": "division-by-zero"
+    },
+    {
+      "probe": "missing-tdef",
+      "category": "assertion",
+      "signal": 6
+    }
+  ]
+}

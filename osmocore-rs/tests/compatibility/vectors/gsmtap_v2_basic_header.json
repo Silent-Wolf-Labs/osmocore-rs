@@ -1,0 +1,20 @@
+{
+  "case":"gsmtap_v2_basic_header",
+  "api":"gsmtap_makemsg_ex",
+  "libosmocore_commit":"950430e829a3dc1d162aa241bc0505745c5a7311",
+  "input":{
+    "type":1,
+    "arfcn":4660,
+    "timeslot":3,
+    "channel_type":8,
+    "sub_slot":1,
+    "frame_number":16909060,
+    "signal_dbm":-73,
+    "snr_db":19,
+    "payload_hex":"deadbeef"
+  },
+  "return_code":0,
+  "message_created":true,
+  "length":20,
+  "encoded_hex":"020401031234b7130102030408000100deadbeef"
+}

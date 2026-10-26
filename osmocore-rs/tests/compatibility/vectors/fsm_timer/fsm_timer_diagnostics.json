@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "reference": "f572b2e98589d209217fdd17b117b79f1ad113b499a96898fd6c7c251d3d7fe0",
+  "generator": "2bf067670670ec52567f4c63a8f6fbbb2f06cad399fe49d766788a8ea0ed83d9",
+  "probes": [
+    {
+      "probe": "invalid-unit",
+      "category": "undefined-behavior"
+    },
+    {
+      "probe": "fallback-overflow",
+      "category": "undefined-behavior"
+    },
+    {
+      "probe": "null-map",
+      "category": "undefined-behavior"
+    },
+    {
+      "probe": "missing-tdef",
+      "category": "assertion"
+    },
+    {
+      "probe": "map32",
+      "category": "assertion"
+    }
+  ]
+}

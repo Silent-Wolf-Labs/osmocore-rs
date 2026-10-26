@@ -1,0 +1,7 @@
+# network-establishment-v1: case bound connected nonblocking reuse_address dscp payload_match
+udp_bound	1	0	0	0	0	0
+udp_configured	1	0	1	1	46	0
+invalid_dscp	1
+udp_connected	1	1	0	0	0	1
+tcp_listener	1	0	0	1	0	0
+tcp_connected	1	1	0	1	0	1

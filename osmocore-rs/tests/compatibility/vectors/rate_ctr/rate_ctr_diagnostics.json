@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "reference": "151fa6367553e99b81fbe0fe4543ed747336c0b380b299963ae775b3fb2a5fc5",
+  "generator": "0629517cd95662f7b41c166cad152c059b44143d6940d50b0c66659f367bbbd5",
+  "probes": [
+    {
+      "probe": "null-add",
+      "category": "null-pointer"
+    },
+    {
+      "probe": "null-inc",
+      "category": "null-pointer"
+    },
+    {
+      "probe": "null-difference",
+      "category": "null-pointer"
+    },
+    {
+      "probe": "null-reset",
+      "category": "null-pointer"
+    }
+  ]
+}

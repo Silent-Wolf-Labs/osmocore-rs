@@ -1,0 +1,48 @@
+@startuml
+title GSMTAP encoding and generic UDP delivery
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+top to bottom direction
+component "GsmtapMessage<'a>\nsemantic header + borrowed payload" as input
+component "Shared header serializer\nGSMTAP v2, 16-byte header" as serializer
+component "encode()\nowned Vec<u8>" as vec
+component "encode_msgb()\nowned Msgb, direct write\nno intermediate Vec" as msgb
+component "into_datagram(destination)\nrequires runtime feature" as datagram
+component "Datagram\nMsgb + optional destination" as packet
+component "RuntimeContext::try_send_udp\nchecked handle, destination rules\nand backing-byte/message quotas" as admission
+component "EnqueueError<Datagram>\noriginal owned value retained" as rejection
+component "Generic runtime UDP queue\nlocal kernel send + WriteOutcome" as transport
+component "Application-owned peer" as peer
+input --> serializer
+serializer --> vec
+serializer --> msgb
+input --> datagram
+datagram --> msgb : encode owned bytes
+msgb --> packet : via into_datagram
+packet --> admission
+admission --> rejection : rejected
+admission --> transport : admitted ticket
+transport --> peer : UDP datagram
+note right of packet
+Connected socket: destination = None.
+Unconnected socket: explicit destination required.
+Runtime validates compatibility, not GSMTAP.
+end note
+note bottom of msgb
+Msgb maximum is 65,535 bytes: payload at most 65,519.
+UDP wire limits are separate.
+end note
+note bottom of transport
+No protocol branches or dedicated GSMTAP sender in runtime.
+Preparation, admission and completion do not prove peer delivery.
+No general GSMTAP parser is provided.
+end note
+@enduml

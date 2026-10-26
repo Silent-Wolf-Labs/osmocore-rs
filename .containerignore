@@ -1,0 +1,9 @@
+.git
+.github
+.idea
+.agents
+.codex
+**/target
+dist
+**/__pycache__
+*.oci.tar

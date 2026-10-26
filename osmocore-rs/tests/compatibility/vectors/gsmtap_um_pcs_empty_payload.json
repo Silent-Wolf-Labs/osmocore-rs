@@ -1,0 +1,20 @@
+{
+  "case":"gsmtap_um_pcs_empty_payload",
+  "api":"gsmtap_makemsg_ex",
+  "libosmocore_commit":"950430e829a3dc1d162aa241bc0505745c5a7311",
+  "input":{
+    "type":1,
+    "arfcn":32770,
+    "timeslot":4,
+    "channel_type":4,
+    "sub_slot":4,
+    "frame_number":4,
+    "signal_dbm":4,
+    "snr_db":4,
+    "payload_hex":""
+  },
+  "return_code":0,
+  "message_created":true,
+  "length":16,
+  "encoded_hex":"02040104800204040000000404000400"
+}

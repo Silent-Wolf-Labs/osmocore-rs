@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly RustSec check, since advisories change without any commit.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  CACHE_REPO: ghcr.io/silent-wolf-labs/osmocore-rs-ci-cache
+  # Only default-branch pushes update the shared layer cache.
+  CACHE_TO: ${{ github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch) && '--cache-to=ghcr.io/silent-wolf-labs/osmocore-rs-ci-cache' || '' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to cache registry
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: buildah login -u "$REGISTRY_USER" --password-stdin ghcr.io <<< "$REGISTRY_TOKEN"
+      - name: Check scripts, formatting, code, documentation and dependencies
+        run: buildah build --layers --target lint --cache-from "$CACHE_REPO" $CACHE_TO -f Containerfile .
+
+  advisories:
+    runs-on: ubuntu-24.04
+    # New advisories should not block unrelated changes; the weekly run reports them.
+    continue-on-error: ${{ github.event_name != 'schedule' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to cache registry
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: buildah login -u "$REGISTRY_USER" --password-stdin ghcr.io <<< "$REGISTRY_TOKEN"
+      - name: Check RustSec advisories
+        run: buildah build --layers --target advisories --build-arg "ADVISORIES_RUN=$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" --cache-from "$CACHE_REPO" -f Containerfile .
+
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        features: ['', tracing, net, 'net,tracing', runtime, 'runtime,tracing', 'runtime,net', 'runtime,net,tracing']
+    name: test (${{ matrix.features || 'none' }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to cache registry
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: buildah login -u "$REGISTRY_USER" --password-stdin ghcr.io <<< "$REGISTRY_TOKEN"
+      - name: Run tests
+        env:
+          TEST_FEATURES: ${{ matrix.features }}
+        run: buildah build --layers --target test --build-arg "FEATURES=$TEST_FEATURES" --cache-from "$CACHE_REPO" $CACHE_TO -f Containerfile .
+
+  package-validation:
+    needs: [lint, test]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to cache registry
+        env:
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: buildah login -u "$REGISTRY_USER" --password-stdin ghcr.io <<< "$REGISTRY_TOKEN"
+      - name: Run integration example, build and verify package
+        run: buildah build --layers --target artifact --output type=local,dest=dist --cache-from "$CACHE_REPO" $CACHE_TO -f Containerfile .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: package-validation
+          path: dist/*.crate
+          if-no-files-found: error
+          retention-days: 7
+
+  release-readiness:
+    if: github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs: [package-validation]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate release authorization and version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          REF_PROTECTED: ${{ github.ref_protected }}
+          RELEASE_BRANCH: ${{ vars.RELEASE_BRANCH || github.event.repository.default_branch }}
+        run: scripts/ci/release-gate.sh
+      - name: Publish to crates.io
+        working-directory: osmocore-rs
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version=${RELEASE_TAG#v}
+          # A re-run skips the upload once this version is on crates.io.
+          if curl --fail --silent --user-agent "osmocore-rs release ($GITHUB_REPOSITORY)" \
+              "https://crates.io/api/v1/crates/osmocore-rs/$version" > /dev/null; then
+            echo "osmocore-rs $version is already on crates.io"
+          else
+            cargo publish --locked
+          fi

@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "reference_manifest_sha256": "f572b2e98589d209217fdd17b117b79f1ad113b499a96898fd6c7c251d3d7fe0",
+  "sha256": {
+    "fsm_tree_vector.c": "3b309f6adf43c6849c90f578cae84342d4c0caebe138a7e177692705d468e60a",
+    "run_fsm_tree_vector.sh": "56a9e468c60b500d1336a48d6d6bef3cb54210a7134d1d1d1ec06c57917edaa5"
+  }
+}

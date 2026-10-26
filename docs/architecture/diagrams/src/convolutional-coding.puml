@@ -1,0 +1,40 @@
+@startuml
+title Convolutional coding flow
+top to bottom direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+
+component "ConvCodeSpec\nowned tables, dimensions,\ntermination and punctures" as spec
+component "ConvCode::new\nvalidate descriptor" as validation
+component "ConvCode\nimmutable validated descriptor" as code
+component "ConvEncoder / encode\nencoder state and cursors" as encoder
+component "ConvDecoder\ngeneric metrics and traceback history" as generic
+component "Portable correlation decoder\nscalar metrics and survivors" as correlation
+component "decode\none-shot backend selection" as dispatch
+component "Encoded bits in caller output buffer" as encoded
+component "Decoded bits in caller output buffer" as decoded
+component "ConvError" as error
+
+spec --> validation
+validation --> code
+validation --> error : invalid descriptor
+code --> encoder
+code --> generic
+code --> dispatch
+dispatch --> correlation : K = 5 or 7, N at most 4
+dispatch --> generic : other descriptors
+encoder --> encoded
+generic --> decoded
+correlation --> decoded
+encoder ..> error
+generic ..> error
+correlation ..> error
+@enduml

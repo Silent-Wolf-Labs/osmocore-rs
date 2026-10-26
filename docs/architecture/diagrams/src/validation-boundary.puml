@@ -1,0 +1,39 @@
+@startuml
+title Validation and package boundaries
+top to bottom direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+
+component "Crate consumer" as consumer
+package "Shipped Cargo package" as group_package {
+component "Public Rust crate" as api
+component "Source unit tests and doctests" as unit
+component "runtime_service example\ncomposition and round trips" as example
+component "Source READMEs, project license\nand complete GPLv3 text" as notices
+}
+package "Repository-only validation: excluded from crate" as group_repository {
+component "Integration tests and Rust models\nisolated diagnostics, mixed clocks\nand acceptance failure subprocesses" as tests
+component "Committed frozen C observations\nand integrity metadata" as fixtures
+}
+package "Local reference environment: excluded from crate" as group_reference {
+component "Separate reference harnesses\nand evidence validators" as tools
+component "Local Osmocom/libosmocore C checkout" as c
+}
+
+unit --> api : exercise
+example --> api : compose
+tests ..> example : normal, panic and deadline paths
+fixtures --> tests : expected results
+c --> tools : direct-call behavior
+consumer --> api : uses
+tests --> api : exercise and compare
+tools --> fixtures : generate and validate observations
+@enduml

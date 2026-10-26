@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "reference": "f572b2e98589d209217fdd17b117b79f1ad113b499a96898fd6c7c251d3d7fe0",
+  "generator": "20b6ca3d2c09276476f69a22ca05893e75e96eee0d1888f39ea1c2dceb26bb5d",
+  "probes": [
+    {
+      "probe": "legacy-cleanup-uaf",
+      "category": "heap-use-after-free"
+    },
+    {
+      "probe": "free-linked-uaf",
+      "category": "heap-use-after-free"
+    },
+    {
+      "probe": "children-parent-uaf",
+      "category": "heap-use-after-free"
+    },
+    {
+      "probe": "broadcast-parent-uaf",
+      "category": "heap-use-after-free"
+    },
+    {
+      "probe": "null-parent",
+      "category": "null-pointer"
+    }
+  ]
+}

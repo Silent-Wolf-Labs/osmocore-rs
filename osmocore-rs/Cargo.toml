@@ -1,0 +1,58 @@
+[package]
+name = "osmocore-rs"
+version = "0.1.0"
+edition = "2024"
+description = "Rust-native telecom and core primitives with checked buffers, explicit runtimes and compatibility adapters"
+repository = "https://github.com/Silent-Wolf-Labs/osmocore-rs"
+keywords = ["telecom", "gsmtap", "crc", "convolutional", "timers"]
+categories = ["encoding", "data-structures"]
+readme = "README.md"
+include = [
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE",
+    "/src/**",
+    "/examples/**",
+]
+license = "GPL-3.0-or-later"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = []
+tracing = ["dep:tracing"]
+net = ["dep:socket2"]
+runtime = ["dep:mio"]
+
+[dependencies]
+mio = { version = "=1.2.4", optional = true, default-features = false, features = ["os-poll", "net"] }
+socket2 = { version = "0.6.5", optional = true, default-features = false, features = ["all"] }
+tracing = { version = "0.1.44", optional = true, default-features = false, features = ["std"] }
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["std", "registry", "fmt", "env-filter"] }
+
+[[example]]
+name = "runtime_service"
+required-features = ["runtime"]
+
+# Keep scoped tracing subscribers isolated from uninstrumented test threads.
+[[test]]
+name = "net_diagnostics"
+path = "tests/net/diagnostics/main.rs"
+
+[[test]]
+name = "runtime_diagnostics"
+path = "tests/runtime/diagnostics/main.rs"
+
+[[test]]
+name = "gsmtap_diagnostics"
+path = "tests/gsmtap/diagnostics/main.rs"
+
+[[test]]
+name = "timer_diagnostics"
+path = "tests/time/diagnostics/main.rs"

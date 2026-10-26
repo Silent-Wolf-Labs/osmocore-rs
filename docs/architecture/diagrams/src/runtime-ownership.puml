@@ -1,0 +1,42 @@
+@startuml
+title Runtime ownership and deferred effects
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+top to bottom direction
+component "Worker threads\nControlHandle<C> clones" as workers
+package "Runtime thread: cooperative execution" {
+component "IoRuntime<C>\nMio Poll + Waker, bounded mailbox\nchecked resources and output queues" as runtime
+component "Application A\nFSMs, schedulers, accounting\ncounters and protocol state" as app
+component "DriverSet<A>\ntyped projections, static bounded entries\ncritical or optional failure policy" as drivers
+component "RuntimeContext\nlogical snapshot + bounded FIFO effects\noutput quota and ticket reservations" as context
+}
+component "Registered std TCP/UDP sockets\nfrom std::net or optional net helpers" as sockets
+workers --> runtime : typed commands + wake\nseparate shutdown latch
+runtime --> workers : command processing receipts
+sockets --> runtime : transfer ownership
+runtime --> app : on_command / on_event / on_shutdown
+runtime --> drivers : prepare / drive\nrelative clock hints and bounded quanta
+drivers --> app : borrow component/context pairs
+app --> context : record callback effects
+drivers --> context : record driver effects
+context --> runtime : commit FIFO after successful callback
+note bottom of context
+Successful send = admission, not completion.
+Complete write = local kernel acceptance, not peer receipt.
+Callback error/unwind cancels uncommitted effects;
+application mutations are not rolled back.
+end note
+note left of drivers
+Driver labels are not resource handles.
+Component state is not owned by IoRuntime.
+Callbacks and whole component batches cannot be preempted.
+end note
+@enduml

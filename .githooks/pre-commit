@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+temporary=$(mktemp -d)
+trap 'rm -rf "$temporary"' EXIT
+
+# Check staged content so working-tree edits cannot hide a bad commit.
+while IFS= read -r -d '' path; do
+    git show ":$path" > "$temporary/staged"
+    first_line=''
+    IFS= read -r first_line < "$temporary/staged" || true
+    if [[ $path == *.sh || $path == *.bash || $path == .githooks/* ||
+          $first_line =~ ^\#!.*(/|[[:space:]])(sh|bash|dash|ksh)([[:space:]]|$) ]]; then
+        command -v shellcheck > /dev/null || {
+            echo 'ShellCheck is required to commit shell scripts. Install shellcheck and retry.' >&2
+            exit 1
+        }
+        printf 'ShellCheck: %s\n' "$path"
+        shellcheck -- "$temporary/staged"
+    fi
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)

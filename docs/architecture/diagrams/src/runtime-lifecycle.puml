@@ -1,0 +1,40 @@
+@startuml
+title Coordinated runtime shutdown
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+hide empty description
+state Running
+state Draining
+state Stopped
+[*] --> Running : initialize runtime
+Running --> Draining : observe shutdown latch\nImmediate or Drain { timeout }
+Draining : close ordinary admission and intake
+Draining : reject queued commands; quiesce drivers
+Draining : invoke on_shutdown once with separate effect allowance
+Draining : final output still obeys hard byte/message quotas
+Draining --> Draining : shorten drain deadline\nor escalate to immediate
+Draining --> Stopped : output empty, deadline reached\nor immediate requested
+Running --> Stopped : fatal failure or unwind cleanup
+Draining --> Stopped : fatal failure or unwind cleanup
+Stopped --> [*]
+note right of Stopped
+Close resources and disable control admission.
+Report unresolved write offsets and registrations.
+On unwind, clean up and resume the original panic.
+Drop is abortive and does not invoke callbacks.
+end note
+note left of Draining
+Monotonic deadline bounds controlled waiting.
+It cannot preempt application callbacks.
+The acceptance example separately uses a worker
+shutdown guard and a process watchdog.
+end note
+@enduml

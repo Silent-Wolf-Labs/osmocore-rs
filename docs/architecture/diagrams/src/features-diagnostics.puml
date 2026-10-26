@@ -1,0 +1,45 @@
+@startuml
+title Independent features and diagnostic targets
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+top to bottom direction
+component "default = []\nalways available core + compat adapters" as defaults
+component "net" as net
+component "runtime" as runtime
+component "tracing" as tracing
+component "socket2\npre-bind configuration" as socket2
+component "mio\nreadiness and wakeup" as mio
+component "tracing crate\nno library-installed subscriber" as library
+component "osmocore_rs::fsm\nosmocore_rs::timer" as coretargets
+component "osmocore_rs::net\nestablishment" as nettarget
+component "osmocore_rs::runtime\nosmocore_rs::net transport" as runtarget
+component "osmocore_rs::gsmtap\nprepare_datagram" as gsmtap
+net --> socket2
+runtime --> mio
+tracing --> library
+tracing --> coretargets : tracing
+net ..> nettarget : net + tracing
+runtime ..> runtarget : runtime + tracing
+runtime ..> gsmtap : runtime + tracing
+library ..> nettarget
+library ..> runtarget
+library ..> gsmtap
+note bottom of defaults
+No normal/build dependencies with features disabled.
+All eight feature combinations are supported.
+There are no net/runtime/tracing feature implication edges.
+end note
+note bottom of gsmtap
+GSMTAP preparation events require runtime, not net.
+Application owns subscriber, filters, spans and output.
+Payloads and endpoint addresses are not logged.
+end note
+@enduml

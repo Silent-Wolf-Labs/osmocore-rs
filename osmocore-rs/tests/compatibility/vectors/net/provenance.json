@@ -1,0 +1,8 @@
+{
+  "revision": "950430e829a3dc1d162aa241bc0505745c5a7311",
+  "files": {
+    "src/core/socket.c": "b67a08155f74b355131e69603da44e60505c19ad3fe914f6f6f227ad9da4501f",
+    "include/osmocom/core/socket.h": "a6223d585fd1388f77748729c1e6aa1afbdf7d5247f821ec053b879b951456da",
+    "tests/socket/socket_test.c": "0d241d38b2cc8500d6d1e2a1d5c769c181124afa3f7b511f8571888ee72eb248"
+  }
+}

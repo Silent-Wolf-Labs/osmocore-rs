@@ -1,0 +1,20 @@
+{
+  "case":"gsmtap_abis_signed_boundaries",
+  "api":"gsmtap_makemsg_ex",
+  "libosmocore_commit":"950430e829a3dc1d162aa241bc0505745c5a7311",
+  "input":{
+    "type":2,
+    "arfcn":32767,
+    "timeslot":6,
+    "channel_type":254,
+    "sub_slot":6,
+    "frame_number":2147418112,
+    "signal_dbm":127,
+    "snr_db":-128,
+    "payload_hex":"0102"
+  },
+  "return_code":0,
+  "message_created":true,
+  "length":18,
+  "encoded_hex":"020402067fff7f807fff0000fe0006000102"
+}

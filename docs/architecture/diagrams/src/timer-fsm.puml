@@ -1,0 +1,36 @@
+@startuml
+title Timer and FSM relationships
+top to bottom direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+
+component "Application\nevents and explicit component ownership" as app
+component "Clock source\nsystem clock or controlled overrides" as clock
+component "Time values: TimeVal and TimeSpec" as values
+component "TDef table and state timeout definitions" as definitions
+component "FsmRuntime::state_change_with_tdef" as bridge
+component "FsmRuntime\ninstances, transitions and timeout handling" as fsm
+component "TimerScheduler\nchecked handles, deadlines\nand callback batches" as scheduler
+
+app --> fsm : dispatch events
+app --> bridge : timed transition
+definitions --> bridge : resolve timeout
+bridge --> fsm : change state and configure timer
+fsm --> scheduler : schedule or cancel instance timer
+clock --> values : read current time
+values --> scheduler : deadline and expiry
+component "Optional runtime DriverSet<A>\nFsmDriver / TimerDriver" as drivers
+app --> scheduler : manual update
+drivers --> scheduler : drive updates
+app --> drivers : choose typed projections
+
+scheduler --> fsm : dispatch expired timer callback
+@enduml

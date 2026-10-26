@@ -1,0 +1,45 @@
+@startuml
+title Crate architecture
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam ArrowColor #475569
+skinparam componentBackgroundColor #EFF6FF
+skinparam componentBorderColor #475569
+skinparam packageBackgroundColor #F8FAFC
+skinparam packageBorderColor #64748B
+top to bottom direction
+component "Application" as app
+package "osmocore-rs: always available" {
+component "Preferred Rust APIs\nmethods, slices and typed errors" as preferred
+component "Always compiled compat adapters\nstatus, buffer and sentinel contracts" as compat
+component "base64 / bcd / hexparse\nbits / bitvec / crc / conv" as utilities
+component "msgb / prim / gsmtap\nVec and Msgb encoding" as messages
+component "time / timer / tdef / fsm\nrate_ctr / time_accounting" as components
+}
+package "Independent optional features: default = []" {
+component "net\nresolution and completed TCP/UDP setup\nsocket2" as net
+component "runtime\nMio readiness, typed commands\nbounded output and component drivers" as runtime
+component "tracing\nstructured diagnostics\napplication-owned subscriber" as tracing
+}
+app --> preferred
+app ..> compat
+preferred --> utilities
+preferred --> messages
+preferred --> components
+compat --> utilities
+compat --> messages
+compat --> components
+app --> net
+app --> runtime
+app ..> tracing
+net ..> runtime : app transfers established std sockets
+note bottom of runtime
+runtime does not enable net or tracing.
+Applications may register std::net sockets directly.
+Typed drivers borrow application-owned components.
+GSMTAP Datagram uses the generic UDP path.
+end note
+@enduml
