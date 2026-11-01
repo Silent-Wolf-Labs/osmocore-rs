@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 use super::*;
-use std::rc::Rc;
+use crate::owner::OwnerId;
 
 struct Slot {
     generation: u64,
@@ -25,7 +25,7 @@ struct Slot {
 /// # Ok::<(), osmocore_rs::rate_ctr::RateCtrError>(())
 /// ```
 pub struct RateCtrRuntime {
-    owner: Rc<()>,
+    owner: OwnerId,
     slots: Vec<Slot>,
     registry: Vec<usize>,
     ticks: u64,
@@ -43,7 +43,7 @@ impl RateCtrRuntime {
     /// expiration increments this phase before checking interval boundaries.
     pub fn with_tick_phase(ticks: u64) -> Self {
         Self {
-            owner: Rc::new(()),
+            owner: OwnerId::next(),
             slots: vec![],
             registry: vec![],
             ticks,
@@ -54,13 +54,13 @@ impl RateCtrRuntime {
     }
     fn handle(&self, slot: usize) -> RateCtrGroupId {
         RateCtrGroupId {
-            owner: self.owner.clone(),
+            owner: self.owner,
             slot,
             generation: self.slots[slot].generation,
         }
     }
     fn slot(&self, id: &RateCtrGroupId) -> Result<usize, RateCtrError> {
-        if Rc::ptr_eq(&self.owner, &id.owner)
+        if self.owner == id.owner
             && let Some(s) = self.slots.get(id.slot)
             && s.generation == id.generation
             && s.group.is_some()

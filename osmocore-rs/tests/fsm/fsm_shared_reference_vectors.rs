@@ -129,7 +129,7 @@ fn timeout(s: &mut S, r: &mut R, id: FsmId) -> i32 {
     if mode == 1
         && let Some(peer) = peer.as_ref()
     {
-        let timer = r.instance(peer).unwrap().timer().clone();
+        let timer = *r.instance(peer).unwrap().timer();
         s.delete(&timer).unwrap();
         record(s, r, "cancel-peer", n, 0, 0);
     }
@@ -141,15 +141,15 @@ fn timeout(s: &mut S, r: &mut R, id: FsmId) -> i32 {
         record(s, r, "term-peer", n, 0, 0);
     }
     if mode == 3 && get(r, 3).is_none() {
-        let d = r.data.definition.clone().unwrap();
+        let d = r.data.definition.unwrap();
         let g = r.alloc(s, &d, Some("g"), ()).unwrap();
         r.set_timer_number(s, &g, 44).unwrap();
-        let timer = r.instance(&g).unwrap().timer().clone();
+        let timer = *r.instance(&g).unwrap().timer();
         s.schedule(&timer, 0, 0).unwrap();
         record(s, r, "create-peer", n, 0, 0);
     }
     if mode == 4 {
-        let timer = r.instance(&id).unwrap().timer().clone();
+        let timer = *r.instance(&id).unwrap().timer();
         s.schedule(&timer, 0, 0).unwrap();
         record(s, r, "rearm", n, 0, 0);
     }
@@ -223,7 +223,7 @@ fn fsm_multiple_timers_application_mutation_and_tdef_c_replay() {
             ..Data::default()
         });
         let d = r.register(definition()).unwrap();
-        r.data.definition = Some(d.clone());
+        r.data.definition = Some(d);
         let mut c = ClockOverrides::new(Source);
         c.gettimeofday_override = true;
         c.gettimeofday_override_time = TimeVal::new(100, 0);
@@ -238,7 +238,7 @@ fn fsm_multiple_timers_application_mutation_and_tdef_c_replay() {
             } else {
                 2
             };
-            let timer = r.instance(&id).unwrap().timer().clone();
+            let timer = *r.instance(&id).unwrap().timer();
             s.schedule(&timer, sec, 0).unwrap();
         }
         let application = s.create(Some(app));

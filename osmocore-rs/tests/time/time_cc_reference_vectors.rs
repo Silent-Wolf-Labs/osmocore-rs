@@ -449,7 +449,7 @@ fn time_cc_clock_errors_zero_start_and_ownership() {
         Err(TimeCcError::Timer(TimerError::InvalidHandle))
     );
     assert_eq!(scheduler.check(), 1);
-    let handle = tc.timer().unwrap().clone();
+    let handle = *tc.timer().unwrap();
     tc.cleanup(&mut scheduler).unwrap();
     assert_eq!(scheduler.pending(&handle), Err(TimerError::InvalidHandle));
     assert_eq!(tc.cfg.rate_ctr, Some(0));

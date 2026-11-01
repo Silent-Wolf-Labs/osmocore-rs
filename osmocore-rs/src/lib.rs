@@ -41,6 +41,7 @@ pub mod hexparse;
 pub mod msgb;
 #[cfg(feature = "net")]
 pub mod net;
+mod owner;
 pub mod prim;
 pub mod rate_ctr;
 #[cfg(feature = "runtime")]

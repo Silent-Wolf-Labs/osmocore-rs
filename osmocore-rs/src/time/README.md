@@ -55,8 +55,10 @@ is owned; no nullable output pointer or shared mutable clock state is exposed.
 `TimerScheduler<C,D>` owns clock/storage, and `TimerId` combines owner identity
 with slot generation. Activation sequence is independent and changes on every
 add/schedule. Callbacks receive scheduler, handle and caller-owned context;
-setup changes made by self/peers remain applied. Rc ownership keeps this scheduler
-and its handles local to their owning thread. A NULL callback still counts as work.
+setup changes made by self/peers remain applied. `TimerId` is `Copy`, `Send` and
+`Sync`, and the scheduler can move between threads when its clock and context
+allow it. Updates still need `&mut`, so nothing here adds locking or concurrent
+dispatch. A NULL callback still counts as work.
 
 Absolute add/reactivation and relative schedule preserve raw wall-clock/single-
 carry behavior. Delete is idempotent cancellation retaining deadline/callback;

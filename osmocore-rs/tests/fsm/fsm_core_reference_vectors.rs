@@ -191,7 +191,7 @@ fn fsm_core_complete_c_replay() {
                 });
                 let mut s = S::new(ClockOverrides::new(Source));
                 let d = r.register(definition(callbacks, permit)).unwrap();
-                r.data.definition = Some(d.clone());
+                r.data.definition = Some(d);
                 r.alloc(&mut s, &d, Some("node"), ()).unwrap();
                 record(
                     &s,
@@ -242,7 +242,7 @@ fn fsm_handles_and_unsafe_leave_termination() {
     let mut f = definition(0, 1);
     f.states[0].onleave = Some(terminate_from_leave);
     let d = r.register(f).unwrap();
-    r.data.definition = Some(d.clone());
+    r.data.definition = Some(d);
     let mut s = S::new(ClockOverrides::new(Source));
     let id = r.alloc(&mut s, &d, Some("node"), 17u64).unwrap();
     let mut other = R::new(Data::default());
