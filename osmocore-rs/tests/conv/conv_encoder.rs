@@ -58,7 +58,7 @@ fn replay_every_c_length_and_encoder_observation() {
             )
         })
         .collect();
-    assert_eq!(codes.len(), 1066);
+    assert_eq!(codes.len(), 1354);
     assert_eq!(
         codes
             .keys()
@@ -189,9 +189,9 @@ fn replay_every_c_length_and_encoder_observation() {
     assert_eq!(
         counts,
         [
-            ("get_input_length", 5097),
-            ("get_output_length", 5097),
-            ("encode", 1699),
+            ("get_input_length", 5529),
+            ("get_output_length", 5529),
+            ("encode", 1843),
             ("encode_init", 728),
             ("encode_load_state", 460),
             ("encode_raw", 720),
@@ -200,10 +200,10 @@ fn replay_every_c_length_and_encoder_observation() {
         .into_iter()
         .collect()
     );
-    assert_eq!(counts.values().sum::<usize>(), 14521);
+    assert_eq!(counts.values().sum::<usize>(), 15529);
     // All backend streams were inspected; only linked-dispatch records these APIs.
-    assert_eq!(backends, [("linked-dispatch", 14521)].into_iter().collect());
-    assert_eq!(cases.len(), 1707);
+    assert_eq!(backends, [("linked-dispatch", 15529)].into_iter().collect());
+    assert_eq!(cases.len(), 1851);
     assert_eq!(encoders.len(), 368);
     assert_eq!(nonbinary_loads, 4);
 }

@@ -16,7 +16,7 @@ fn fixture() -> &'static Fixture {
 fn conv_direct_c_evidence_integrity_only() {
     conv_fixture::validate_fingerprint(VECTORS);
     conv_fixture::validate_manifests(REFERENCE, GENERATOR, fixture());
-    assert_eq!(fixture().records.len(), 36256);
+    assert_eq!(fixture().records.len(), 38560);
 }
 
 #[test]
@@ -56,7 +56,7 @@ fn conv_reset_and_rewind_semantics_are_distinct() {
 
 #[test]
 fn conv_x86_backends_agree_on_matched_case_and_api_observations_only() {
-    assert_eq!(conv_fixture::compare_backends(fixture()), 10053);
+    assert_eq!(conv_fixture::compare_backends(fixture()), 10485);
     checks::backend_rejections(fixture());
 }
 

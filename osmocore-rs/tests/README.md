@@ -870,31 +870,33 @@ C evidence. No vendored crate refresh is needed for independent fixture support.
 
 ## Convolutional descriptors, encoder, decoders and evidence
 
-`compatibility/vectors/conv/conv_vectors.ndjson` contains 36,256 direct C
-records: four backend metadata records, 1,066 descriptors and 35,186
+`compatibility/vectors/conv/conv_vectors.ndjson` contains 38,560 direct C
+records: four backend metadata records, 1,354 descriptors and 37,202
 operations covering all 17 selected core convolutional exports. Its byte-identical
 sibling is `gsmtap-rs/tests/vectors/conv/conv_vectors.ndjson`. The shared
 `support/conv_fixture.rs` reader and `conv/conv_reference_vectors.rs` tests
 validate evidence integrity and backend comparisons only. Separate
-`conv/conv_encoder.rs` tests replay all 14,521 frozen length/encoder operations against
+`conv/conv_encoder.rs` tests replay all 15,529 frozen length/encoder operations against
 the Rust APIs, including return values, full buffers, suffixes, state and both
 cursors across split calls and reuse. `conv/conv_decoder.rs` replays all 7,261
 frozen generic stateful lifecycle observations across 332 cases: 6,597 callable
 API observations and 664 deinitializations represented by Rust drops. All match
-the frozen evidence. `conv/conv_correlation.rs` independently replays 6,796
-`osmo_conv_decode_acc` observations (1,699 each linked/scalar/SSE/AVX) and
-6,608 public `osmo_conv_decode` observations (1,652 each), totaling 13,404
-complete output-buffer, status/metric and unchanged-input comparisons. All match
+the frozen evidence. `conv/conv_correlation.rs` independently replays 7,300
+`osmo_conv_decode_acc` observations (1,843 each linked/SSE/AVX, 1,771 scalar) and
+7,112 public `osmo_conv_decode` observations (1,796 each linked/SSE/AVX, 1,724
+scalar), totaling 14,412 complete output-buffer, status/metric and unchanged-input comparisons. All match
 the frozen evidence, preserving backend identity. Snapshots describe semantic
 state, never struct memory, pointers or uninitialized history.
 
-Replay covers 10,194 signed length returns and 4,327 encoder observations,
+Replay covers 11,058 signed length returns and 4,471 encoder observations,
 including 460 state loads (four with nonbinary bytes) and 368 distinct reusable
-sessions across 1,707 cases. Backend identity is retained: only linked-dispatch
+sessions across 1,851 cases. Backend identity is retained: only linked-dispatch
 records these seven APIs, while the exact-source backend streams remain separate
 decoder evidence, not extra encoder conformance observations.
 
-Coverage includes exhaustive small inputs; rates/constraint lengths beyond the
+Coverage includes full-scale unpunctured frames whose path metrics saturate. Scalar
+C omits their -128 input, which is outside the documented `sbit_t` range and which
+its wrapping metrics decode differently. Coverage also includes exhaustive small inputs; rates/constraint lengths beyond the
 optimized domain and byte-width boundaries; flush/truncation/tail-biting/raw
 termination values; explicit recursive tables; puncture cursor continuation;
 helper-length/write-count divergence; state packing; reset/rewind/reuse;

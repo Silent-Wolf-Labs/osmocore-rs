@@ -8,10 +8,6 @@ use osmocore_rs::conv::{ConvCode, ConvCodeSpec, ConvDecoder, Termination, decode
 use std::hint::black_box;
 
 const INPUT_BITS: usize = 224;
-/// Below full scale because `decode` currently returns `ArithmeticOverflow` for
-/// clean +/-127 frames of this length, which the C reference decodes. The
-/// add-compare-select work does not depend on the amplitude.
-const AMPLITUDE: i8 = 120;
 
 /// Build flushed, non-recursive code tables from generator polynomials, where
 /// bit `i` of a generator is the coefficient of `D^i`.
@@ -57,7 +53,7 @@ fn noisy(clean: &[i8]) -> Vec<i8> {
             state ^= state >> 7;
             state ^= state << 17;
             let noise = (state % 201) as i32 - 100;
-            (i32::from(soft) + noise).clamp(-i32::from(AMPLITUDE), i32::from(AMPLITUDE)) as i8
+            (i32::from(soft) + noise).clamp(-127, 127) as i8
         })
         .collect()
 }
@@ -68,7 +64,7 @@ fn bench_code(c: &mut Criterion, name: &str, code: &ConvCode) {
     encode(code, &input, &mut encoded).unwrap();
     let clean: Vec<i8> = encoded
         .iter()
-        .map(|&bit| if bit == 0 { AMPLITUDE } else { -AMPLITUDE })
+        .map(|&bit| if bit == 0 { 127 } else { -127 })
         .collect();
     let noisy = noisy(&clean);
     let mut decoded = vec![0u8; INPUT_BITS];

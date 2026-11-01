@@ -61,7 +61,8 @@ Larger starts are errors. Nonnegative traceback end selectors instead must be
 strictly below state_count. Reset/rewind invalidate active history; rewind
 subtracts the minimum error while retaining normalized path metrics.
 
-All signed-byte soft samples, including -128, are accepted; zero is an erasure.
+All signed-byte soft samples are accepted, including -128, which is outside
+libosmocore's documented `sbit_t` range of -127 to 127; zero is an erasure.
 Branch cost is `(soft - expected)^2 >> 9`, with expected +127/-127. Strict
 improvement retains the first survivor on ties. Stored/returned u32 metrics
 still obey signed C INT_MAX and the separate MAX_AE=0x00ffffff survivor cutoff.
@@ -95,8 +96,9 @@ Termination-output presence activates recursive decoding regardless of mode.
 The lowest systematic bit with zero zero-input output across states is selected;
 nonsystematic recursion returns `UnsupportedRecursiveCode` (C -EPROTO).
 Correlation does not walk next-state tables, but descriptor validation still
-checks them. Full i8 input is accepted; selected i16 narrowing/normalization
-outside range reports `ArithmeticOverflow`. Negative traceback returns become
+checks them. Full i8 input is accepted. Path metrics saturate at the i16 limits
+like the C SSE and AVX backends. The C scalar backend wraps instead, and decodes
+some long frames containing -128 differently, so -128 follows SSE and AVX. Negative traceback returns become
 `NoSurvivor`, not successful negative metrics. Output is atomic on failure.
 `decode_input_capacity` is independent of signed length helpers and the encoder's
 short-tail-biting loading restriction; capacity does not promise backend support.
@@ -158,7 +160,7 @@ AMR/DTX, protocol parity definitions and generated GSM/GMR/WiMax catalogues,
 Rust SIMD selection and NEON parity require separate scope and evidence.
 Allocation failure is checked where fallible reservation is used but was not
 injected as C golden evidence. Unsafe empty/short history, invalid shifts,
-sizing/metric overflow and unsafe wide-state paths remain excluded.
+sizing overflow and unsafe wide-state paths remain excluded.
 
 Owned checked descriptors, bounded punctures, explicit lifetimes/drop and typed
 errors replace raw tables, negative-sentinel scanning, nullable storage and C

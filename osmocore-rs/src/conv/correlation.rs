@@ -24,9 +24,9 @@ pub fn osmo_conv_decode_acc(
     check_buffers(code, input, output, transmitted)?;
     let mut decoder = CorrelationDecoder::new(code, symbols)?;
     let sequence = depuncture(code, input, raw)?;
-    decoder.traverse(&sequence)?;
+    decoder.traverse(&sequence);
     if code.spec.term == Termination::TAIL_BITING {
-        decoder.traverse(&sequence)?;
+        decoder.traverse(&sequence);
     }
     let decoded = decoder.traceback(code.spec.term, code.spec.len as usize)?;
     output[..decoded.len()].copy_from_slice(&decoded);
@@ -215,39 +215,48 @@ impl CorrelationDecoder {
         &self.trellis[state].incoming[usize::from(path)]
     }
 
-    fn traverse(&mut self, sequence: &[i8]) -> Result<(), ConvError> {
+    /// Metrics saturate like the C SSE/AVX backends. The C scalar backend wraps
+    /// instead. They differ only on -128, which is outside libosmocore's documented
+    /// soft-bit range but accepted here, so -128 follows SSE/AVX.
+    fn traverse(&mut self, sequence: &[i8]) {
         for (row, sample) in sequence.chunks_exact(self.rate).enumerate() {
             let mut next = [0i16; 64];
             let half = self.states / 2;
             for state in 0..half {
-                let metric: i32 = sample
+                // At most 4 * 128 in magnitude, so this sum can't overflow.
+                let metric: i16 = sample
                     .iter()
                     .zip(self.trellis[state].correlation)
-                    .map(|(&soft, sign)| i32::from(soft) * i32::from(sign))
+                    .map(|(&soft, sign)| i16::from(soft) * sign)
                     .sum();
-                let even = i32::from(self.sums[2 * state]);
-                let odd = i32::from(self.sums[2 * state + 1]);
+                let even = self.sums[2 * state];
+                let odd = self.sums[2 * state + 1];
                 for (target, left, right) in [
-                    (state, even + metric, odd - metric),
-                    (state + half, even - metric, odd + metric),
+                    (
+                        state,
+                        even.saturating_add(metric),
+                        odd.saturating_sub(metric),
+                    ),
+                    (
+                        state + half,
+                        even.saturating_sub(metric),
+                        odd.saturating_add(metric),
+                    ),
                 ] {
                     // Equality selects predecessor zero in scalar/SSE/AVX.
                     let path = u8::from(left < right);
-                    next[target] = i16::try_from(if path == 0 { left } else { right })
-                        .map_err(|_| ConvError::ArithmeticOverflow)?;
+                    next[target] = if path == 0 { left } else { right };
                     self.paths[row * self.states + target] = path;
                 }
             }
             if row % self.interval == 0 {
-                let minimum = i32::from(*next[..self.states].iter().min().unwrap());
+                let minimum = *next[..self.states].iter().min().unwrap();
                 for sum in &mut next[..self.states] {
-                    *sum = i16::try_from(i32::from(*sum) - minimum)
-                        .map_err(|_| ConvError::ArithmeticOverflow)?;
+                    *sum = sum.saturating_sub(minimum);
                 }
             }
             self.sums = next;
         }
-        Ok(())
     }
 
     fn traceback(&self, term: Termination, len: usize) -> Result<Vec<u8>, ConvError> {
@@ -359,10 +368,10 @@ mod tests {
     fn erasure_ties_select_even_predecessors_and_negative_128_is_not_clamped() {
         let code = code(2, 5, 1, Termination::TAIL_BITING);
         let mut decoder = CorrelationDecoder::new(&code, 1).unwrap();
-        decoder.traverse(&[0, 0]).unwrap();
+        decoder.traverse(&[0, 0]);
         assert_eq!(decoder.paths, vec![0; 16]);
         assert_eq!(&decoder.sums[..16], &[0; 16]);
-        decoder.traverse(&[-128, -128]).unwrap();
+        decoder.traverse(&[-128, -128]);
         assert_eq!(&decoder.paths[..8], &[1; 8]);
         assert_eq!(&decoder.paths[8..], &[0; 8]);
         assert_eq!(&decoder.sums[..16], &[0; 16]);
@@ -374,7 +383,7 @@ mod tests {
         let interval = CorrelationDecoder::new(&code, 1).unwrap().interval;
         for rows in [1, interval, interval + 1, interval + 2, 2 * interval + 1] {
             let mut decoder = CorrelationDecoder::new(&code, rows).unwrap();
-            decoder.traverse(&vec![127; rows * 2]).unwrap();
+            decoder.traverse(&vec![127; rows * 2]);
             assert!(
                 decoder.sums[..16]
                     .iter()
@@ -384,20 +393,18 @@ mod tests {
     }
 
     #[test]
-    fn metric_narrowing_and_normalization_overflow_are_checked() {
+    fn metrics_and_normalization_saturate() {
         let code = code(2, 5, 1, Termination::TRUNCATION);
         let mut decoder = CorrelationDecoder::new(&code, 1).unwrap();
         decoder.sums[..16].fill(i16::MAX);
-        assert_eq!(
-            decoder.traverse(&[127; 2]),
-            Err(ConvError::ArithmeticOverflow)
-        );
+        decoder.traverse(&[127; 2]);
+        assert_eq!(&decoder.sums[..16], &[0; 16]);
         decoder.sums[..16].fill(i16::MIN);
         decoder.sums[0] = i16::MAX;
-        assert_eq!(
-            decoder.traverse(&[0; 2]),
-            Err(ConvError::ArithmeticOverflow)
-        );
+        decoder.traverse(&[0; 2]);
+        assert_eq!(decoder.sums[0], i16::MAX);
+        assert_eq!(decoder.sums[8], i16::MAX);
+        assert_eq!(decoder.sums[1], 0);
     }
 
     #[test]
@@ -562,11 +569,11 @@ mod tests {
         let code = code(2, 5, 1, Termination::TAIL_BITING);
         let mut decoder = CorrelationDecoder::new(&code, 1).unwrap();
         decoder.sums[1] = 100;
-        decoder.traverse(&[0; 2]).unwrap();
+        decoder.traverse(&[0; 2]);
         assert_eq!(decoder.sums[0], 100);
         assert_eq!(decoder.sums[8], 100);
         assert_eq!(decoder.paths[0], 1);
-        decoder.traverse(&[0; 2]).unwrap();
+        decoder.traverse(&[0; 2]);
         assert_eq!(decoder.sums[0], 100);
         assert_eq!(decoder.sums[4], 100);
         assert_eq!(decoder.paths[0], 0);

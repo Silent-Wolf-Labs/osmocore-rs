@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `conv::decode` and `osmo_conv_decode_acc` no longer return `ArithmeticOverflow`
+  for long unpunctured K=5 and K=7 frames at or near full scale. Path metrics now
+  saturate like the C SSE and AVX backends. Affected frames include clean +/-127
+  xCCH blocks.
+
 ### Added
 
 - Criterion benchmarks for CRC, convolutional coding, bit packing, message buffers,
