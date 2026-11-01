@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Criterion benchmarks for CRC, convolutional coding, bit packing, message buffers,
+  timers and FSMs, with tracked results in [docs/benchmarks.md](docs/benchmarks.md).
+
 ## [0.1.0] - 2026-10-26
 
 First release.
