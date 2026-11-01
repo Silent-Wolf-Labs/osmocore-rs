@@ -18,9 +18,11 @@ pub(super) struct Definition<C, D, E> {
 /// replaced by runtime ownership. Optional tracing observes execution without
 /// owning a logger. Safe termination ordering defaults off,
 /// as in C; both modes use checked handles and safe storage reclamation.
+/// `FsmId` and `FsmDefinitionId` can cross threads, but the runtime stays on one
+/// thread because instance-private values aren't required to be `Send`.
 pub struct FsmRuntime<C, D, E = ()> {
     pub data: D,
-    pub(super) owner: Rc<()>,
+    pub(super) owner: OwnerId,
     pub(super) definitions: Vec<Definition<C, D, E>>,
     pub(super) slots: Vec<Slot>,
     pub(super) callback_error: Option<FsmError>,
@@ -49,7 +51,7 @@ impl<C, D, E> FsmRuntime<C, D, E> {
     pub fn new(data: D) -> Self {
         Self {
             data,
-            owner: Rc::new(()),
+            owner: OwnerId::next(),
             definitions: Vec::new(),
             slots: Vec::new(),
             callback_error: None,
@@ -59,14 +61,14 @@ impl<C, D, E> FsmRuntime<C, D, E> {
         }
     }
     pub(super) fn definition_index(&self, id: &FsmDefinitionId) -> Result<usize, FsmError> {
-        if Rc::ptr_eq(&self.owner, &id.owner) && id.slot < self.definitions.len() {
+        if self.owner == id.owner && id.slot < self.definitions.len() {
             Ok(id.slot)
         } else {
             Err(FsmError::InvalidDefinition)
         }
     }
     pub(super) fn index(&self, id: &FsmId) -> Result<usize, FsmError> {
-        if Rc::ptr_eq(&self.owner, &id.owner)
+        if self.owner == id.owner
             && let Some(s) = self.slots.get(id.slot)
             && s.generation == id.generation
             && s.instance.is_some()
@@ -105,7 +107,7 @@ impl<C, D, E> FsmRuntime<C, D, E> {
         Ok(slots
             .into_iter()
             .map(|(slot, s)| FsmId {
-                owner: self.owner.clone(),
+                owner: self.owner,
                 slot,
                 generation: s.generation,
             })
@@ -146,7 +148,7 @@ impl<C, D, E> FsmRuntime<C, D, E> {
             return Err(FsmError::InvalidDescriptor);
         }
         let id = FsmDefinitionId {
-            owner: self.owner.clone(),
+            owner: self.owner,
             slot: self.definitions.len(),
         };
         self.definitions.push(Definition {
@@ -191,7 +193,7 @@ impl<C, D, E> FsmRuntime<C, D, E> {
             .iter()
             .position(|d| d.registered && d.fsm.name == name)
             .map(|slot| FsmDefinitionId {
-                owner: self.owner.clone(),
+                owner: self.owner,
                 slot,
             })
     }
@@ -298,7 +300,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
             terminating: false,
             id: id.map(str::to_owned),
             name,
-            definition: definition.clone(),
+            definition: *definition,
             timer,
             private: Box::new(private),
             parent: None,
@@ -315,7 +317,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
             current_state = 0u32
         );
         Ok(FsmId {
-            owner: self.owner.clone(),
+            owner: self.owner,
             slot,
             generation: self.slots[slot].generation,
         })
@@ -375,7 +377,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
                 st.action
             };
             if let Some(cb) = cb {
-                cb(s, self, id.clone(), event, data)
+                cb(s, self, *id, event, data)
             }
             Ok(())
         })
@@ -447,7 +449,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
                 .as_ref()
                 .filter(|i| i.timer == timer)
                 .map(|_| FsmId {
-                    owner: r.owner.clone(),
+                    owner: r.owner,
                     slot,
                     generation: entry.generation,
                 })
@@ -461,7 +463,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
             let t = i.timer_number;
             let cb = r.definitions[i.definition.slot].fsm.timer_cb;
             if let Some(cb) = cb
-                && cb(s, r, id.clone()) != 1
+                && cb(s, r, id) != 1
             {
                 return;
             }
@@ -519,13 +521,13 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
             if new_state as usize >= fsm.states.len() {
                 return Err(FsmError::InvalidState(new_state));
             }
-            let timer = inst.timer.clone();
+            let timer = inst.timer;
             let leave = st.onleave;
             if !keep {
                 s.delete(&timer)?
             }
             if let Some(cb) = leave {
-                cb(s, self, id.clone(), new_state)
+                cb(s, self, *id, new_state)
             }
             // C may use freed memory if onleave terminates this instance. Rust reports
             // a stale handle after preserving the completed cancellation/callback prefix.
@@ -556,7 +558,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
                 }
             }
             if let Some(cb) = fsm.states[new_state as usize].onenter {
-                cb(s, self, id.clone(), old)
+                cb(s, self, *id, old)
             }
             event!(
                 debug,

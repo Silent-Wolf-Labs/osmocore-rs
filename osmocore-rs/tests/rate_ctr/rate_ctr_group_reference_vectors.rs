@@ -119,7 +119,7 @@ fn stage7_complete_direct_c_replay() {
         );
         let mut rc = 0i64;
         let mut trace = vec![];
-        let id = nodes[row.slot].clone();
+        let id = nodes[row.slot];
         let text = || String::from_utf8_lossy(row.text.as_deref().unwrap()).into_owned();
         match row.op.as_str() {
             "alloc" => match r.allocate(desc(row.a), row.b as u32) {
@@ -337,26 +337,26 @@ fn stage7_ownership_handles_and_safe_restrictions() {
     name.clear();
     assert_eq!(r.group(&id).unwrap().name(), Some("report"));
     r.set_index(&id, 99).unwrap();
-    assert_eq!(r.find_group("g", 99), Some(id.clone()));
+    assert_eq!(r.find_group("g", 99), Some(id));
     assert_eq!(
         RateCtrRuntime::new().group(&id).unwrap_err(),
         RateCtrError::InvalidHandle
     );
-    let before = snapshot(&r, &[Some(id.clone())]);
+    let before = snapshot(&r, &[Some(id)]);
     assert_eq!(r.process_expirations(0), Err(RateCtrError::ZeroExpirations));
     assert_eq!(r.ticks(), 0);
-    assert_eq!(snapshot(&r, &[Some(id.clone())]), before);
+    assert_eq!(snapshot(&r, &[Some(id)]), before);
     assert_eq!(r.add(&id, 3, 1), Err(RateCtrError::CounterOutOfRange));
-    assert_eq!(snapshot(&r, &[Some(id.clone())]), before);
+    assert_eq!(snapshot(&r, &[Some(id)]), before);
     assert_eq!(
         r.set_name(&id, Some("x\0y")),
         Err(RateCtrError::EmbeddedNul)
     );
-    assert_eq!(snapshot(&r, &[Some(id.clone())]), before);
+    assert_eq!(snapshot(&r, &[Some(id)]), before);
     let mut bad = desc(0);
     bad.group_description = Some("x\0y".into());
     assert_eq!(r.allocate(bad, 1), Err(RateCtrError::EmbeddedNul));
-    assert_eq!(snapshot(&r, &[Some(id.clone())]), before);
+    assert_eq!(snapshot(&r, &[Some(id)]), before);
     assert_eq!(
         r.for_each_group(|r, id| {
             r.free(id).unwrap();

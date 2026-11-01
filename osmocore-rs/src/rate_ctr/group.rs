@@ -2,8 +2,9 @@
 
 //! Owned equivalents of C group/registry operations and periodic rollups.
 use super::RateCtr;
+use crate::owner::OwnerId;
 use crate::time::TimeError;
-use std::{fmt, rc::Rc};
+use std::fmt;
 
 /// Owned strings replace C's retained descriptor/name pointers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,21 +50,13 @@ fn identifier_valid(s: &str) -> bool {
             .all(|b| (0x20..=0x7e).contains(&b) && !b"., {}[]()<>|~\\^`'\"?=;/+*&%$#!".contains(&b))
 }
 /// Identity uses the owning runtime, slot and generation; the mutable C index
-/// never participates in identity. A cloned handle does not keep a group alive.
-#[derive(Debug, Clone)]
+/// never participates in identity. A copied handle does not keep a group alive.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RateCtrGroupId {
-    pub(super) owner: Rc<()>,
+    pub(super) owner: OwnerId,
     pub(super) slot: usize,
     pub(super) generation: u64,
 }
-impl PartialEq for RateCtrGroupId {
-    fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.owner, &other.owner)
-            && self.slot == other.slot
-            && self.generation == other.generation
-    }
-}
-impl Eq for RateCtrGroupId {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RateCtrError {
     InvalidDescriptor,

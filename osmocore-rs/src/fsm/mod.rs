@@ -5,6 +5,7 @@
 //! Callbacks receive handles, never mutable instance references. They may make
 //! synchronous nested calls; lookups remain visible while termination callbacks
 //! run. Registration belongs to this runtime, not a process-global registry.
+use crate::owner::OwnerId;
 use crate::time::Clock;
 use crate::timer::{TimerError, TimerId, TimerScheduler};
 use std::{any::Any, borrow::Cow, fmt, rc::Rc};

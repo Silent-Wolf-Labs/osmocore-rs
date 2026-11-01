@@ -11,6 +11,10 @@
 
 ### Changed
 
+- `TimerId`, `FsmId`, `FsmDefinitionId` and `RateCtrGroupId` are now `Copy`, `Send`
+  and `Sync`, and `TimerScheduler` and `RateCtrRuntime` can move between threads.
+  Existing code still compiles, but `.clone()` on these handles now triggers
+  Clippy's `clone_on_copy`. `FsmRuntime` and `IoRuntime` stay on one thread.
 - The 10 largest test fixtures are stored gzip-compressed. Their decompressed
   content and fingerprints are unchanged.
 

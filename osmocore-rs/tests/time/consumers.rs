@@ -55,7 +55,7 @@ fn accounting_consumer_counts_active_periods_and_keeps_rate_counter_history() {
     assert_eq!(tc.cfg.rate_ctr.unwrap().current, 2);
     assert_eq!(tc.cfg.rate_ctr.unwrap().previous, 9);
     assert_eq!(tc.cfg.rate_ctr.unwrap().intv, RateCtr::default().intv);
-    let timer = tc.timer().unwrap().clone();
+    let timer = *tc.timer().unwrap();
     tc.cleanup(&mut scheduler).unwrap();
     assert_eq!(scheduler.pending(&timer), Err(TimerError::InvalidHandle));
     assert_eq!(scheduler.check(), 0);
@@ -98,7 +98,7 @@ fn timer_operation_sequences_match_deadline_order_and_reject_released_handles() 
                 active[slot] = None;
             }
             2 => {
-                let old = ids[slot].clone();
+                let old = ids[slot];
                 scheduler.release(&old).unwrap();
                 ids[slot] = scheduler.create(Some(dispatch));
                 active[slot] = None;
@@ -123,7 +123,7 @@ fn timer_operation_sequences_match_deadline_order_and_reject_released_handles() 
                 // Selected timers dispatch in descending deadline/activation order.
                 due.sort();
                 due.reverse();
-                let expected: Vec<_> = due.iter().map(|&(_, _, slot)| ids[slot].clone()).collect();
+                let expected: Vec<_> = due.iter().map(|&(_, _, slot)| ids[slot]).collect();
                 consumer.events.clear();
                 assert_eq!(
                     scheduler.update(&mut consumer),

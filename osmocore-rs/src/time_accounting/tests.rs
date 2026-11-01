@@ -209,7 +209,7 @@ fn absent_deadline_keeps_existing_timer_and_deadline() {
     let mut tc = seeded();
     let mut scheduler = TimerScheduler::new(FixedClock);
     tc.arm_wakeup(&mut scheduler, 100, Some(110)).unwrap();
-    let handle = tc.timer().unwrap().clone();
+    let handle = *tc.timer().unwrap();
     let deadline = scheduler.deadline(&handle).unwrap();
     tc.arm_wakeup(&mut scheduler, 110, None).unwrap();
     assert!(scheduler.pending(&handle).unwrap());

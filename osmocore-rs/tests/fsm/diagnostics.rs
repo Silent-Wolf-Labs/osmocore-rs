@@ -48,7 +48,7 @@ fn action(
 ) {
     r.data.calls.push("action");
     if event == 0 {
-        if let Some(child) = r.data.nested.clone() {
+        if let Some(child) = r.data.nested {
             r.dispatch(s, Some(&child), 1, data).unwrap();
         }
         r.state_change(s, &id, 1, 0, 0).unwrap();
@@ -122,7 +122,7 @@ fn structured_dispatch_transition_nested_context_and_payload_privacy() {
         let outer = tracing::info_span!("application", request = 42u64);
         let _guard = outer.enter();
         let (mut s, mut r, id) = setup();
-        let definition = r.instance(&id).unwrap().definition().clone();
+        let definition = *r.instance(&id).unwrap().definition();
         let nested = r.alloc(&mut s, &definition, None, Payload).unwrap();
         r.data.nested = Some(nested);
         r.dispatch(&mut s, Some(&id), 0, &EventData::User(&Payload))
@@ -241,7 +241,7 @@ fn hierarchical_termination_reports_completed_lifecycle_in_both_modes() {
         tracing::subscriber::with_default(capture.subscriber("trace"), || {
             let (mut s, mut r, parent) = setup();
             r.term_safely(safe);
-            let definition = r.instance(&parent).unwrap().definition().clone();
+            let definition = *r.instance(&parent).unwrap().definition();
             let child = r
                 .alloc_child(&mut s, &definition, &parent, 1, Payload)
                 .unwrap();
@@ -311,7 +311,7 @@ fn reentrant_child_stall_is_reported_without_changing_termination_progress() {
     let capture = Capture::default();
     tracing::subscriber::with_default(capture.subscriber("trace"), || {
         let (mut s, mut r, parent) = setup();
-        let definition = r.instance(&parent).unwrap().definition().clone();
+        let definition = *r.instance(&parent).unwrap().definition();
         let child = r
             .alloc_child(&mut s, &definition, &parent, 1, Payload)
             .unwrap();

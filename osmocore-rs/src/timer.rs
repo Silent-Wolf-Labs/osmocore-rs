@@ -7,25 +7,17 @@
 //! Nested updates are rejected; prepare and timer mutation remain available.
 use super::time::{Clock, SystemClock, TimeError, TimeVal};
 use crate::diagnostics::{event, observe};
+use crate::owner::OwnerId;
 use std::collections::BTreeMap;
 use std::fmt;
-use std::rc::Rc;
 
 /// Identity survives activation changes, but not release and slot reuse.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct TimerId {
-    owner: Rc<()>,
+    owner: OwnerId,
     slot: usize,
     generation: u64,
 }
-impl PartialEq for TimerId {
-    fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.owner, &other.owner)
-            && self.slot == other.slot
-            && self.generation == other.generation
-    }
-}
-impl Eq for TimerId {}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TimerError {
@@ -75,7 +67,7 @@ struct Slot<C, D> {
 /// No native clock reads occur in construction. No async runtime is required.
 pub struct TimerScheduler<C = SystemClock, D = ()> {
     pub clock: C,
-    owner: Rc<()>,
+    owner: OwnerId,
     slots: Vec<Slot<C, D>>,
     active: BTreeMap<(TimeVal, u64), usize>,
     sequence: u64,
@@ -94,7 +86,7 @@ impl<C, D> TimerScheduler<C, D> {
     pub fn new(clock: C) -> Self {
         Self {
             clock,
-            owner: Rc::new(()),
+            owner: OwnerId::next(),
             slots: Vec::new(),
             active: BTreeMap::new(),
             sequence: 0,
@@ -124,13 +116,13 @@ impl<C, D> TimerScheduler<C, D> {
         entry.deadline = TimeVal::default();
         entry.callback = callback;
         TimerId {
-            owner: self.owner.clone(),
+            owner: self.owner,
             slot,
             generation: entry.generation,
         }
     }
     fn index(&self, id: &TimerId) -> Result<usize, TimerError> {
-        if Rc::ptr_eq(&self.owner, &id.owner)
+        if self.owner == id.owner
             && let Some(slot) = self.slots.get(id.slot)
             && slot.allocated
             && slot.generation == id.generation
@@ -339,7 +331,7 @@ impl<C: Clock, D> TimerScheduler<C, D> {
                     #[cfg(feature = "tracing")]
                     let activation_context = entry.context.clone();
                     let id = TimerId {
-                        owner: self.owner.clone(),
+                        owner: self.owner,
                         slot,
                         generation,
                     };

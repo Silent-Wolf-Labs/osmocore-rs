@@ -15,41 +15,41 @@ column on the right; a `-` means the bench didn't exist yet. Results measure the
 default build with no Cargo features.
 
 <!-- bench-table:begin -->
-| Benchmark | v0.1.0 | v0.1.0 repeat | Decoder saturation fix |
-| --- | ---: | ---: | ---: |
-| `bits/pack_184` | 105 | 104 | 104 |
-| `bits/pack_456` | 256 | 255 | 254 |
-| `bits/pack_offset_184` | 119 | 119 | 118 |
-| `bits/pack_offset_456` | 298 | 294 | 293 |
-| `bits/unpack_184` | 100 | 99.7 | 99.8 |
-| `bits/unpack_456` | 252 | 252 | 251 |
-| `bits/unpack_offset_184` | 92.5 | 92.8 | 91.9 |
-| `bits/unpack_offset_456` | 239 | 235 | 233 |
-| `conv/k5_n2/decode_clean` | 6,313 | 6,270 | 5,727 |
-| `conv/k5_n2/decode_noisy` | 6,310 | 6,290 | 5,708 |
-| `conv/k5_n2/decoder_reuse_noisy` | 22,669 | 23,131 | 24,220 |
-| `conv/k5_n2/encode` | 608 | 604 | 601 |
-| `conv/k7_n3/decode_clean` | 26,003 | 25,988 | 20,067 |
-| `conv/k7_n3/decode_noisy` | 26,328 | 26,100 | 20,071 |
-| `conv/k7_n3/decoder_reuse_noisy` | 113,461 | 112,508 | 111,139 |
-| `conv/k7_n3/encode` | 674 | 680 | 668 |
-| `crc/crc16/ccitt_1500_bytes` | 2,317 | 2,311 | 2,302 |
-| `crc/crc16/ccitt_64_bytes` | 81.3 | 82.0 | 80.8 |
-| `crc/crc16/crc16_1500_bytes` | 2,323 | 2,313 | 2,297 |
-| `crc/crc16/crc16_64_bytes` | 81.0 | 80.9 | 80.6 |
-| `crc/generic_fire40/1024_bits` | 1,133 | 1,133 | 1,122 |
-| `crc/generic_fire40/184_bits` | 199 | 201 | 197 |
-| `fsm/dispatch` | 3.5 | 3.7 | 3.5 |
-| `fsm/state_change` | 6.6 | 6.5 | 6.5 |
-| `msgb/alloc_1500` | 45.7 | 40.2 | 39.2 |
-| `msgb/alloc_64` | 34.3 | 34.0 | 33.1 |
-| `msgb/put_pull_1500` | 2.9 | 2.9 | 2.7 |
-| `msgb/put_pull_64` | 2.9 | 2.9 | 2.7 |
-| `msgb/put_pull_u32` | 3.4 | 4.3 | 3.2 |
-| `timer/update/expire/1` | 37.8 | 37.7 | 37.7 |
-| `timer/update/expire/16` | 356 | 344 | 342 |
-| `timer/update/expire/256` | 7,337 | 7,318 | 7,265 |
-| `timer/update/idle_256_pending` | 6.2 | 6.2 | 6.1 |
+| Benchmark | v0.1.0 | v0.1.0 repeat | Decoder saturation fix | Thread-safe handles |
+| --- | ---: | ---: | ---: | ---: |
+| `bits/pack_184` | 105 | 104 | 104 | 105 |
+| `bits/pack_456` | 256 | 255 | 254 | 256 |
+| `bits/pack_offset_184` | 119 | 119 | 118 | 119 |
+| `bits/pack_offset_456` | 298 | 294 | 293 | 294 |
+| `bits/unpack_184` | 100 | 99.7 | 99.8 | 101 |
+| `bits/unpack_456` | 252 | 252 | 251 | 252 |
+| `bits/unpack_offset_184` | 92.5 | 92.8 | 91.9 | 90.3 |
+| `bits/unpack_offset_456` | 239 | 235 | 233 | 236 |
+| `conv/k5_n2/decode_clean` | 6,313 | 6,270 | 5,727 | 5,743 |
+| `conv/k5_n2/decode_noisy` | 6,310 | 6,290 | 5,708 | 5,769 |
+| `conv/k5_n2/decoder_reuse_noisy` | 22,669 | 23,131 | 24,220 | 22,279 |
+| `conv/k5_n2/encode` | 608 | 604 | 601 | 560 |
+| `conv/k7_n3/decode_clean` | 26,003 | 25,988 | 20,067 | 20,124 |
+| `conv/k7_n3/decode_noisy` | 26,328 | 26,100 | 20,071 | 20,288 |
+| `conv/k7_n3/decoder_reuse_noisy` | 113,461 | 112,508 | 111,139 | 109,044 |
+| `conv/k7_n3/encode` | 674 | 680 | 668 | 632 |
+| `crc/crc16/ccitt_1500_bytes` | 2,317 | 2,311 | 2,302 | 2,311 |
+| `crc/crc16/ccitt_64_bytes` | 81.3 | 82.0 | 80.8 | 81.2 |
+| `crc/crc16/crc16_1500_bytes` | 2,323 | 2,313 | 2,297 | 2,311 |
+| `crc/crc16/crc16_64_bytes` | 81.0 | 80.9 | 80.6 | 81.0 |
+| `crc/generic_fire40/1024_bits` | 1,133 | 1,133 | 1,122 | 1,138 |
+| `crc/generic_fire40/184_bits` | 199 | 201 | 197 | 199 |
+| `fsm/dispatch` | 3.5 | 3.7 | 3.5 | 3.3 |
+| `fsm/state_change` | 6.6 | 6.5 | 6.5 | 5.9 |
+| `msgb/alloc_1500` | 45.7 | 40.2 | 39.2 | 40.5 |
+| `msgb/alloc_64` | 34.3 | 34.0 | 33.1 | 34.2 |
+| `msgb/put_pull_1500` | 2.9 | 2.9 | 2.7 | 2.9 |
+| `msgb/put_pull_64` | 2.9 | 2.9 | 2.7 | 2.9 |
+| `msgb/put_pull_u32` | 3.4 | 4.3 | 3.2 | 3.4 |
+| `timer/update/expire/1` | 37.8 | 37.7 | 37.7 | 35.7 |
+| `timer/update/expire/16` | 356 | 344 | 342 | 338 |
+| `timer/update/expire/256` | 7,337 | 7,318 | 7,265 | 7,172 |
+| `timer/update/idle_256_pending` | 6.2 | 6.2 | 6.1 | 6.1 |
 <!-- bench-table:end -->
 
 | Column | Source | rustc | Date | Notes |
@@ -57,6 +57,7 @@ default build with no Cargo features.
 | v0.1.0 | `9756920` | 1.99.0 | 2026-11-01 | Starting baseline |
 | v0.1.0 repeat | `9756920` | 1.99.0 | 2026-11-01 | Same code run again, to show noise |
 | Decoder saturation fix | `adc549d` plus the fix | 1.99.0 | 2026-11-01 | `decode` metrics saturate; `conv` benches use +/-127 |
+| Thread-safe handles | `ee4eea0` plus the change | 1.99.0 | 2026-11-01 | Owner tokens are integers instead of `Rc`; handles are `Copy` |
 
 All columns so far were measured on an AMD Ryzen 9 7900X (Linux, `amd-pstate-epp`
 driver, `powersave` governor), pinned to one core.

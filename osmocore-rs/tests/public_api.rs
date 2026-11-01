@@ -131,3 +131,220 @@ fn ordinary_primitive_maps_do_not_interpret_c_sentinels() {
     assert_eq!(event_for_primitive(&header, &[]), None);
     assert_eq!(compat::prim::osmo_event_for_prim(&header, &maps), u32::MAX);
 }
+
+/// Handles can leave their owner's thread, but only their owner accepts them.
+mod handles {
+    use osmocore_rs::{
+        fsm::{Fsm, FsmDefinitionId, FsmError, FsmId, FsmRuntime, FsmState},
+        rate_ctr::{RateCtrDesc, RateCtrError, RateCtrGroupDesc, RateCtrGroupId, RateCtrRuntime},
+        time::SystemClock,
+        timer::{TimerError, TimerId, TimerScheduler},
+    };
+    use std::thread;
+
+    type Scheduler = TimerScheduler<SystemClock, ()>;
+    type MachineRuntime = FsmRuntime<SystemClock, ()>;
+    type MachineScheduler = TimerScheduler<SystemClock, MachineRuntime>;
+
+    fn assert_handle<T: Copy + Send + Sync + 'static>() {}
+    fn assert_send_sync<T: Send + Sync>() {}
+
+    /// Hand a value to another thread and take it back.
+    fn round_trip<T: Send + 'static>(value: T) -> T {
+        thread::spawn(move || value).join().unwrap()
+    }
+
+    fn group_descriptor() -> RateCtrGroupDesc {
+        RateCtrGroupDesc {
+            group_name_prefix: "handles".into(),
+            group_description: None,
+            class_id: 0,
+            counters: vec![RateCtrDesc {
+                name: "packets".into(),
+                description: None,
+            }],
+        }
+    }
+
+    fn machine() -> (MachineScheduler, MachineRuntime, FsmDefinitionId, FsmId) {
+        let mut scheduler = MachineScheduler::new(SystemClock);
+        let mut runtime = MachineRuntime::new(());
+        let definition = runtime
+            .register(Fsm {
+                name: "handles".into(),
+                states: vec![FsmState {
+                    name: None,
+                    in_event_mask: 0,
+                    out_state_mask: 0,
+                    action: None,
+                    onenter: None,
+                    onleave: None,
+                }],
+                allstate_event_mask: 0,
+                allstate_action: None,
+                pre_term: None,
+                cleanup: None,
+                timer_cb: None,
+                event_names: None,
+            })
+            .unwrap();
+        let id = runtime
+            .alloc(&mut scheduler, &definition, None, ())
+            .unwrap();
+        (scheduler, runtime, definition, id)
+    }
+
+    #[test]
+    fn handles_are_copy_send_and_sync() {
+        assert_handle::<TimerId>();
+        assert_handle::<FsmId>();
+        assert_handle::<FsmDefinitionId>();
+        assert_handle::<RateCtrGroupId>();
+        #[cfg(feature = "runtime")]
+        {
+            use osmocore_rs::runtime::{ListenerHandle, ResourceHandle, TcpHandle, UdpHandle};
+            assert_handle::<TcpHandle>();
+            assert_handle::<UdpHandle>();
+            assert_handle::<ListenerHandle>();
+            assert_handle::<ResourceHandle>();
+        }
+    }
+
+    #[test]
+    fn timer_scheduler_and_rate_counters_can_change_threads() {
+        assert_send_sync::<Scheduler>();
+        assert_send_sync::<RateCtrRuntime>();
+
+        let mut scheduler = Scheduler::new(SystemClock);
+        let id = scheduler.create(None);
+        let mut scheduler = round_trip(scheduler);
+        assert_eq!(scheduler.pending(&id), Ok(false));
+        assert_eq!(scheduler.release(&id), Ok(()));
+    }
+
+    #[test]
+    fn handles_still_work_after_visiting_another_thread() {
+        let mut scheduler = Scheduler::new(SystemClock);
+        let timer = scheduler.create(None);
+        let returned = round_trip(timer);
+        assert_eq!(returned, timer);
+        assert_eq!(scheduler.pending(&returned), Ok(false));
+
+        let (_scheduler, runtime, definition, machine_id) = machine();
+        let returned = round_trip(machine_id);
+        assert_eq!(returned, machine_id);
+        assert!(runtime.instance(&returned).is_ok());
+        let returned = round_trip(definition);
+        assert_eq!(returned, definition);
+        assert!(runtime.descriptor(&returned).is_ok());
+
+        let mut counters = RateCtrRuntime::new();
+        let group = counters.allocate(group_descriptor(), 0).unwrap();
+        let returned = round_trip(group);
+        assert_eq!(returned, group);
+        assert!(counters.group(&returned).is_ok());
+    }
+
+    #[test]
+    fn foreign_handles_are_rejected() {
+        let mut first = Scheduler::new(SystemClock);
+        let mut second = Scheduler::new(SystemClock);
+        let timer = first.create(None);
+        let same_slot = second.create(None);
+        assert_ne!(timer, same_slot);
+        assert_eq!(second.pending(&timer), Err(TimerError::InvalidHandle));
+
+        let (_, first, first_definition, first_id) = machine();
+        let (_, second, second_definition, second_id) = machine();
+        assert_ne!(first_id, second_id);
+        assert_ne!(first_definition, second_definition);
+        assert_eq!(
+            second.instance(&first_id).err(),
+            Some(FsmError::InvalidHandle)
+        );
+        assert_eq!(
+            second.descriptor(&first_definition).err(),
+            Some(FsmError::InvalidDefinition)
+        );
+        assert!(first.instance(&first_id).is_ok());
+
+        let mut first = RateCtrRuntime::new();
+        let mut second = RateCtrRuntime::new();
+        let group = first.allocate(group_descriptor(), 0).unwrap();
+        let same_slot = second.allocate(group_descriptor(), 0).unwrap();
+        assert_ne!(group, same_slot);
+        assert_eq!(
+            second.group(&group).unwrap_err(),
+            RateCtrError::InvalidHandle
+        );
+    }
+
+    #[test]
+    fn stale_handles_are_rejected_after_their_slot_is_reused() {
+        let mut scheduler = Scheduler::new(SystemClock);
+        let stale = scheduler.create(None);
+        scheduler.release(&stale).unwrap();
+        let reused = scheduler.create(None);
+        assert_ne!(stale, reused);
+        assert_eq!(scheduler.pending(&stale), Err(TimerError::InvalidHandle));
+        assert_eq!(scheduler.pending(&reused), Ok(false));
+
+        let (mut scheduler, mut runtime, definition, stale) = machine();
+        runtime.free(&mut scheduler, &stale).unwrap();
+        let reused = runtime
+            .alloc(&mut scheduler, &definition, None, ())
+            .unwrap();
+        assert_ne!(stale, reused);
+        assert_eq!(
+            runtime.instance(&stale).err(),
+            Some(FsmError::InvalidHandle)
+        );
+        assert!(runtime.instance(&reused).is_ok());
+
+        let mut counters = RateCtrRuntime::new();
+        let stale = counters.allocate(group_descriptor(), 0).unwrap();
+        counters.free(&stale).unwrap();
+        let reused = counters.allocate(group_descriptor(), 0).unwrap();
+        assert_ne!(stale, reused);
+        assert_eq!(
+            counters.group(&stale).unwrap_err(),
+            RateCtrError::InvalidHandle
+        );
+        assert!(counters.group(&reused).is_ok());
+    }
+
+    /// A copied handle no longer keeps its owner's identity alive, so the identity
+    /// itself must not come back.
+    #[test]
+    fn handles_outliving_their_owner_match_no_later_owner() {
+        let mut dropped = Scheduler::new(SystemClock);
+        let timer = dropped.create(None);
+        drop(dropped);
+        let mut later = Scheduler::new(SystemClock);
+        let same_slot = later.create(None);
+        assert_ne!(timer, same_slot);
+        assert_eq!(later.pending(&timer), Err(TimerError::InvalidHandle));
+    }
+
+    #[test]
+    fn owners_created_concurrently_get_distinct_identities() {
+        let workers: Vec<_> = (0..8)
+            .map(|_| {
+                thread::spawn(|| {
+                    (0..500)
+                        .map(|_| Scheduler::new(SystemClock).create(None))
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+        // Every handle has slot 0 and generation 0, so only the owner can differ.
+        let handles: Vec<TimerId> = workers
+            .into_iter()
+            .flat_map(|worker| worker.join().unwrap())
+            .collect();
+        assert_eq!(handles.len(), 4_000);
+        for (index, handle) in handles.iter().enumerate() {
+            assert!(!handles[index + 1..].contains(handle));
+        }
+    }
+}

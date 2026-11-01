@@ -38,7 +38,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
         })
     }
     fn detach(&mut self, id: &FsmId) -> Result<(), FsmError> {
-        let parent = self.instance(id)?.parent.clone();
+        let parent = self.instance(id)?.parent;
         if let Some(parent) = parent
             && let Ok(i) = self.index(&parent)
         {
@@ -62,19 +62,19 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
             self.checked(s, id)?;
             if let Some(parent) = parent {
                 self.checked(s, parent)?;
-                let mut ancestor = Some(parent.clone());
+                let mut ancestor = Some(*parent);
                 while let Some(p) = ancestor {
                     if p == *id {
                         return Err(FsmError::ParentCycle);
                     }
-                    ancestor = self.instance(&p)?.parent.clone();
+                    ancestor = self.instance(&p)?.parent;
                 }
             }
             self.unlink_parent(s, id)?;
             if let Some(parent) = parent {
                 let i = self.index(id)?;
                 let inst = self.slots[i].instance.as_mut().unwrap();
-                inst.parent = Some(parent.clone());
+                inst.parent = Some(*parent);
                 inst.parent_term_event = event;
                 let p = self.index(parent)?;
                 self.slots[p]
@@ -82,7 +82,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
                     .as_mut()
                     .unwrap()
                     .children
-                    .insert(0, id.clone());
+                    .insert(0, *id);
             }
             event!(
                 debug,
@@ -110,7 +110,7 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
     }
     fn retire(&mut self, s: &mut TimerScheduler<C, Self>, id: &FsmId) -> Result<(), FsmError> {
         let i = self.checked(s, id)?;
-        let timer = self.slots[i].instance.as_ref().unwrap().timer.clone();
+        let timer = self.slots[i].instance.as_ref().unwrap().timer;
         s.release(&timer)?;
         self.slots[i].visible = false;
         #[cfg(feature = "tracing")]
@@ -198,14 +198,14 @@ impl<C: Clock, D, E> FsmRuntime<C, D, E> {
         // parent again after cleanup (pre_term may reparent the instance).
         let parent_event = inst.parent_term_event;
         if let Some(cb) = fsm.pre_term {
-            cb(s, self, id.clone(), cause)
+            cb(s, self, *id, cause)
         }
         self.term_children(s, id, TermCause::Parent, &EventData::None)?;
         self.detach(id)?;
         if let Some(cb) = fsm.cleanup {
-            cb(s, self, id.clone(), cause)
+            cb(s, self, *id, cause)
         }
-        let parent = self.instance(id)?.parent.clone();
+        let parent = self.instance(id)?.parent;
         if !cascading {
             self.retire(s, id)?;
         }
@@ -301,14 +301,13 @@ mod tests {
         if runtime.data.head.as_ref() != Some(&child) {
             return;
         }
-        let parent = runtime.instance(&child).unwrap().parent().unwrap().clone();
-        let sibling = runtime
+        let parent = *runtime.instance(&child).unwrap().parent().unwrap();
+        let sibling = *runtime
             .instance(&parent)
             .unwrap()
             .children()
             .last()
-            .unwrap()
-            .clone();
+            .unwrap();
         runtime
             .term(scheduler, &sibling, TermCause::Regular, &EventData::None)
             .unwrap();

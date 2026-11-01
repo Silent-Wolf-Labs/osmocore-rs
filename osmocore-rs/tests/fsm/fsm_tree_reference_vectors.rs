@@ -188,7 +188,7 @@ fn scene(scenario: usize, mode: usize, safe: bool) -> (R, S) {
     });
     r.term_safely(safe);
     let d = r.register(definition()).unwrap();
-    r.data.definition = Some(d.clone());
+    r.data.definition = Some(d);
     let mut clock = ClockOverrides::new(Source);
     clock.gettimeofday_override = true;
     clock.gettimeofday_override_time = TimeVal::new(100, 0);
@@ -248,7 +248,7 @@ fn execute(r: &mut R, s: &mut S, op: usize) -> Result<i32, FsmError> {
         9 => {
             let id = a.as_ref().unwrap();
             r.set_timer_number(s, id, 23)?;
-            let timer = r.instance(id)?.timer().clone();
+            let timer = *r.instance(id)?.timer();
             s.schedule(&timer, 1, 0)?;
             record(s, r, "armed", 1, 0, 0);
             s.clock.gettimeofday_override_time.seconds = 101;

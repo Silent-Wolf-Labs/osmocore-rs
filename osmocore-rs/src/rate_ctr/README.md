@@ -220,7 +220,7 @@ stats reporters/TCP, VTY and logging APIs remain separately scoped gaps.
 
 C uses global registry/tick state and retained descriptor pointers. Rust owns
 strings/counter shapes inside explicit runtimes and preserves identity with
-owner/slot/generation handles; cloned handles do not keep groups alive. Mutable
+owner/slot/generation handles; copied handles do not keep groups alive. Mutable
 C metadata aliasing is recorded but deliberately not reproduced. Printable ASCII
 identifier rules/dot mangling and UTF-8 metadata have explicit string boundaries;
 embedded NUL is rejected instead of truncating. Rust allocation follows its

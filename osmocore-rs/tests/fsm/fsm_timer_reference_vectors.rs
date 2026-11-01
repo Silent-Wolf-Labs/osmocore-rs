@@ -82,7 +82,7 @@ fn status(r: Result<(), FsmError>) -> i32 {
 }
 fn leave(s: &mut S, r: &mut R, id: FsmId, next: u32) {
     record(s, r, "leave", next as i64, 0);
-    let timer = r.instance(&id).unwrap().timer().clone();
+    let timer = *r.instance(&id).unwrap().timer();
     if r.data.mode == 1 {
         r.set_timer_number(s, &id, 123).unwrap();
         s.schedule(&timer, 9, 456).unwrap();
@@ -116,7 +116,7 @@ fn timeout(s: &mut S, r: &mut R, id: FsmId) -> i32 {
     let t = r.instance(&id).unwrap().timer_number;
     record(s, r, "timeout", t as i64, rc);
     if kind == 5 {
-        let timer = r.instance(&id).unwrap().timer().clone();
+        let timer = *r.instance(&id).unwrap().timer();
         r.set_timer_number(s, &id, 77).unwrap();
         s.schedule(&timer, 1, 0).unwrap();
         record(s, r, "timeout-rearm", 0, 0);
@@ -183,11 +183,11 @@ fn fsm_timer_and_tdef_complete_c_replay() {
         clock.gettimeofday_override_time = TimeVal::new(100, 789);
         let mut s = S::new(clock);
         let d = r.register(definition(permit, kind)).unwrap();
-        r.data.definition = Some(d.clone());
+        r.data.definition = Some(d);
         let id = r.alloc(&mut s, &d, Some("node"), ()).unwrap();
         if active {
             r.set_timer_number(&s, &id, 99).unwrap();
-            let timer = r.instance(&id).unwrap().timer().clone();
+            let timer = *r.instance(&id).unwrap().timer();
             s.schedule(&timer, 3, 123).unwrap();
         }
         record(&s, &mut r, "init", marker as i64, 0);
@@ -244,14 +244,14 @@ fn fsm_timer_and_tdef_complete_c_replay() {
 fn fsm_timer_errors_preserve_completed_mutation_prefix() {
     let mut r = R::new(Data::default());
     let d = r.register(definition(true, 1)).unwrap();
-    r.data.definition = Some(d.clone());
+    r.data.definition = Some(d);
     let mut clock = ClockOverrides::new(Source);
     clock.gettimeofday_override = true;
     clock.gettimeofday_override_time = TimeVal::new(100, 0);
     let mut s = S::new(clock);
     let id = r.alloc(&mut s, &d, Some("node"), ()).unwrap();
     r.state_change(&mut s, &id, 0, 10, 99).unwrap();
-    let timer = r.instance(&id).unwrap().timer().clone();
+    let timer = *r.instance(&id).unwrap().timer();
     let initial = s.deadline(&timer).unwrap();
     let mut map = [StateTimeout::default(); 32];
     map[1] = StateTimeout {
@@ -325,7 +325,7 @@ fn fsm_callback_error_is_consumed_by_update_or_raw_dispatch() {
     let mut f = definition(true, 1);
     f.timer_cb = Some(invalid_timeout);
     let d = r.register(f).unwrap();
-    r.data.definition = Some(d.clone());
+    r.data.definition = Some(d);
     let mut c = ClockOverrides::new(Source);
     c.gettimeofday_override = true;
     c.gettimeofday_override_time = TimeVal::new(100, 0);

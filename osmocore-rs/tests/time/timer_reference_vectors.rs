@@ -212,7 +212,7 @@ fn absolute_deadline_lifecycle_and_cache_match_c() {
         ..Context::default()
     };
     d.ids.push(s.create(None));
-    let id = d.ids[0].clone();
+    let id = d.ids[0];
     s.prepare().unwrap();
     trace(&s, &mut d, "empty", -1, s.nearest_ms().unwrap());
     s.add(&id, TimeVal::new(i64::MAX, 0)).unwrap();
@@ -380,7 +380,7 @@ fn clock_and_arithmetic_errors_preserve_activation_and_cache() {
 }
 
 fn release_peer(s: &mut Scheduler, _: TimerId, d: &mut Context) {
-    let stale = d.ids[1].clone();
+    let stale = d.ids[1];
     s.release(&stale).unwrap();
     let fresh = s.create(Some(replacement));
     assert_ne!(stale, fresh);

@@ -2,32 +2,18 @@
 
 use super::*;
 /// Runtime identity with generation checks; slot reuse never revives old handles.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FsmId {
-    pub(super) owner: Rc<()>,
+    pub(super) owner: OwnerId,
     pub(super) slot: usize,
     pub(super) generation: u64,
 }
 /// Owned definition identity, retained after unregistration for live instances.
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FsmDefinitionId {
-    pub(super) owner: Rc<()>,
+    pub(super) owner: OwnerId,
     pub(super) slot: usize,
 }
-impl PartialEq for FsmId {
-    fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.owner, &other.owner)
-            && self.slot == other.slot
-            && self.generation == other.generation
-    }
-}
-impl Eq for FsmId {}
-impl PartialEq for FsmDefinitionId {
-    fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.owner, &other.owner) && self.slot == other.slot
-    }
-}
-impl Eq for FsmDefinitionId {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i32)]
 pub enum TermCause {

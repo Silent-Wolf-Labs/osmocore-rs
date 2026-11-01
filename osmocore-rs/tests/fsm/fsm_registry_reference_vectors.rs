@@ -190,7 +190,7 @@ fn fsm_registry_complete_c_replay() {
             descriptor.states[1].name = None;
         }
         let d = r.register(descriptor).unwrap();
-        r.data.definition = Some(d.clone());
+        r.data.definition = Some(d);
         let rec = |r: &mut R, op, arg, rc, qid, qname| {
             record(
                 r,
@@ -219,7 +219,7 @@ fn fsm_registry_complete_c_replay() {
             Some("Identity(base)"),
         );
         let id = format!("x{}z", char::from(c));
-        let node = r.data.nodes[0].clone().unwrap();
+        let node = r.data.nodes[0].unwrap();
         let rc = status(r.update_id(&node, Some(&id)));
         rec(
             &mut r,
