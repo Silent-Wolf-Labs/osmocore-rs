@@ -2,6 +2,8 @@
 
 #[path = "../support/conv_fixture.rs"]
 mod conv_fixture;
+#[path = "../support/gzip_fixture.rs"]
+mod gzip_fixture;
 
 mod conv_correlation;
 mod conv_decoder;

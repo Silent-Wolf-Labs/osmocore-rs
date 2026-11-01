@@ -2,6 +2,8 @@
 
 #[path = "../support/bitvec_fixture.rs"]
 mod bitvec_fixture;
+#[path = "../support/gzip_fixture.rs"]
+mod gzip_fixture;
 
 mod base64_reference_vectors;
 mod bcd_reference_vectors;

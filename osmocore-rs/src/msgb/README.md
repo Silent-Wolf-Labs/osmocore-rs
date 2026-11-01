@@ -86,10 +86,10 @@ storage, data/tail/layer/control state, queries, returns and guarded panics.
 
 | Stage | Fixture | Direct C operation records |
 | --- | --- | ---: |
-| Storage | `msgb_vectors.json` | 3,695 |
-| Typed/layer | `msgb_layers_vectors.json` | 7,572 |
-| Copy/resize | `msgb_resize_vectors.json` | 8,888: 1,131 copies, 7,757 resizes |
-| Remaining adapters | `msgb_adapters_vectors.json` | 4,055 |
+| Storage | `msgb_vectors.json.gz` | 3,695 |
+| Typed/layer | `msgb_layers_vectors.json.gz` | 7,572 |
+| Copy/resize | `msgb_resize_vectors.json.gz` | 8,888: 1,131 copies, 7,757 resizes |
+| Remaining adapters | `msgb_adapters_vectors.json.gz` | 4,055 |
 | Total | Four completed stages | 24,210 |
 
 Coverage includes all 256 u8 values; u16/u32 high-bit boundaries; exact/short

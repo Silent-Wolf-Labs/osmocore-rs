@@ -1,8 +1,14 @@
+use crate::gzip_fixture;
 use osmocore_rs::bitvec::*;
+use std::sync::LazyLock;
 
 #[path = "../support/bitvec_buffers_fixture.rs"]
 mod fixture;
-const FIXTURE: &str = include_str!("../compatibility/vectors/bitvec_buffers_vectors.json");
+static FIXTURE: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/bitvec_buffers_vectors.json.gz"
+    ))
+});
 
 fn compare(fixture_text: &str) {
     for record in fixture::validated_records(fixture_text) {
@@ -59,7 +65,7 @@ fn compare(fixture_text: &str) {
 
 #[test]
 fn integer_fill_padding_and_bytes_match_c() {
-    compare(FIXTURE);
+    compare(&FIXTURE);
 }
 
 #[test]

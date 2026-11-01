@@ -1,5 +1,12 @@
 # Integration and conformance tests
 
+## Compressed fixtures
+
+Fixtures of 5 MB or more are stored gzip-compressed as `*.gz`. Tests read them
+through `support/gzip_fixture.rs`, and fingerprints and hashes apply to the
+decompressed text, so compression doesn't change the evidence. To review a changed
+fixture as text, run `git config diff.gz.textconv "gzip -dc"` once in each clone.
+
 ## Test-location convention
 
 - Keep unit tests that need private implementation access beside the code in
@@ -248,7 +255,7 @@ into both locations. Normal tests consume these committed observations.
 ## Bit-vector integers, fill/padding, and bytes
 
 `utilities/bitvec_buffers_reference_vectors.rs` compares eight additional APIs with
-38,837 observations in `compatibility/vectors/bitvec_buffers_vectors.json`.
+38,837 observations in `compatibility/vectors/bitvec_buffers_vectors.json.gz`.
 Coverage includes zero/full/oversized widths, partial reads/writes, L/H mode,
 32-bit signed numeric results, `set_uint`'s count narrowing (256 becomes zero),
 wrapping fill and inclusive padding counts, all byte alignments, and complete
@@ -270,15 +277,15 @@ observations of the local C build, not a Rust model.
 
 ```bash
 ../gsmtap-rs/reference/bitvec/run_bitvec_vector.sh --buffers > /tmp/bitvec_buffers.fresh.json
-cmp /tmp/bitvec_buffers.fresh.json osmocore-rs/tests/compatibility/vectors/bitvec_buffers_vectors.json
-cmp /tmp/bitvec_buffers.fresh.json ../gsmtap-rs/tests/vectors/bitvec/bitvec_buffers_vectors.json
+gzip -dc osmocore-rs/tests/compatibility/vectors/bitvec_buffers_vectors.json.gz | cmp /tmp/bitvec_buffers.fresh.json -
+gzip -dc ../gsmtap-rs/tests/vectors/bitvec/bitvec_buffers_vectors.json.gz | cmp /tmp/bitvec_buffers.fresh.json -
 cmp osmocore-rs/tests/support/bitvec_buffers_fixture.rs ../gsmtap-rs/tests/support/bitvec_buffers_fixture.rs
 ```
 
 ## Bit-vector indexed operations and helpers
 
 `utilities/bitvec_operations_reference_vectors.rs` compares eight more APIs with
-38,643 observations in `compatibility/vectors/bitvec_operations_vectors.json`.
+38,643 observations in `compatibility/vectors/bitvec_operations_vectors.json.gz`.
 The shared `support/bitvec_operations_fixture.rs` validator freezes inputs,
 order/count, numeric/string types, source provenance, initial backing bytes,
 array arguments, return fields, and index/cursor state constraints. C field
@@ -300,8 +307,8 @@ From the repository root:
 
 ```bash
 ../gsmtap-rs/reference/bitvec/run_bitvec_vector.sh --operations > /tmp/bitvec_operations.fresh.json
-cmp /tmp/bitvec_operations.fresh.json osmocore-rs/tests/compatibility/vectors/bitvec_operations_vectors.json
-cmp /tmp/bitvec_operations.fresh.json ../gsmtap-rs/tests/vectors/bitvec/bitvec_operations_vectors.json
+gzip -dc osmocore-rs/tests/compatibility/vectors/bitvec_operations_vectors.json.gz | cmp /tmp/bitvec_operations.fresh.json -
+gzip -dc ../gsmtap-rs/tests/vectors/bitvec/bitvec_operations_vectors.json.gz | cmp /tmp/bitvec_operations.fresh.json -
 cmp osmocore-rs/tests/support/bitvec_operations_fixture.rs ../gsmtap-rs/tests/support/bitvec_operations_fixture.rs
 ```
 
@@ -313,7 +320,7 @@ fixture copies. Normal Rust tests read committed observations only.
 
 `utilities/bitvec_adapters_reference_vectors.rs` compares pack/unpack, hex loading,
 and formatting with 6,757 observations in
-`compatibility/vectors/bitvec_adapters_vectors.json`. The shared
+`compatibility/vectors/bitvec_adapters_vectors.json.gz`. The shared
 `support/bitvec_adapters_fixture.rs` validator freezes inputs/order/count, types,
 source provenance, and all backing, source and transfer buffers. In addition
 to bitvec hashes, the runner pins the `utils.c`, `utils.h`, and upstream utils
@@ -337,8 +344,8 @@ From the repository root:
 
 ```bash
 ../gsmtap-rs/reference/bitvec/run_bitvec_vector.sh --adapters > /tmp/bitvec_adapters.fresh.json
-cmp /tmp/bitvec_adapters.fresh.json osmocore-rs/tests/compatibility/vectors/bitvec_adapters_vectors.json
-cmp /tmp/bitvec_adapters.fresh.json ../gsmtap-rs/tests/vectors/bitvec/bitvec_adapters_vectors.json
+gzip -dc osmocore-rs/tests/compatibility/vectors/bitvec_adapters_vectors.json.gz | cmp /tmp/bitvec_adapters.fresh.json -
+gzip -dc ../gsmtap-rs/tests/vectors/bitvec/bitvec_adapters_vectors.json.gz | cmp /tmp/bitvec_adapters.fresh.json -
 cmp osmocore-rs/tests/support/bitvec_adapters_fixture.rs ../gsmtap-rs/tests/support/bitvec_adapters_fixture.rs
 ```
 
@@ -390,8 +397,8 @@ The test suite consumes the committed fixture and needs no C build.
 
 `bit_packing_ext_reference_vectors.rs` compares `osmo_ubit2pbit_ext()` and
 `osmo_pbit2ubit_ext()` against all 63,384 observations in
-`compatibility/vectors/bit_packing_ext_vectors.json`. The copied fixture must match the
-testing project's `tests/vectors/bits/bit_packing_ext_vectors.json` byte for
+`compatibility/vectors/bit_packing_ext_vectors.json.gz`. The copied fixture must match the
+testing project's `tests/vectors/bits/bit_packing_ext_vectors.json.gz` byte for
 byte. It uses the same pinned C revision and `bits.c`/`bits.h` hashes as basic
 packing and records a 32-bit C unsigned-int ABI.
 
@@ -415,8 +422,8 @@ fixture:
 ```bash
 set -e
 ../gsmtap-rs/reference/bits/run_bit_packing_ext_vector.sh > /tmp/bit_packing_ext.fresh.json
-cmp /tmp/bit_packing_ext.fresh.json ../gsmtap-rs/tests/vectors/bits/bit_packing_ext_vectors.json
-cmp /tmp/bit_packing_ext.fresh.json osmocore-rs/tests/compatibility/vectors/bit_packing_ext_vectors.json
+gzip -dc ../gsmtap-rs/tests/vectors/bits/bit_packing_ext_vectors.json.gz | cmp /tmp/bit_packing_ext.fresh.json -
+gzip -dc osmocore-rs/tests/compatibility/vectors/bit_packing_ext_vectors.json.gz | cmp /tmp/bit_packing_ext.fresh.json -
 ```
 
 For an intentional regeneration, review the fixture diff before accepting it.
@@ -424,11 +431,11 @@ Ordinary Rust tests consume the copied fixture and do not require C or gsmtap-rs
 
 ## Message-buffer stage 1
 
-The dedicated `compatibility/vectors/msgb_vectors.json` contains 3,695 direct C
+The dedicated `compatibility/vectors/msgb_vectors.json.gz` contains 3,695 direct C
 operation records, with full backing bytes before/after, data/tail offsets,
 length/capacity, layer markers, control words, destination/channel presence,
 query results, and normalized panic/error outcomes. The fixture is identical to
-the sibling `gsmtap-rs/tests/vectors/msgb/msgb_vectors.json`.
+the sibling `gsmtap-rs/tests/vectors/msgb/msgb_vectors.json.gz`.
 The shared `support/msgb_fixture.rs` validator is identical to the
 sibling's `tests/support/msgb_fixture.rs`. Tests freeze schema, inputs,
 order, provenance, ABI, state consistency, sequence continuity, and corruption
@@ -475,8 +482,8 @@ Regenerate and verify from the conversion repository root:
 
 ```bash
 ../gsmtap-rs/reference/msgb/run_msgb_vector.sh > /tmp/msgb_vectors.fresh.json
-cmp /tmp/msgb_vectors.fresh.json osmocore-rs/tests/compatibility/vectors/msgb_vectors.json
-cmp ../gsmtap-rs/tests/vectors/msgb/msgb_vectors.json osmocore-rs/tests/compatibility/vectors/msgb_vectors.json
+gzip -dc osmocore-rs/tests/compatibility/vectors/msgb_vectors.json.gz | cmp /tmp/msgb_vectors.fresh.json -
+cmp ../gsmtap-rs/tests/vectors/msgb/msgb_vectors.json.gz osmocore-rs/tests/compatibility/vectors/msgb_vectors.json.gz
 cmp ../gsmtap-rs/tests/support/msgb_fixture.rs osmocore-rs/tests/support/msgb_fixture.rs
 cargo fmt --manifest-path osmocore-rs/Cargo.toml --check
 cargo test --manifest-path osmocore-rs/Cargo.toml
@@ -518,7 +525,7 @@ Tag/length prepending adds two bytes: the tag and the prior message length
 narrowed to eight bits, including wrap for lengths above 255. It returns the
 new data offset. Headroom errors do not write either byte.
 
-A separate 7,572-record C fixture, `msgb_layers_vectors.json`, captures complete
+A separate 7,572-record C fixture, `msgb_layers_vectors.json.gz`, captures complete
 before/after storage and metadata, queries, return values, and panic outcomes.
 It covers all 256 u8 values for all four typed operations; u16/u32 boundary
 values and high-bit results; exact/insufficient room and message lengths;
@@ -557,8 +564,8 @@ From the conversion repository root:
 
 ```bash
 ../gsmtap-rs/reference/msgb/run_msgb_vector.sh --layers > /tmp/msgb_layers.fresh.json
-cmp /tmp/msgb_layers.fresh.json osmocore-rs/tests/compatibility/vectors/msgb_layers_vectors.json
-cmp ../gsmtap-rs/tests/vectors/msgb/msgb_layers_vectors.json osmocore-rs/tests/compatibility/vectors/msgb_layers_vectors.json
+gzip -dc osmocore-rs/tests/compatibility/vectors/msgb_layers_vectors.json.gz | cmp /tmp/msgb_layers.fresh.json -
+cmp ../gsmtap-rs/tests/vectors/msgb/msgb_layers_vectors.json.gz osmocore-rs/tests/compatibility/vectors/msgb_layers_vectors.json.gz
 cmp ../gsmtap-rs/tests/support/msgb_layers_fixture.rs osmocore-rs/tests/support/msgb_layers_fixture.rs
 cargo fmt --manifest-path osmocore-rs/Cargo.toml --check
 cargo test --manifest-path osmocore-rs/Cargo.toml
@@ -599,7 +606,7 @@ mutation, rejects negative sizes, and leaves all state unchanged on errors.
 A marker that would move beyond backing storage produces `OffsetOutOfRange`;
 an old area outside active data produces `AreaOutsideMessage`.
 
-The separate `msgb_resize_vectors.json` holds 8,888 direct C records: 1,131
+The separate `msgb_resize_vectors.json.gz` holds 8,888 direct C records: 1,131
 copy calls across all four wrappers and 7,757 area-resize calls. Successful
 copies record both unchanged source state and the complete new buffer, with
 pointer identity reduced to a distinct-storage flag. NULL copy results are
@@ -638,8 +645,8 @@ From the conversion repository root:
 
 ```bash
 ../gsmtap-rs/reference/msgb/run_msgb_vector.sh --resize > /tmp/msgb_resize.fresh.json
-cmp /tmp/msgb_resize.fresh.json osmocore-rs/tests/compatibility/vectors/msgb_resize_vectors.json
-cmp ../gsmtap-rs/tests/vectors/msgb/msgb_resize_vectors.json osmocore-rs/tests/compatibility/vectors/msgb_resize_vectors.json
+gzip -dc osmocore-rs/tests/compatibility/vectors/msgb_resize_vectors.json.gz | cmp /tmp/msgb_resize.fresh.json -
+cmp ../gsmtap-rs/tests/vectors/msgb/msgb_resize_vectors.json.gz osmocore-rs/tests/compatibility/vectors/msgb_resize_vectors.json.gz
 cmp ../gsmtap-rs/tests/support/msgb_resize_fixture.rs osmocore-rs/tests/support/msgb_resize_fixture.rs
 cargo fmt --manifest-path osmocore-rs/Cargo.toml --check
 cargo test --manifest-path osmocore-rs/Cargo.toml
@@ -702,7 +709,7 @@ The explicit allocation and context inventory is:
 | `_msgb_eq` source-location/print arguments; `msgb_eq_data_print`, `msgb_eq_l1_data_print` through `msgb_eq_l4_data_print` | Comparison behavior is represented by the checked equality helpers. Fatal logging, source locations, and print side effects are excluded. |
 | C destination/channel pointers and list links | Excluded from owned `Msgb`; control words remain fixed 64-bit values matching the fixture ABI. |
 
-The separate `msgb_adapters_vectors.json` contains **4,055 direct C records**:
+The separate `msgb_adapters_vectors.json.gz` contains **4,055 direct C records**:
 450 slice comparisons (including NULL inputs), 270 message comparisons,
 2,942 caller-buffer dumps, 62 static and 62 allocated dumps, 152 layer dumps,
 90 formatted appends, and 27 queue operations. Across all four stages there
@@ -739,8 +746,8 @@ Regenerate stage 4 from the testing repository:
 
 ```bash
 ./reference/msgb/run_msgb_vector.sh --adapters > /tmp/msgb_adapters.fresh.json
-cmp /tmp/msgb_adapters.fresh.json tests/vectors/msgb/msgb_adapters_vectors.json
-cmp tests/vectors/msgb/msgb_adapters_vectors.json ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/msgb_adapters_vectors.json
+gzip -dc tests/vectors/msgb/msgb_adapters_vectors.json.gz | cmp /tmp/msgb_adapters.fresh.json -
+cmp tests/vectors/msgb/msgb_adapters_vectors.json.gz ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/msgb_adapters_vectors.json.gz
 cmp tests/support/msgb_adapters_fixture.rs ../libosmocore-rs/osmocore-rs/tests/support/msgb_adapters_fixture.rs
 ```
 
@@ -808,7 +815,7 @@ buffer scenarios. Each buffer scenario directly calls whole-buffer, first-chunk,
 and continuation APIs, records all 260 input bytes before/after, and includes
 an untouched suffix. The zero-length buffer calls use a null C input pointer.
 
-`crc_generic_vectors.json` contains **22,848 records**. The frozen matrix covers
+`crc_generic_vectors.json.gz` contains **22,848 records**. The frozen matrix covers
 every configured width in each storage type, four neutral descriptors, four
 input patterns (including nonbinary bytes), lengths `INT_MIN`, -1, 0, 1, 7,
 and 32, and exact/oversized CRC destinations. Each record directly observes
@@ -857,9 +864,9 @@ Regenerate and audit from the testing repository:
 ./reference/crc/run_crc_vector.sh generic > /tmp/crc-generic.fresh.json
 ./reference/crc/run_crc_vector.sh --audit
 cmp /tmp/crc-byte.fresh.json tests/vectors/crc/crc_byte_vectors.json
-cmp /tmp/crc-generic.fresh.json tests/vectors/crc/crc_generic_vectors.json
+gzip -dc tests/vectors/crc/crc_generic_vectors.json.gz | cmp /tmp/crc-generic.fresh.json -
 cmp tests/vectors/crc/crc_byte_vectors.json ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/crc_byte_vectors.json
-cmp tests/vectors/crc/crc_generic_vectors.json ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/crc_generic_vectors.json
+cmp tests/vectors/crc/crc_generic_vectors.json.gz ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/crc_generic_vectors.json.gz
 cmp tests/support/crc_fixture.rs ../libosmocore-rs/osmocore-rs/tests/support/crc_fixture.rs
 ```
 
@@ -870,31 +877,33 @@ C evidence. No vendored crate refresh is needed for independent fixture support.
 
 ## Convolutional descriptors, encoder, decoders and evidence
 
-`compatibility/vectors/conv/conv_vectors.ndjson` contains 36,256 direct C
-records: four backend metadata records, 1,066 descriptors and 35,186
+`compatibility/vectors/conv/conv_vectors.ndjson.gz` contains 38,560 direct C
+records: four backend metadata records, 1,354 descriptors and 37,202
 operations covering all 17 selected core convolutional exports. Its byte-identical
-sibling is `gsmtap-rs/tests/vectors/conv/conv_vectors.ndjson`. The shared
+sibling is `gsmtap-rs/tests/vectors/conv/conv_vectors.ndjson.gz`. The shared
 `support/conv_fixture.rs` reader and `conv/conv_reference_vectors.rs` tests
 validate evidence integrity and backend comparisons only. Separate
-`conv/conv_encoder.rs` tests replay all 14,521 frozen length/encoder operations against
+`conv/conv_encoder.rs` tests replay all 15,529 frozen length/encoder operations against
 the Rust APIs, including return values, full buffers, suffixes, state and both
 cursors across split calls and reuse. `conv/conv_decoder.rs` replays all 7,261
 frozen generic stateful lifecycle observations across 332 cases: 6,597 callable
 API observations and 664 deinitializations represented by Rust drops. All match
-the frozen evidence. `conv/conv_correlation.rs` independently replays 6,796
-`osmo_conv_decode_acc` observations (1,699 each linked/scalar/SSE/AVX) and
-6,608 public `osmo_conv_decode` observations (1,652 each), totaling 13,404
-complete output-buffer, status/metric and unchanged-input comparisons. All match
+the frozen evidence. `conv/conv_correlation.rs` independently replays 7,300
+`osmo_conv_decode_acc` observations (1,843 each linked/SSE/AVX, 1,771 scalar) and
+7,112 public `osmo_conv_decode` observations (1,796 each linked/SSE/AVX, 1,724
+scalar), totaling 14,412 complete output-buffer, status/metric and unchanged-input comparisons. All match
 the frozen evidence, preserving backend identity. Snapshots describe semantic
 state, never struct memory, pointers or uninitialized history.
 
-Replay covers 10,194 signed length returns and 4,327 encoder observations,
+Replay covers 11,058 signed length returns and 4,471 encoder observations,
 including 460 state loads (four with nonbinary bytes) and 368 distinct reusable
-sessions across 1,707 cases. Backend identity is retained: only linked-dispatch
+sessions across 1,851 cases. Backend identity is retained: only linked-dispatch
 records these seven APIs, while the exact-source backend streams remain separate
 decoder evidence, not extra encoder conformance observations.
 
-Coverage includes exhaustive small inputs; rates/constraint lengths beyond the
+Coverage includes full-scale unpunctured frames whose path metrics saturate. Scalar
+C omits their -128 input, which is outside the documented `sbit_t` range and which
+its wrapping metrics decode differently. Coverage also includes exhaustive small inputs; rates/constraint lengths beyond the
 optimized domain and byte-width boundaries; flush/truncation/tail-biting/raw
 termination values; explicit recursive tables; puncture cursor continuation;
 helper-length/write-count divergence; state packing; reset/rewind/reuse;
@@ -972,8 +981,8 @@ From the sibling testing repository:
 ./reference/conv/run_conv_vector.sh --verify
 ./reference/conv/run_conv_vector.sh --audit
 ./reference/conv/run_conv_vector.sh all > /tmp/conv.fresh.ndjson
-cmp /tmp/conv.fresh.ndjson tests/vectors/conv/conv_vectors.ndjson
-cmp /tmp/conv.fresh.ndjson ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/conv/conv_vectors.ndjson
+gzip -dc tests/vectors/conv/conv_vectors.ndjson.gz | cmp /tmp/conv.fresh.ndjson -
+gzip -dc ../libosmocore-rs/osmocore-rs/tests/compatibility/vectors/conv/conv_vectors.ndjson.gz | cmp /tmp/conv.fresh.ndjson -
 cmp tests/support/conv_fixture.rs ../libosmocore-rs/osmocore-rs/tests/support/conv_fixture.rs
 ```
 

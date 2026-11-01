@@ -1,0 +1,2 @@
+# Show compressed fixtures as text: git config diff.gz.textconv "gzip -dc"
+*.gz -text diff=gz

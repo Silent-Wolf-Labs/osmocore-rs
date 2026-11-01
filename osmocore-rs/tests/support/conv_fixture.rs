@@ -53,14 +53,14 @@ pub fn fingerprint(text: &str) -> u64 {
     })
 }
 
-pub const FIXTURE_FINGERPRINT: u64 = 0x8f2c0427eb58d013;
-const CASE_FINGERPRINT: u64 = 0xc8bf7e357d2c5f2d;
+pub const FIXTURE_FINGERPRINT: u64 = 0xbc8634bcd895dac5;
+const CASE_FINGERPRINT: u64 = 0x529c28b7cd5a5459;
 const BACKENDS: [&str; 4] = ["linked-dispatch", "scalar", "sse", "avx"];
 const REFERENCE_SHA: &str = "dcc2ab8e2341b5c8ccd7942ac79b34f977d477cdd1c4a95a949a666a963d8067";
-const GENERATOR_SHA: &str = "ea292ede99d0b7143fe7c4c78409da48733dede5bf673a516657a86e9dff41b8";
+const GENERATOR_SHA: &str = "f804518da23c393ead4fb3647d6f995a3ea73d8306a2e0f9d3df18eb96d9e89c";
 const LIBRARY_SHA: &str = "f452c264ec62f77420e96bfdf3c66a64b40ba025f1c8629ca8c1244bae45bf40";
-const HARNESS_SHA: &str = "f4ba52b97c1dc2ed12eb620a17cea07e3ee9020edb88be19f6fd4dda76fc9203";
-const RUNNER_SHA: &str = "7145c28c8681aa7bc08b83c3728bd6af369429593dcb4bf0535c5168156f84a5";
+const HARNESS_SHA: &str = "cfbc5520d8f64d4f77d1a484a48cacda29857d984736bc75b03bfbcb29149f17";
+const RUNNER_SHA: &str = "1a45ea9d8eee9d5d9efeb6241b6a27a8506ff02f72024d0ed241dff4f4b0f1ed";
 const STRINGS: &[&str] = &[
     "type",
     "backend",
@@ -113,9 +113,9 @@ const BUFFERS: &str = "input_before input_after output_before output_after ret";
 const ENCODER: &str = "state i_idx p_idx";
 const DECODER: &str = "len n_states o_idx p_idx ae ae_next_valid ae_next history";
 const API_COUNTS: [(&str, usize); 17] = [
-    ("get_input_length", 5097),
-    ("get_output_length", 5097),
-    ("encode", 1699),
+    ("get_input_length", 5529),
+    ("get_output_length", 5529),
+    ("encode", 1843),
     ("encode_init", 728),
     ("encode_load_state", 460),
     ("encode_raw", 720),
@@ -128,8 +128,8 @@ const API_COUNTS: [(&str, usize); 17] = [
     ("decode_get_best_end_state", 797),
     ("decode_get_output", 1891),
     ("decode_rewind", 332),
-    ("decode", 6608),
-    ("decode_acc", 6796),
+    ("decode", 7112),
+    ("decode_acc", 7300),
 ];
 
 fn shape(record: &Record) -> Vec<&str> {
@@ -677,12 +677,12 @@ pub fn validate_records<'a>(records: impl IntoIterator<Item = &'a Record>) {
             _ => unreachable!(),
         }
     }
-    assert_eq!(total, 36256);
+    assert_eq!(total, 38560);
     assert_eq!(meta.len(), 4);
-    assert_eq!(codes.len(), 1066);
-    assert_eq!(distinct.len(), 1707);
+    assert_eq!(codes.len(), 1354);
+    assert_eq!(distinct.len(), 1851);
     assert_eq!(generic.len(), 332);
-    assert_eq!(sequences.len(), 6804);
+    assert_eq!(sequences.len(), 7308);
     assert_eq!(
         fingerprint(&coverage),
         CASE_FINGERPRINT,
@@ -692,10 +692,10 @@ pub fn validate_records<'a>(records: impl IntoIterator<Item = &'a Record>) {
     assert_eq!(
         backend_counts,
         [
-            ("linked-dispatch", 25133),
-            ("scalar", 3351),
-            ("sse", 3351),
-            ("avx", 3351)
+            ("linked-dispatch", 26429),
+            ("scalar", 3495),
+            ("sse", 3639),
+            ("avx", 3639)
         ]
         .into_iter()
         .collect()
@@ -705,9 +705,9 @@ pub fn validate_records<'a>(records: impl IntoIterator<Item = &'a Record>) {
         assert_eq!(
             codes.keys().filter(|&&(b, _)| b == backend).count(),
             if backend == "linked-dispatch" {
-                268
+                340
             } else {
-                266
+                338
             }
         );
     }
@@ -725,7 +725,7 @@ pub fn validate_fingerprint(text: &str) {
 /// No sibling repository or C installation is needed by ordinary tests.
 pub fn validate_manifests(reference: &str, generator: &str, fixture: &Fixture) {
     assert_eq!(fingerprint(reference), 0x144cae78eeb44ce8);
-    assert_eq!(fingerprint(generator), 0x44e8c13a9dc0a0f8);
+    assert_eq!(fingerprint(generator), 0xb3cd974c3aa81cb3);
     assert!(reference.contains("\"upstream_git_revision\": \"unknown\""));
     assert!(reference.contains("\"embedded_version_descriptive\": \"1.14.1.1-95043\""));
     assert!(generator.contains(&format!(
@@ -786,7 +786,8 @@ pub fn compare_backends(fixture: &Fixture) -> usize {
             }
         }
     }
-    assert_eq!(compared, 3351 * 3);
+    // Full-scale soft mode 3 has no scalar record to compare against.
+    assert_eq!(compared, 3495 * 3);
     compared
 }
 
@@ -1281,7 +1282,7 @@ pub mod checks {
         rejected("reference manifest", || {
             validate_manifests(&bad_reference, generator, fixture)
         });
-        let bad_generator = generator.replacen("35186", "35185", 1);
+        let bad_generator = generator.replacen("37202", "37201", 1);
         rejected("generator coverage manifest", || {
             validate_manifests(reference, &bad_generator, fixture)
         });

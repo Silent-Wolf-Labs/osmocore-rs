@@ -12,10 +12,10 @@ validation and conformance registered under `tests/utilities/main.rs`. They incl
 operation names and event mapping; see the test guide for scope and provenance.
 
 CRC observations are in `vectors/crc_byte_vectors.json` and
-`vectors/crc_generic_vectors.json`; undefined C shifts are excluded. The utility
+`vectors/crc_generic_vectors.json.gz`; undefined C shifts are excluded. The utility
 conformance tests and shared strict validator register under `tests/utilities/main.rs`.
 
-Convolutional C evidence is in `vectors/conv/conv_vectors.ndjson`, with copies
+Convolutional C evidence is in `vectors/conv/conv_vectors.ndjson.gz`, with copies
 of its content-hash provenance manifests. The shared reader checks semantic
 state, operations, buffers and backend identity; Rust behavior is replayed
 separately by encoder, generic decoder and correlation/dispatch conformance

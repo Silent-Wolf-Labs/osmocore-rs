@@ -1,8 +1,14 @@
+use crate::gzip_fixture;
 use osmocore_rs::bitvec::*;
 use osmocore_rs::compat::bitvec::{bitvec_add_array, bitvec_find_bit_pos, bitvec_get_nth_set_bit};
+use std::sync::LazyLock;
 #[path = "../support/bitvec_operations_fixture.rs"]
 mod fixture;
-const FIXTURE: &str = include_str!("../compatibility/vectors/bitvec_operations_vectors.json");
+static FIXTURE: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/bitvec_operations_vectors.json.gz"
+    ))
+});
 const ARRAY: [u32; 4] = [0, u32::MAX, 0x8000_0000, 0x1234_5678];
 
 fn compare(text: &str) {
@@ -97,7 +103,7 @@ fn compare(text: &str) {
 
 #[test]
 fn fields_search_runs_shifts_and_arrays_match_c() {
-    compare(FIXTURE);
+    compare(&FIXTURE);
 }
 
 #[test]

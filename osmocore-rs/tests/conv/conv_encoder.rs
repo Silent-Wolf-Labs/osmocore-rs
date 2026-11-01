@@ -1,10 +1,16 @@
 //! Encoder and length conformance against every committed direct C observation.
 use super::conv_fixture::{Fixture, Record, bytes, list, signed, unsigned};
+use crate::gzip_fixture;
 use osmocore_rs::compat::conv::{osmo_conv_get_input_length, osmo_conv_get_output_length};
 use osmocore_rs::conv::{ConvCode, ConvCodeSpec, ConvEncoder, ConvError, Termination, encode};
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::LazyLock;
 
-const VECTORS: &str = include_str!("../compatibility/vectors/conv/conv_vectors.ndjson");
+static VECTORS: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/conv/conv_vectors.ndjson.gz"
+    ))
+});
 
 fn pairs(text: &str) -> Vec<[u8; 2]> {
     let data = bytes(text);
@@ -46,7 +52,7 @@ pub(super) fn descriptor(record: &Record) -> ConvCode {
 
 #[test]
 fn replay_every_c_length_and_encoder_observation() {
-    let fixture = Fixture::read(VECTORS);
+    let fixture = Fixture::read(&VECTORS);
     let codes: BTreeMap<_, _> = fixture
         .records
         .iter()
@@ -58,7 +64,7 @@ fn replay_every_c_length_and_encoder_observation() {
             )
         })
         .collect();
-    assert_eq!(codes.len(), 1066);
+    assert_eq!(codes.len(), 1354);
     assert_eq!(
         codes
             .keys()
@@ -189,9 +195,9 @@ fn replay_every_c_length_and_encoder_observation() {
     assert_eq!(
         counts,
         [
-            ("get_input_length", 5097),
-            ("get_output_length", 5097),
-            ("encode", 1699),
+            ("get_input_length", 5529),
+            ("get_output_length", 5529),
+            ("encode", 1843),
             ("encode_init", 728),
             ("encode_load_state", 460),
             ("encode_raw", 720),
@@ -200,10 +206,10 @@ fn replay_every_c_length_and_encoder_observation() {
         .into_iter()
         .collect()
     );
-    assert_eq!(counts.values().sum::<usize>(), 14521);
+    assert_eq!(counts.values().sum::<usize>(), 15529);
     // All backend streams were inspected; only linked-dispatch records these APIs.
-    assert_eq!(backends, [("linked-dispatch", 14521)].into_iter().collect());
-    assert_eq!(cases.len(), 1707);
+    assert_eq!(backends, [("linked-dispatch", 15529)].into_iter().collect());
+    assert_eq!(cases.len(), 1851);
     assert_eq!(encoders.len(), 368);
     assert_eq!(nonbinary_loads, 4);
 }

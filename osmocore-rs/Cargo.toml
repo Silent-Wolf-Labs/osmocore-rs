@@ -21,6 +21,8 @@ all-features = true
 
 [lib]
 path = "src/lib.rs"
+# Criterion's command-line flags are rejected by the libtest harness.
+bench = false
 
 [features]
 default = []
@@ -34,6 +36,8 @@ socket2 = { version = "0.6.5", optional = true, default-features = false, featur
 tracing = { version = "0.1.44", optional = true, default-features = false, features = ["std"] }
 
 [dev-dependencies]
+criterion = { version = "0.8.2", default-features = false, features = ["cargo_bench_support"] }
+flate2 = "1.1.10"
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["std", "registry", "fmt", "env-filter"] }
 
 [[example]]
@@ -56,3 +60,34 @@ path = "tests/gsmtap/diagnostics/main.rs"
 [[test]]
 name = "timer_diagnostics"
 path = "tests/time/diagnostics/main.rs"
+
+# Explicit paths let the Containerfile fetch dependencies without the bench sources.
+[[bench]]
+name = "bits"
+path = "benches/bits.rs"
+harness = false
+
+[[bench]]
+name = "conv"
+path = "benches/conv.rs"
+harness = false
+
+[[bench]]
+name = "crc"
+path = "benches/crc.rs"
+harness = false
+
+[[bench]]
+name = "fsm"
+path = "benches/fsm.rs"
+harness = false
+
+[[bench]]
+name = "msgb"
+path = "benches/msgb.rs"
+harness = false
+
+[[bench]]
+name = "timer"
+path = "benches/timer.rs"
+harness = false

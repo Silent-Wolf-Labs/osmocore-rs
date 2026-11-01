@@ -3,8 +3,8 @@
   "upstream_git_revision": "unknown",
   "reference_manifest_sha256": "dcc2ab8e2341b5c8ccd7942ac79b34f977d477cdd1c4a95a949a666a963d8067",
   "sha256": {
-    "conv_vector.c": "f4ba52b97c1dc2ed12eb620a17cea07e3ee9020edb88be19f6fd4dda76fc9203",
-    "run_conv_vector.sh": "7145c28c8681aa7bc08b83c3728bd6af369429593dcb4bf0535c5168156f84a5"
+    "conv_vector.c": "cfbc5520d8f64d4f77d1a484a48cacda29857d984736bc75b03bfbcb29149f17",
+    "run_conv_vector.sh": "1a45ea9d8eee9d5d9efeb6241b6a27a8506ff02f72024d0ed241dff4f4b0f1ed"
   },
   "evidence_schema": "Flat NDJSON; integer numbers, lowercase byte hex strings, semicolon-delimited integer lists; records scoped by backend",
   "code_keys": "type;id;backend;n;k;len;term;next_output;next_state;next_term_output;next_term_state;puncture_present;puncture",
@@ -18,7 +18,7 @@
   "buffer_rule": "Byte hex preserves signed soft-bit bit patterns. Outputs begin as a5 bytes and include four untouched suffix bytes (raw/flush buffers also retain unwritten capacity). Empty strings represent absent buffers. Void operations omit ret except load_state, which records ret=0 as a harness placeholder, not a C return.",
   "sequence_rule": "Each backend/case has consecutive operation seq starting at zero; descriptor keys are backend/id. Generic state is post-operation. Arrays are semantic data, never object memory. Only valid forced/auto traceback is emitted. Non-tail no-survivor auto output returns -1 before accessing history.",
   "soft_modes": "0=clean +/-127;1=zeros;2=every-fifth sign flip, otherwise +/-31;3=clean with -128 for encoded one;4=cyclic -1,0,1 ties;5=all -128",
-  "golden_exclusions": "Unsafe shift/sizing probes emit diagnostics only in --audit. Short fixed-start tail-biting fallback is omitted below K; empty non-flush fallback is omitted. Zero-length flush fallback and short non-tail calls are observed. K>9 generic snapshots and one-shot tail-biting are omitted because byte states leave unreachable history; K=10 encoding/load-state and safe non-tail fallback are observed.",
+  "golden_exclusions": "Unsafe shift/sizing probes emit diagnostics only in --audit. Short fixed-start tail-biting fallback is omitted below K; empty non-flush fallback is omitted. Zero-length flush fallback and short non-tail calls are observed. K>9 generic snapshots and one-shot tail-biting are omitted because byte states leave unreachable history; K=10 encoding/load-state and safe non-tail fallback are observed. Full-scale soft mode 3 uses -128, outside the documented sbit_t range, and is omitted from scalar, whose wrapping metrics decode it differently from the saturating SSE and AVX backends.",
   "coverage": {
     "selected_exports": 17,
     "rates": "1;2;3;4;5;8;9",
@@ -28,14 +28,16 @@
     "punctures": "NULL;empty;every-third;endpoint/out-of-endpoint;all symbols;synthetic length-97 every-third",
     "patterns": "zero;one;alternating;impulse;LCG seed 0x12345678;replacement LCG seed 0x8f32d6a1",
     "recursion": "Explicit systematic and nonsystematic descriptors, including -EPROTO",
+    "full_scale": "Unpunctured N=2..4,K=5/7; lengths 125;184;224;456; terminations 0;1;2; soft mode 0 on every backend and soft mode 3 on linked-dispatch, sse and avx",
     "normalization": "N=2..4,K=5/7; total trellis lengths interval-1,interval,interval+1,3*interval+1; recursion absent/systematic/nonsystematic; six soft modes",
     "generic_stateful_cases": 332,
-    "distinct_case_ids": 1707,
-    "all_records": 36256,
-    "all_operations": 35186,
-    "all_descriptors": 1066,
-    "linked_operations": 25133,
-    "isolated_operations_each": 3351,
+    "distinct_case_ids": 1851,
+    "all_records": 38560,
+    "all_operations": 37202,
+    "all_descriptors": 1354,
+    "linked_operations": 26429,
+    "scalar_operations": 3495,
+    "sse_avx_operations_each": 3639,
     "backend_names": "linked-dispatch;scalar;sse;avx",
     "neon_executed": 0
   },

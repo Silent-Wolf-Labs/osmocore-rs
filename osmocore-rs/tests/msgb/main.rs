@@ -1,5 +1,7 @@
 //! Msgb API comparisons against committed C observations.
 
+#[path = "../support/gzip_fixture.rs"]
+mod gzip_fixture;
 #[path = "../support/msgb_fixture.rs"]
 mod msgb_fixture;
 

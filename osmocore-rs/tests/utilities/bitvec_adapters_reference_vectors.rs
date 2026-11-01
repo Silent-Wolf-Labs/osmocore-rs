@@ -1,8 +1,14 @@
+use crate::gzip_fixture;
 use osmocore_rs::bitvec::*;
 use osmocore_rs::compat::bitvec::{bitvec_to_string_r, bitvec_unhex};
+use std::sync::LazyLock;
 #[path = "../support/bitvec_adapters_fixture.rs"]
 mod fixture;
-const FIXTURE: &str = include_str!("../compatibility/vectors/bitvec_adapters_vectors.json");
+static FIXTURE: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/bitvec_adapters_vectors.json.gz"
+    ))
+});
 
 fn compare(text: &str) {
     for record in fixture::validated_records(text) {
@@ -48,7 +54,7 @@ fn compare(text: &str) {
 
 #[test]
 fn copies_hex_and_formatting_match_c() {
-    compare(FIXTURE);
+    compare(&FIXTURE);
 }
 
 #[test]
@@ -68,6 +74,10 @@ fn rejects_corrupt_inputs_provenance_and_outputs() {
         "\"io_after_hex\":\"5a203100",
         1,
     );
-    assert_ne!(corrupt, FIXTURE, "fixture includes formatting output 0");
+    assert_ne!(
+        corrupt,
+        FIXTURE.as_str(),
+        "fixture includes formatting output 0"
+    );
     assert!(std::panic::catch_unwind(|| compare(&corrupt)).is_err());
 }

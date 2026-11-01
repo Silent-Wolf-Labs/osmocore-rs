@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- `conv::decode` and `osmo_conv_decode_acc` no longer return `ArithmeticOverflow`
+  for long unpunctured K=5 and K=7 frames at or near full scale. Path metrics now
+  saturate like the C SSE and AVX backends. Affected frames include clean +/-127
+  xCCH blocks.
+
+### Changed
+
+- The 10 largest test fixtures are stored gzip-compressed. Their decompressed
+  content and fingerprints are unchanged.
+
+### Added
+
+- Criterion benchmarks for CRC, convolutional coding, bit packing, message buffers,
+  timers and FSMs, with tracked results in [docs/benchmarks.md](docs/benchmarks.md).
+
 ## [0.1.0] - 2026-10-26
 
 First release.

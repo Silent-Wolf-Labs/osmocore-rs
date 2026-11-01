@@ -46,6 +46,9 @@ RUN for features in '' tracing net net,tracing runtime runtime,tracing runtime,n
         && RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps --no-default-features --features "$features" \
         || exit 1; \
     done
+# Run each benchmark once. Clippy only compiles them, and this release build stays out of the layer cache.
+RUN CARGO_TARGET_DIR=/tmp/bench-target cargo bench --locked -- --test \
+    && rm -rf /tmp/bench-target
 RUN cargo deny --locked --all-features check licenses sources
 RUN for features in runtime runtime,tracing; do \
         cargo deny --locked --no-default-features --features "$features" --exclude-dev check bans \
