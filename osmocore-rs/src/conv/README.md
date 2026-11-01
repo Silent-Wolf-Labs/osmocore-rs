@@ -105,7 +105,7 @@ short-tail-biting loading restriction; capacity does not promise backend support
 
 ## Testing and verification
 
-Repository evidence: `tests/compatibility/vectors/conv/conv_vectors.ndjson`;
+Repository evidence: `tests/compatibility/vectors/conv/conv_vectors.ndjson.gz`;
 replays: `tests/conv/conv_encoder.rs`, `conv_decoder.rs`, `conv_correlation.rs`.
 The strict shared reader validates descriptors, schema, full buffers, semantic
 state, operations, backend identity, provenance and frozen coverage; corruption

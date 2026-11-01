@@ -1,16 +1,22 @@
 //! Independent direct-correlation and public-dispatch frozen C replays.
 use super::conv_encoder::descriptor;
 use super::conv_fixture::{Fixture, bytes, signed};
+use crate::gzip_fixture;
 use osmocore_rs::compat::conv::osmo_conv_decode_acc;
 use osmocore_rs::conv::*;
 use std::collections::BTreeMap;
+use std::sync::LazyLock;
 
-const VECTORS: &str = include_str!("../compatibility/vectors/conv/conv_vectors.ndjson");
+static VECTORS: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/conv/conv_vectors.ndjson.gz"
+    ))
+});
 
 type Decode = fn(&ConvCode, &[i8], &mut [u8]) -> Result<i32, ConvError>;
 
 fn replay(api: &str, decode: Decode) {
-    let fixture = Fixture::read(VECTORS);
+    let fixture = Fixture::read(&VECTORS);
     let codes: BTreeMap<_, _> = fixture
         .records
         .iter()

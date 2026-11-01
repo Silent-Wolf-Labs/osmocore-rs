@@ -1,3 +1,4 @@
+use crate::gzip_fixture;
 use osmocore_rs::compat::msgb::{
     msgb_dequeue, msgb_dequeue_count, msgb_enqueue, msgb_enqueue_count, msgb_eq, msgb_eq_data,
     msgb_eq_l1, msgb_eq_l1_data, msgb_eq_l2, msgb_eq_l2_data, msgb_eq_l3, msgb_eq_l3_data,
@@ -5,16 +6,21 @@ use osmocore_rs::compat::msgb::{
     msgb_hexdump_l2, msgb_hexdump_l3, msgb_hexdump_l4, msgb_hexdump_owned, msgb_printf,
     msgb_queue_free,
 };
+use std::sync::LazyLock;
 #[path = "../support/msgb_adapters_fixture.rs"]
 mod fixture;
 use super::msgb_reference_vectors::{initial, snapshot};
 use fixture::{bytes, number};
 use osmocore_rs::msgb::*;
-const FIXTURE: &str = include_str!("../compatibility/vectors/msgb_adapters_vectors.json");
+static FIXTURE: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_adapters_vectors.json.gz"
+    ))
+});
 
 #[test]
 fn remaining_adapters_match_all_c_observations() {
-    let records = fixture::validated_records(FIXTURE);
+    let records = fixture::validated_records(&FIXTURE);
     let mut queue = MsgbQueue::new();
     let mut count = 0;
     for r in &records {
@@ -158,7 +164,7 @@ fn remaining_adapters_match_all_c_observations() {
 }
 #[test]
 fn rejects_corrupt_adapter_evidence() {
-    fixture::check_corruptions(FIXTURE);
+    fixture::check_corruptions(&FIXTURE);
 }
 #[test]
 fn equality_and_layer_dumps_reject_unsafe_offsets_without_mutation() {

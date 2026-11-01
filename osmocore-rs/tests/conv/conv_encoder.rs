@@ -1,10 +1,16 @@
 //! Encoder and length conformance against every committed direct C observation.
 use super::conv_fixture::{Fixture, Record, bytes, list, signed, unsigned};
+use crate::gzip_fixture;
 use osmocore_rs::compat::conv::{osmo_conv_get_input_length, osmo_conv_get_output_length};
 use osmocore_rs::conv::{ConvCode, ConvCodeSpec, ConvEncoder, ConvError, Termination, encode};
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::LazyLock;
 
-const VECTORS: &str = include_str!("../compatibility/vectors/conv/conv_vectors.ndjson");
+static VECTORS: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/conv/conv_vectors.ndjson.gz"
+    ))
+});
 
 fn pairs(text: &str) -> Vec<[u8; 2]> {
     let data = bytes(text);
@@ -46,7 +52,7 @@ pub(super) fn descriptor(record: &Record) -> ConvCode {
 
 #[test]
 fn replay_every_c_length_and_encoder_observation() {
-    let fixture = Fixture::read(VECTORS);
+    let fixture = Fixture::read(&VECTORS);
     let codes: BTreeMap<_, _> = fixture
         .records
         .iter()

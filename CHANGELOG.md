@@ -9,6 +9,11 @@
   saturate like the C SSE and AVX backends. Affected frames include clean +/-127
   xCCH blocks.
 
+### Changed
+
+- The 10 largest test fixtures are stored gzip-compressed. Their decompressed
+  content and fingerprints are unchanged.
+
 ### Added
 
 - Criterion benchmarks for CRC, convolutional coding, bit packing, message buffers,

@@ -1,3 +1,4 @@
+use crate::gzip_fixture;
 use osmocore_rs::compat::msgb::msgb_sms;
 #[path = "../support/msgb_layers_fixture.rs"]
 mod fixture;
@@ -7,9 +8,9 @@ use osmocore_rs::msgb::*;
 
 #[test]
 fn typed_and_layer_helpers_match_all_c_observations() {
-    let records = fixture::validated_records(include_str!(
-        "../compatibility/vectors/msgb_layers_vectors.json"
-    ));
+    let records = fixture::validated_records(&gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_layers_vectors.json.gz"
+    )));
     let mut current = None;
     for r in &records {
         if number(r, "step") == 0 {
@@ -61,9 +62,9 @@ fn typed_and_layer_helpers_match_all_c_observations() {
 }
 #[test]
 fn rejects_corrupt_typed_and_layer_evidence() {
-    fixture::check_corruptions(include_str!(
-        "../compatibility/vectors/msgb_layers_vectors.json"
-    ));
+    fixture::check_corruptions(&gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_layers_vectors.json.gz"
+    )));
 }
 
 #[test]

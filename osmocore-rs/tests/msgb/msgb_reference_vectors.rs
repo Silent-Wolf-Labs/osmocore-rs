@@ -1,3 +1,4 @@
+use crate::gzip_fixture;
 use crate::msgb_fixture as fixture;
 use fixture::{Record, bytes, number, words};
 use osmocore_rs::compat::msgb::{msgb_data, msgb_headlen};
@@ -60,8 +61,9 @@ pub(super) fn initial(r: &Record) -> Msgb {
 
 #[test]
 fn primitives_match_all_c_observations() {
-    let records =
-        fixture::validated_records(include_str!("../compatibility/vectors/msgb_vectors.json"));
+    let records = fixture::validated_records(&gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_vectors.json.gz"
+    )));
     let mut current: Option<Msgb> = None;
     for r in &records {
         if number(r, "step") == 0 {
@@ -155,5 +157,7 @@ fn owned_storage_initialization_and_byte_access() {
 
 #[test]
 fn rejects_corrupt_schema_provenance_and_observations() {
-    fixture::check_corruptions(include_str!("../compatibility/vectors/msgb_vectors.json"));
+    fixture::check_corruptions(&gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_vectors.json.gz"
+    )));
 }

@@ -1,14 +1,15 @@
 #[path = "../support/msgb_resize_fixture.rs"]
 mod fixture;
 use super::msgb_reference_vectors::{initial, snapshot};
+use crate::gzip_fixture;
 use fixture::number;
 use osmocore_rs::msgb::*;
 
 #[test]
 fn copies_and_area_resizes_match_all_c_observations() {
-    let records = fixture::validated_records(include_str!(
-        "../compatibility/vectors/msgb_resize_vectors.json"
-    ));
+    let records = fixture::validated_records(&gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_resize_vectors.json.gz"
+    )));
     let mut current = None;
     for r in &records {
         if number(r, "step") == 0 {
@@ -50,9 +51,9 @@ fn copies_and_area_resizes_match_all_c_observations() {
 }
 #[test]
 fn rejects_corrupt_copy_resize_evidence() {
-    fixture::check_corruptions(include_str!(
-        "../compatibility/vectors/msgb_resize_vectors.json"
-    ));
+    fixture::check_corruptions(&gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/msgb_resize_vectors.json.gz"
+    )));
 }
 #[test]
 fn copies_clear_unused_bytes_and_metadata_and_own_independent_storage() {

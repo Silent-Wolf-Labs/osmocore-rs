@@ -1,3 +1,4 @@
+use crate::gzip_fixture;
 use osmocore_rs::compat::crc::{OSMO_CRC16_CCITT_TABLE, OSMO_CRC16_TABLE};
 use osmocore_rs::compat::crc::{
     osmo_crc8gen_check_bits, osmo_crc8gen_compute_bits, osmo_crc8gen_set_bits, osmo_crc16,
@@ -6,12 +7,17 @@ use osmocore_rs::compat::crc::{
     osmo_crc32gen_compute_bits, osmo_crc32gen_set_bits, osmo_crc64gen_check_bits,
     osmo_crc64gen_compute_bits, osmo_crc64gen_set_bits,
 };
+use std::sync::LazyLock;
 #[path = "../support/crc_fixture.rs"]
 mod fixture;
 use fixture::{bytes, number, signed};
 use osmocore_rs::crc::*;
 const BYTE: &str = include_str!("../compatibility/vectors/crc_byte_vectors.json");
-const GENERIC: &str = include_str!("../compatibility/vectors/crc_generic_vectors.json");
+static GENERIC: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/crc_generic_vectors.json.gz"
+    ))
+});
 
 #[test]
 fn byte_crc_matches_direct_c_observations() {
@@ -72,7 +78,7 @@ fn byte_crc_matches_direct_c_observations() {
 
 #[test]
 fn generic_crc_matches_direct_c_observations() {
-    for r in fixture::validate_generic(GENERIC) {
+    for r in fixture::validate_generic(&GENERIC) {
         let input = bytes(&r["input_before"]);
         let len = signed(&r, "len");
         let source = if len <= 0 { &[][..] } else { input.as_slice() };
@@ -168,5 +174,5 @@ fn generic_crc_matches_direct_c_observations() {
 #[test]
 fn corrupt_crc_evidence_is_rejected() {
     fixture::check_corruptions(BYTE, false);
-    fixture::check_corruptions(GENERIC, true);
+    fixture::check_corruptions(&GENERIC, true);
 }

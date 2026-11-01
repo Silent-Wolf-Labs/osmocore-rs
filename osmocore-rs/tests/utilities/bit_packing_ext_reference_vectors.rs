@@ -1,12 +1,18 @@
+use crate::gzip_fixture;
 use osmocore_rs::bits::{pack_into_offset, unpack_into_offset};
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::LazyLock;
 
 const COMMIT: &str = "950430e829a3dc1d162aa241bc0505745c5a7311";
 const COUNT: usize = 63_384;
 const OFFSETS: &[usize] = &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 15, 16];
 const COUNTS: &[usize] = &[1, 7, 8, 9, 15, 16, 17, 31, 32, 33];
 const MODES: &[i32] = &[0, 1, 2, -1];
-const FIXTURE: &str = include_str!("../compatibility/vectors/bit_packing_ext_vectors.json");
+static FIXTURE: LazyLock<String> = LazyLock::new(|| {
+    gzip_fixture::text(include_bytes!(
+        "../compatibility/vectors/bit_packing_ext_vectors.json.gz"
+    ))
+});
 
 struct Case {
     name: String,
@@ -453,7 +459,7 @@ fn compare_record(record: &BTreeMap<String, String>, expected: &Case) {
 
 #[test]
 fn extended_bit_conversions_match_all_c_reference_vectors() {
-    let records = parse_fixture(FIXTURE);
+    let records = parse_fixture(&FIXTURE);
     let cases = expected_cases();
     assert_eq!(records.len(), COUNT, "complete frozen fixture");
     for (record, expected) in records.iter().zip(&cases) {

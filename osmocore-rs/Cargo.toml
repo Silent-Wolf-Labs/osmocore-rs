@@ -37,6 +37,7 @@ tracing = { version = "0.1.44", optional = true, default-features = false, featu
 
 [dev-dependencies]
 criterion = { version = "0.8.2", default-features = false, features = ["cargo_bench_support"] }
+flate2 = "1.1.10"
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["std", "registry", "fmt", "env-filter"] }
 
 [[example]]
