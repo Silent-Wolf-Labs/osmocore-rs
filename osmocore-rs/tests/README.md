@@ -42,6 +42,7 @@ contents where those are part of the API contract.
 | --- | --- |
 | `public_api` | Cross-subsystem public API contracts and compatibility distinctions |
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
+| `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
 | `msgb` | Message-buffer primitives, layers, resizing and adapters |
@@ -883,6 +884,20 @@ and caller-defined descriptors. `utilities/prbs_reference_vectors.rs` replays ea
 call and compares the result, the complete destination with its guard bytes and
 the generator state. Regenerate it from `gsmtap-rs` with
 `reference/prbs/run_prbs_vector.sh`.
+
+## GSM 05.02 observations
+
+`gsm0502_vectors.ndjson` holds 6,376 records of direct `libosmogsm` calls: the
+header constants, frame arithmetic at edge and pseudo-random values, block starts
+including all 258 frames in upstream's `gsm0502_test.ok`, CCCH blocks, hopping rows
+that reach every RNTABLE entry, and paging groups for every value of the three-bit
+fields. `gsm0502/reference_vectors.rs` replays them against both the preferred and
+`compat::gsm0502` APIs. Regenerate it from `gsmtap-rs` with
+`reference/gsm0502/run_gsm0502_vector.sh`.
+
+The fixture has no C result for an empty allocation, a hopping sequence number
+above 63 or a zero group divisor, because those calls crash or are undefined. Those
+Rust errors have direct tests instead.
 
 ## Convolutional descriptors, encoder, decoders and evidence
 

@@ -110,6 +110,35 @@ functions. `fill` takes its length from the slice, so it doesn't return the coun
 that C does. The C state field is public and can be seeded directly; Rust always
 starts from state 1 and exposes the register read-only.
 
+### GSM 05.02
+
+[gsm0502.rs](gsm0502.rs) provides TDMA frame arithmetic, burst sizes, block starts,
+CCCH blocks, frequency hopping and paging groups.
+
+`hop_index` and `hop_arfcn` take a frame number, not C's `gsm_time`, and derive T1,
+T2 and T3 from it. Results match C when the `gsm_time` comes from `gsm_fn2gsmtime`.
+A caller with only T1, T2 and T3 has to compute the frame number itself, because
+`gsm_gsmtime2fn` isn't implemented. There is no equivalent of a `gsm_time` whose
+fields disagree, and that C behavior isn't recorded. A `GsmTime` type with both
+conversions is planned for 0.3, alongside `gsm_utils`.
+
+Rust rejects inputs where C crashes, reads out of bounds or computes a meaningless
+result:
+
+| Input | C | Rust |
+| --- | --- | --- |
+| Empty mobile allocation | Divides by zero | `HopError::EmptyAllocation` |
+| Hopping sequence number above 63 | Can read past RNTABLE | `HopError::InvalidHsn` |
+| No block ends on the frame | Logs an error, returns the input | `block_start` returns `None` |
+| Frame can't carry CCCH | Returns a negative code | `ccch_block` returns `None` |
+| Reserved `CCCH_CONF` code | Wrapped arithmetic | `CcchConf::from_code` returns `None` |
+| `BS_AG_BLKS_RES` above 2 on a combined channel | Clamped or wrapped arithmetic | `PagingConfig::new` returns `None` |
+
+`compat::gsm0502` keeps the C results for all but the first two rows, and returns
+`None` from the group helpers where C divides by zero. Frames exactly half a
+hyperframe apart each compare as later than the other, in both `frame_cmp` and C,
+so `frame_cmp` must not be used as a sort order.
+
 ### Base64, BCD and hexadecimal parsing
 
 [base64.rs](base64.rs) provides typed `encode_into`/`decode_into` results and owned
@@ -305,6 +334,7 @@ the family names below also cover preferred methods in the functional modules.
 | `bitvec` (buffer and text adapters) | `bitvec_pack`, `bitvec_unpack`, `bitvec_unhex`, `bitvec_to_string_r` | `src/core/bitvec.c`; hex loading calls `osmo_hexparse` in `src/core/utils.c` | `include/osmocom/core/bitvec.h` |
 | `msgb` | `msgb_put_u8`, `msgb_put_u16`, `msgb_put_u32`, `msgb_push_u8`, `msgb_push_u16`, `msgb_push_u32`, `msgb_get_u8`, `msgb_get_u16`, `msgb_get_u32`, `msgb_pull_u8`, `msgb_pull_u16`, `msgb_pull_u32`, `msgb_l1`, `msgb_l2`, `msgb_l3`, `msgb_l4`, `msgb_sms`, `msgb_l1len`, `msgb_l2len`, `msgb_l3len`, `msgb_l4len`, `msgb_pull_to_l2`, `msgb_pull_to_l3`, `msgb_l3trim`, `msgb_push_tl` | Inline/macro operations in `msgb.h`; endian operations in generated headers | `include/osmocom/core/msgb.h`, `bit16gen.h`, `bit32gen.h` |
 | `hexparse` | `osmo_hexparse` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
+| `gsm0502` | `GSM_TDMA_FN_SUM`, `GSM_TDMA_FN_SUB`, `GSM_TDMA_FN_DIFF`, `GSM_TDMA_FN_INC`, `GSM_TDMA_FN_DEC`, `gsm0502_fncmp`, `gsm0502_fn_remap`, `gsm0502_fn2ccch_block`, `gsm0502_hop_seq_gen` (frame-number input, no `gsm_time`), `gsm0502_get_n_pag_blocks`, `gsm0502_get_ccch_group`, `gsm0502_get_paging_group`, `gsm0502_calc_paging_group`, `gsm48_number_of_paging_subchannels`, `rsl_ccch_conf_to_bs_cc_chans`, `GSM_NBITS_*` | `src/gsm/gsm0502.c`, `gsm48.c`, `rsl.c` | `include/osmocom/gsm/gsm0502.h` |
 | `prbs` | `osmo_prbs7`, `osmo_prbs9`, `osmo_prbs11`, `osmo_prbs15`, `osmo_prbs_state_init`, `osmo_prbs_get_ubit`, `osmo_prbs_get_ubits` | `src/core/prbs.c` | `include/osmocom/core/prbs.h` |
 | `msgb` | `msgb_data`, `msgb_length`, `msgb_headlen`, `msgb_headroom`, `msgb_tailroom`, `msgb_reserve`, `msgb_put`, `msgb_get`, `msgb_push`, `msgb_pull`, `msgb_trim`, `msgb_reset`, `msgb_test_invariant`; basic allocation/free equivalents via `Msgb::new`, `Msgb::with_headroom`, and drop | `src/core/msgb.c` (most primitives are inline in the header) | `include/osmocom/core/msgb.h` |
 | `msgb` | Queue/count/free helpers; all slice/message equality helpers; dump/buffer/layer helpers; `msgb_hexdump_c` via `msgb_hexdump_owned`; `msgb_printf` via Rust formatting and `msgb_append_str`. Allocation/context/logging inventory in the message-buffer README. | `src/core/msgb.c`, `src/core/utils.c`; inline queue, comparison, and layer dump helpers | `include/osmocom/core/msgb.h`, `utils.h`, `linuxlist.h` |

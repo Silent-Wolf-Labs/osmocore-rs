@@ -11,6 +11,9 @@ pub mod base64;
 /// Recorded bcd compatibility contracts.
 pub mod bcd;
 
+/// Recorded GSM 05.02 compatibility contracts.
+pub mod gsm0502;
+
 /// Recorded prim compatibility contracts.
 pub mod prim;
 
