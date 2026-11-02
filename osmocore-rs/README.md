@@ -29,7 +29,7 @@ deliberate Rust safety differences.
 
 Functional modules live at the crate root:
 
-- `base64`, `bcd`, `hexparse`, `bits`, `bitvec`, `crc`, `conv`: encoding and buffers.
+- `base64`, `bcd`, `hexparse`, `bits`, `bitvec`, `crc`, `conv`, `prbs`: encoding and buffers.
 - `msgb`, `prim`, `gsmtap`: message storage, primitive metadata, GSMTAP Vec/Msgb encoding and optional generic UDP runtime integration.
 - `time`, `timer`, `tdef`, `time_accounting`: clocks, scheduling, timeout definitions and accounting.
 - `fsm`, `rate_ctr`: owned state-machine and counter-group runtimes.

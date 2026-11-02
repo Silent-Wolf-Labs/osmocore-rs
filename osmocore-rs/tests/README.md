@@ -41,7 +41,7 @@ contents where those are part of the API contract.
 | Cargo target | Responsibility |
 | --- | --- |
 | `public_api` | Cross-subsystem public API contracts and compatibility distinctions |
-| `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, primitive metadata and CRC |
+| `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
 | `msgb` | Message-buffer primitives, layers, resizing and adapters |
@@ -874,6 +874,15 @@ The full generator includes both CRC stages. Fixtures and validators are shared
 byte-for-byte; ordinary Cargo tests require no C build. Review every generation
 diff, including existing fixtures. Update fingerprints only from reviewed direct
 C evidence. No vendored crate refresh is needed for independent fixture support.
+
+## PRBS observations
+
+`prbs_vectors.ndjson` records every `osmo_prbs_*` call in 14 cases: two full
+periods of each standard sequence, single-bit steps, mixed and zero-length calls,
+and caller-defined descriptors. `utilities/prbs_reference_vectors.rs` replays each
+call and compares the result, the complete destination with its guard bytes and
+the generator state. Regenerate it from `gsmtap-rs` with
+`reference/prbs/run_prbs_vector.sh`.
 
 ## Convolutional descriptors, encoder, decoders and evidence
 

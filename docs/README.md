@@ -30,7 +30,7 @@ modules grouped in the diagram are families, not a dependency chain.
 
 | Area | Design and contracts |
 | --- | --- |
-| Encoding and coding | Slice-based conversions, CRC and [convolutional coding](#convolutional-coding) |
+| Encoding and coding | Slice-based conversions, CRC, PRBS and [convolutional coding](#convolutional-coding) |
 | Messages | Owned Msgb storage, primitive metadata and [GSMTAP encoding/delivery](#gsmtap-encoding-and-runtime-delivery) |
 | Components | Explicit clocks/schedulers, [FSMs, accounting and rate counters](#timing-fsms-accounting-and-counters) |
 | Socket establishment | Optional [net helpers](#networking-establishment) return owned standard sockets |
@@ -608,7 +608,7 @@ The initial scope excludes `stat_item`, separate `osmo_counter` APIs, generic
 stats reporters, VTY/CTRL, native C select/timerfd and I/O backends, specialized socket
 families/options beyond the bounded IP setup layer, and process-wide logging. Other unimplemented families include
 application initialization, backtraces, bit compression, execution, HDLC,
-intrusive queues, netdev/netns/tun, plugins, PRBS, serial/soft UART, signals,
+intrusive queues, netdev/netns/tun, plugins, serial/soft UART, signals,
 string ring buffers and C thread/write-queue APIs. The generic runtime supplies
 its own bounded output queues. General string and
 numeric utilities beyond the selected conversions also remain outside scope.
