@@ -15,6 +15,9 @@
   and `Sync`, and `TimerScheduler` and `RateCtrRuntime` can move between threads.
   Existing code still compiles, but `.clone()` on these handles now triggers
   Clippy's `clone_on_copy`. `FsmRuntime` and `IoRuntime` stay on one thread.
+- `conv::decode` is faster for K=5 and K=7 codes, and so is `xcch_decode`, because
+  the compiler now vectorizes the correlation decoder's main loop. Results are
+  unchanged. See `docs/benchmarks.md`.
 - The 10 largest test fixtures are stored gzip-compressed. Their decompressed
   content and fingerprints are unchanged.
 

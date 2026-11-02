@@ -9,7 +9,7 @@ All 17 selected upstream core convolutional exports have behavior represented:
 two length helpers, five encoder operations, generic decoder lifecycle/scan/
 traceback and one-shot dispatch, and explicit correlation decoding. Rust drop
 replaces deinitialization. This covers checked descriptors, reusable and one-shot
-encoding, generic stateful squared-error decoding and portable scalar correlation.
+encoding, generic stateful squared-error decoding and portable correlation.
 
 Use `ConvCode::new(ConvCodeSpec)`, `ConvEncoder`/`ConvDecoder` methods and
 `conv::encode`/`decode`. Signed C length helpers, signed raw encode/scan counts,
@@ -91,6 +91,10 @@ all sums equal, scans twice retaining sums, overwrites paths and restarts row
 normalization. Traceback uses first strict maximum closing path, or first strict
 maximum fallback. Flush forces zero and removes K-1 tail symbols. Punctures are
 erasures at absolute positions.
+
+The main loop is safe Rust that the compiler vectorizes for the build target. It
+uses no intrinsics and no runtime CPU selection, so results don't depend on the
+CPU, and a unit test compares it with a one-state-at-a-time version of the loop.
 
 Termination-output presence activates recursive decoding regardless of mode.
 The lowest systematic bit with zero zero-input output across states is selected;
