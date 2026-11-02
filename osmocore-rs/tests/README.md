@@ -131,6 +131,20 @@ primitive messages and enqueue independent copies; account active periods into
 released-handle rejection. The models preserve partial bit writes, reverse
 expired-timer dispatch and the final non-counting wakeup after accounting pauses.
 
+## Coverage
+
+Coverage isn't part of CI. To measure lines and branches locally, from
+`osmocore-rs/`, with [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov)
+and the `llvm-tools` component installed on a nightly toolchain:
+
+```bash
+cargo +nightly llvm-cov --branch --all-features --locked --html
+```
+
+Branch coverage needs nightly. Reported totals count each generic instantiation
+separately, so a branch can look missed in one instantiation and be covered in
+another. Coverage shows what ran, not what the tests assert.
+
 ## Bit-vector primitives
 
 `utilities/bitvec_reference_vectors.rs` compares the bit-vector primitives with all 5,944
@@ -884,9 +898,9 @@ fallback; direct correlation requires `N=2..=4`, `K=5/7` and positive lengths.
 Nonsystematic recursion maps to `UnsupportedRecursiveCode`; negative traceback
 statuses map to `NoSurvivor`. Focused Rust-only tests cover dimensions, slices,
 recursion, short correlation tail-biting, checked sizing/metric arithmetic and
-atomic output. Selected `i16` metric/normalization narrowing outside range is
-`ArithmeticOverflow`, not a golden implementation-defined C result. All `i8`
-inputs, including `-128`, are supported; output suffixes remain untouched.
+atomic output. Correlation path metrics saturate at the `i16` limits like the C
+SSE and AVX backends. All `i8` inputs, including `-128`, are supported; output
+suffixes remain untouched.
 Run these with `cargo test --manifest-path osmocore-rs/Cargo.toml conv` from the
 repository root. The sibling utility validates the fixture's integrity.
 

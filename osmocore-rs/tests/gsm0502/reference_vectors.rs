@@ -304,3 +304,20 @@ fn group_helpers_reject_what_c_divides_by_zero() {
 fn corrupted_fixtures_are_rejected() {
     gsm0502_fixture::check_corruptions(FIXTURE);
 }
+
+#[test]
+fn paging_adapters_refuse_inputs_where_c_divides_by_zero() {
+    // A zero count, directly or because the product wraps to zero at 32 bits.
+    for (channels, blocks) in [(0, 8), (1, 0), (0, 0), (1 << 16, 1 << 16)] {
+        assert_eq!(
+            compat::gsm0502_get_ccch_group(123, channels, blocks),
+            None,
+            "{channels} {blocks}"
+        );
+        assert_eq!(
+            compat::gsm0502_get_paging_group(123, channels, blocks as i32),
+            None,
+            "{channels} {blocks}"
+        );
+    }
+}

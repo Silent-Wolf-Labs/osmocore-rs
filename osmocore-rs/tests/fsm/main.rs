@@ -8,6 +8,7 @@ mod fsm_registry_reference_vectors;
 mod fsm_shared_reference_vectors;
 mod fsm_timer_reference_vectors;
 mod fsm_tree_reference_vectors;
+mod validation;
 
 #[cfg(feature = "tracing")]
 mod diagnostics;
