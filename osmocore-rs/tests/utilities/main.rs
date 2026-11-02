@@ -4,6 +4,8 @@
 mod bitvec_fixture;
 #[path = "../support/gzip_fixture.rs"]
 mod gzip_fixture;
+#[path = "../support/prbs_fixture.rs"]
+mod prbs_fixture;
 
 mod base64_reference_vectors;
 mod bcd_reference_vectors;
@@ -15,6 +17,7 @@ mod bitvec_operations_reference_vectors;
 mod bitvec_reference_vectors;
 mod crc_reference_vectors;
 mod hexparse_reference_vectors;
+mod prbs_reference_vectors;
 mod prim_reference_vectors;
 
 mod operation_sequences;

@@ -20,6 +20,8 @@
 
 ### Added
 
+- `prbs` module with the ITU-T O.150 PRBS-7, 9, 11 and 15 sequences and
+  caller-defined ones, checked against the C generator.
 - Criterion benchmarks for CRC, convolutional coding, bit packing, message buffers,
   timers and FSMs, with tracked results in [docs/benchmarks.md](docs/benchmarks.md).
 
