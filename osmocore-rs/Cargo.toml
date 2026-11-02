@@ -63,6 +63,11 @@ path = "tests/time/diagnostics/main.rs"
 
 # Explicit paths let the Containerfile fetch dependencies without the bench sources.
 [[bench]]
+name = "gsm0503"
+path = "benches/gsm0503.rs"
+harness = false
+
+[[bench]]
 name = "bits"
 path = "benches/bits.rs"
 harness = false

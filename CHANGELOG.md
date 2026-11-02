@@ -20,6 +20,8 @@
 
 ### Added
 
+- `gsm0503` module with SACCH, SDCCH and BCCH block encoding and soft decoding,
+  including bit-error counts, checked against the C library.
 - `gsm0502` module with TDMA frame arithmetic, burst sizes, block starts, CCCH
   blocks, frequency hopping and paging groups, checked against the C library.
 - `prbs` module with the ITU-T O.150 PRBS-7, 9, 11 and 15 sequences and
