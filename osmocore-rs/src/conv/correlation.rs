@@ -122,13 +122,12 @@ struct Transition {
 #[derive(Clone, Copy, Default)]
 struct TrellisState {
     incoming: [Transition; 2],
-    correlation: [i16; 4],
+    symbol: u8,
 }
 
 impl TrellisState {
     fn new(code: &ConvCode, state: usize, systematic: Option<usize>) -> Self {
         let k = code.spec.k as usize;
-        let rate = code.spec.n as usize;
         let predecessor = (state << 1) & (code.state_count() - 2);
         let source = reverse_bits(predecessor, k - 1);
         let high = ((state >> (k - 2)) & 1) as u8;
@@ -142,15 +141,7 @@ impl TrellisState {
                 predecessor: predecessor | path,
                 input: input ^ if systematic.is_some() { path as u8 } else { 0 },
             }),
-            correlation: std::array::from_fn(|bit| {
-                if bit >= rate {
-                    0
-                } else if symbol & (1 << (rate - bit - 1)) == 0 {
-                    1
-                } else {
-                    -1
-                }
-            }),
+            symbol,
         }
     }
 }
@@ -161,6 +152,11 @@ struct CorrelationDecoder {
     symbols: usize,
     interval: usize,
     trellis: [TrellisState; 64],
+    /// The sign each output bit contributes to a state's metric, by bit and then
+    /// state. Only the lower half of the states needs one: the upper half uses the
+    /// same metric negated. Separate rows of plain integers let the compiler
+    /// vectorize the metric calculation.
+    signs: [[i16; 32]; 4],
     sums: [i16; 64],
     paths: Vec<u8>,
 }
@@ -188,20 +184,33 @@ impl CorrelationDecoder {
         } else {
             None
         };
+        // Construct states and incoming paths in ascending order. Stored path
+        // indices keep their existing tie-resolution meaning.
+        let trellis: [TrellisState; 64] = std::array::from_fn(|state| {
+            if state < states {
+                TrellisState::new(code, state, systematic)
+            } else {
+                TrellisState::default()
+            }
+        });
+        let signs = std::array::from_fn(|bit| {
+            std::array::from_fn(|state| {
+                if bit >= rate || state >= states / 2 {
+                    0
+                } else if trellis[state].symbol & (1 << (rate - bit - 1)) == 0 {
+                    1
+                } else {
+                    -1
+                }
+            })
+        });
         let mut decoder = Self {
             rate,
             states,
             symbols,
             interval: i16::MAX as usize / (rate * i8::MAX as usize) - k,
-            // Construct states and incoming paths in ascending order. Stored
-            // path indices keep their existing tie-resolution meaning.
-            trellis: std::array::from_fn(|state| {
-                if state < states {
-                    TrellisState::new(code, state, systematic)
-                } else {
-                    TrellisState::default()
-                }
-            }),
+            trellis,
+            signs,
             sums: [0; 64],
             paths: filled(cells, 0)?,
         };
@@ -219,43 +228,46 @@ impl CorrelationDecoder {
     /// instead. They differ only on -128, which is outside libosmocore's documented
     /// soft-bit range but accepted here, so -128 follows SSE/AVX.
     fn traverse(&mut self, sequence: &[i8]) {
+        // `osmo_conv_decode_acc` accepts only K=5 and K=7.
+        match self.states {
+            16 => self.traverse_rows::<8>(sequence),
+            64 => self.traverse_rows::<32>(sequence),
+            states => unreachable!("no correlation decoder has {states} states"),
+        }
+    }
+
+    /// A fixed state count, with fixed-size arrays and one loop per step, is what
+    /// lets the compiler vectorize this. `docs/benchmarks.md` records the gain.
+    fn traverse_rows<const HALF: usize>(&mut self, sequence: &[i8]) {
         for (row, sample) in sequence.chunks_exact(self.rate).enumerate() {
-            let mut next = [0i16; 64];
-            let half = self.states / 2;
-            for state in 0..half {
-                // At most 4 * 128 in magnitude, so this sum can't overflow.
-                let metric: i16 = sample
-                    .iter()
-                    .zip(self.trellis[state].correlation)
-                    .map(|(&soft, sign)| i16::from(soft) * sign)
-                    .sum();
-                let even = self.sums[2 * state];
-                let odd = self.sums[2 * state + 1];
-                for (target, left, right) in [
-                    (
-                        state,
-                        even.saturating_add(metric),
-                        odd.saturating_sub(metric),
-                    ),
-                    (
-                        state + half,
-                        even.saturating_sub(metric),
-                        odd.saturating_add(metric),
-                    ),
-                ] {
-                    // Equality selects predecessor zero in scalar/SSE/AVX.
-                    let path = u8::from(left < right);
-                    next[target] = if path == 0 { left } else { right };
-                    self.paths[row * self.states + target] = path;
+            let mut metric = [0i16; HALF];
+            for (&soft, signs) in sample.iter().zip(&self.signs) {
+                for (metric, &sign) in metric.iter_mut().zip(signs) {
+                    // At most 4 * 128 in magnitude, so this sum can't overflow.
+                    *metric += i16::from(soft) * sign;
                 }
             }
+            let mut even = [0i16; HALF];
+            let mut odd = [0i16; HALF];
+            let (pairs, _) = self.sums.as_chunks::<2>();
+            for ((even, odd), pair) in even.iter_mut().zip(&mut odd).zip(pairs) {
+                [*even, *odd] = *pair;
+            }
+
+            let (lower_sums, upper_sums) = self.sums.split_at_mut(HALF);
+            let paths = &mut self.paths[row * self.states..][..self.states];
+            let (lower_paths, upper_paths) = paths.split_at_mut(HALF);
+            add_compare_select(&even, &odd, &metric, lower_sums, lower_paths);
+            metric = metric.map(|metric| -metric);
+            add_compare_select(&even, &odd, &metric, upper_sums, upper_paths);
+
             if row % self.interval == 0 {
-                let minimum = *next[..self.states].iter().min().unwrap();
-                for sum in &mut next[..self.states] {
+                let sums = &mut self.sums[..self.states];
+                let minimum = sums.iter().copied().min().unwrap_or(0);
+                for sum in sums {
                     *sum = sum.saturating_sub(minimum);
                 }
             }
-            self.sums = next;
         }
     }
 
@@ -300,6 +312,23 @@ impl CorrelationDecoder {
             state = transition.predecessor;
         }
         Ok(decoded)
+    }
+}
+
+fn add_compare_select(
+    even: &[i16],
+    odd: &[i16],
+    metric: &[i16],
+    sums: &mut [i16],
+    paths: &mut [u8],
+) {
+    let inputs = even.iter().zip(odd).zip(metric);
+    for (((&even, &odd), &metric), (sum, path)) in inputs.zip(sums.iter_mut().zip(paths)) {
+        let left = even.saturating_add(metric);
+        let right = odd.saturating_sub(metric);
+        // Equality selects predecessor zero in scalar/SSE/AVX.
+        *sum = left.max(right);
+        *path = u8::from(left < right);
     }
 }
 
@@ -554,14 +583,107 @@ mod tests {
                 );
             }
         }
-        assert!(
-            decoder.trellis[..8]
-                .iter()
-                .all(|state| state.correlation == [-1, -1, 0, 0])
-        );
+        for (bit, sign) in [(0, -1), (1, -1), (2, 0), (3, 0)] {
+            assert!(decoder.signs[bit][..8].iter().all(|&s| s == sign));
+        }
         assert_eq!(decoder.traceback(Termination::FLUSH, 1), Ok(vec![1]));
         decoder.paths[0] = 1;
         assert_eq!(decoder.traceback(Termination::FLUSH, 1), Ok(vec![0]));
+    }
+
+    /// The add-compare-select step written one state at a time, for comparison with
+    /// the vectorized loop.
+    fn traverse_one_state_at_a_time(decoder: &mut CorrelationDecoder, sequence: &[i8]) {
+        let half = decoder.states / 2;
+        for (row, sample) in sequence.chunks_exact(decoder.rate).enumerate() {
+            let mut next = [0i16; 64];
+            for state in 0..half {
+                let metric: i16 = sample
+                    .iter()
+                    .enumerate()
+                    .map(|(bit, &soft)| {
+                        let negative =
+                            decoder.trellis[state].symbol & (1 << (decoder.rate - bit - 1)) != 0;
+                        i16::from(soft) * if negative { -1 } else { 1 }
+                    })
+                    .sum();
+                let even = decoder.sums[2 * state];
+                let odd = decoder.sums[2 * state + 1];
+                for (target, left, right) in [
+                    (
+                        state,
+                        even.saturating_add(metric),
+                        odd.saturating_sub(metric),
+                    ),
+                    (
+                        state + half,
+                        even.saturating_sub(metric),
+                        odd.saturating_add(metric),
+                    ),
+                ] {
+                    let path = u8::from(left < right);
+                    next[target] = if path == 0 { left } else { right };
+                    decoder.paths[row * decoder.states + target] = path;
+                }
+            }
+            if row % decoder.interval == 0 {
+                let minimum = *next[..decoder.states].iter().min().unwrap();
+                for sum in &mut next[..decoder.states] {
+                    *sum = sum.saturating_sub(minimum);
+                }
+            }
+            decoder.sums = next;
+        }
+    }
+
+    #[test]
+    fn vectorized_traversal_matches_one_state_at_a_time() {
+        let mut random = 0x9e37_79b9_7f4a_7c15u64;
+        let mut next = move || {
+            random ^= random << 13;
+            random ^= random >> 7;
+            random ^= random << 17;
+            random
+        };
+        for n in 2..=4 {
+            for k in [5, 7] {
+                for term in [Termination::FLUSH, Termination::TAIL_BITING] {
+                    let mut spec = code(n, k, 300, term).spec().clone();
+                    for row in &mut spec.next_output {
+                        *row = [0, 1].map(|_| (next() & ((1 << n) - 1)) as u8);
+                    }
+                    let code = ConvCode::new(spec).unwrap();
+                    let (symbols, raw, _) = input_sizes(&code).unwrap();
+                    for choices in [
+                        &[-128, 127][..],
+                        &[-127, 127],
+                        &[-127, 0, 127],
+                        &[0],
+                        &[1, 2, 3, -1, -2, -3],
+                    ] {
+                        let sequence: Vec<i8> = (0..raw)
+                            .map(|_| choices[next() as usize % choices.len()])
+                            .collect();
+                        let mut actual = CorrelationDecoder::new(&code, symbols).unwrap();
+                        let mut expected = CorrelationDecoder::new(&code, symbols).unwrap();
+                        // A second pass starts from nonzero sums, as tail biting does.
+                        for _ in 0..2 {
+                            actual.traverse(&sequence);
+                            traverse_one_state_at_a_time(&mut expected, &sequence);
+                            assert_eq!(actual.sums, expected.sums);
+                            assert_eq!(actual.paths, expected.paths);
+                        }
+                    }
+                    let sequence: Vec<i8> = (0..raw).map(|_| next() as u8 as i8).collect();
+                    let mut actual = CorrelationDecoder::new(&code, symbols).unwrap();
+                    let mut expected = CorrelationDecoder::new(&code, symbols).unwrap();
+                    actual.traverse(&sequence);
+                    traverse_one_state_at_a_time(&mut expected, &sequence);
+                    assert_eq!(actual.sums, expected.sums);
+                    assert_eq!(actual.paths, expected.paths);
+                }
+            }
+        }
     }
 
     #[test]

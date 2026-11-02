@@ -526,7 +526,7 @@ mutation, callback, clock-error and compatibility semantics.
 ## Convolutional coding
 
 Checked `ConvCodeSpec`/`ConvCode` descriptors feed an encoder, generic stateful
-decoder or portable scalar correlation decoder. Each path owns its working
+decoder or portable correlation decoder. Each path owns its working
 state and checks dimensions, capacities and arithmetic.
 
 ![Convolutional coding flow](architecture/diagrams/generated/convolutional-coding.svg)
