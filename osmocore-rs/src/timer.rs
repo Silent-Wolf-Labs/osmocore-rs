@@ -73,6 +73,9 @@ pub struct TimerScheduler<C = SystemClock, D = ()> {
     sequence: u64,
     nearest: Option<TimeVal>,
     dispatching: bool,
+    /// Reused by `update`, so expiring timers doesn't allocate on every call. Empty
+    /// outside `update`.
+    batch: Vec<(usize, u64, u64)>,
 }
 impl<C, D> TimerScheduler<C, D> {
     #[cfg(feature = "tracing")]
@@ -92,6 +95,7 @@ impl<C, D> TimerScheduler<C, D> {
             sequence: 0,
             nearest: None,
             dispatching: false,
+            batch: Vec::new(),
         }
     }
     pub fn create(&mut self, callback: Option<TimerCallback<C, D>>) -> TimerId {
@@ -308,16 +312,23 @@ impl<C: Clock, D> TimerScheduler<C, D> {
                 return Err(TimerError::NestedUpdate);
             }
             let now = self.clock.gettimeofday(None)?;
-            let batch: Vec<_> = self
-                .active
-                .iter()
-                .take_while(|((deadline, _), _)| *deadline <= now)
-                .map(|((_, activation), slot)| (*slot, self.slots[*slot].generation, *activation))
-                .collect();
+            if !matches!(self.active.first_key_value(), Some(((deadline, _), _)) if *deadline <= now)
+            {
+                return Ok(0);
+            }
+            let mut batch = std::mem::take(&mut self.batch);
+            batch.extend(
+                self.active
+                    .iter()
+                    .take_while(|((deadline, _), _)| *deadline <= now)
+                    .map(|((_, activation), slot)| {
+                        (*slot, self.slots[*slot].generation, *activation)
+                    }),
+            );
             self.dispatching = true;
             let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut work = 0;
-                for (slot, generation, activation) in batch.into_iter().rev() {
+                for &(slot, generation, activation) in batch.iter().rev() {
                     let entry = &self.slots[slot];
                     if !entry.allocated
                         || entry.generation != generation
@@ -363,6 +374,8 @@ impl<C: Clock, D> TimerScheduler<C, D> {
                 work
             }));
             self.dispatching = false;
+            batch.clear();
+            self.batch = batch;
             match outcome {
                 Ok(work) => Ok(work),
                 Err(panic) => {
@@ -387,5 +400,85 @@ pub(crate) mod legacy {
         id: &TimerId,
     ) -> Result<i32, TimerError> {
         scheduler.pending(id).map(i32::from)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::time::{ClockId, TimeSpec, TimeZone};
+
+    struct FixedClock;
+
+    impl Clock for FixedClock {
+        fn gettimeofday(&mut self, _: Option<&mut TimeZone>) -> Result<TimeVal, TimeError> {
+            Ok(TimeVal::new(1_000, 0))
+        }
+        fn clock_gettime(&mut self, _: ClockId) -> Result<TimeSpec, TimeError> {
+            unreachable!("timers use wall time")
+        }
+    }
+
+    type Scheduler = TimerScheduler<FixedClock, Vec<usize>>;
+
+    fn record(_: &mut Scheduler, id: TimerId, fired: &mut Vec<usize>) {
+        fired.push(id.slot);
+    }
+
+    fn record_then_panic(_: &mut Scheduler, id: TimerId, fired: &mut Vec<usize>) {
+        fired.push(id.slot);
+        std::panic::panic_any("callback panic");
+    }
+
+    fn arm(scheduler: &mut Scheduler, id: &TimerId) {
+        scheduler.add(id, TimeVal::new(1_000, 0)).unwrap();
+    }
+
+    #[test]
+    fn batch_buffer_is_kept_and_empty_between_updates() {
+        let mut scheduler = Scheduler::new(FixedClock);
+        let ids: Vec<_> = (0..8).map(|_| scheduler.create(Some(record))).collect();
+        ids.iter().for_each(|id| arm(&mut scheduler, id));
+
+        let mut fired = Vec::new();
+        assert_eq!(scheduler.update(&mut fired), Ok(1));
+        assert_eq!(fired.len(), 8);
+        assert!(scheduler.batch.is_empty());
+        let capacity = scheduler.batch.capacity();
+        assert!(capacity >= 8);
+
+        // Nothing is due, so nothing fires again and the buffer stays.
+        assert_eq!(scheduler.update(&mut fired), Ok(0));
+        assert_eq!(fired.len(), 8);
+        assert_eq!(scheduler.batch.capacity(), capacity);
+
+        ids.iter().for_each(|id| arm(&mut scheduler, id));
+        assert_eq!(scheduler.update(&mut fired), Ok(1));
+        assert_eq!(fired.len(), 16);
+        assert_eq!(scheduler.batch.capacity(), capacity);
+    }
+
+    #[test]
+    fn panicking_callback_leaves_buffer_empty_and_each_timer_fires_once() {
+        let mut scheduler = Scheduler::new(FixedClock);
+        let ids: Vec<_> = (0..4).map(|_| scheduler.create(Some(record))).collect();
+        scheduler.setup(&ids[2], Some(record_then_panic)).unwrap();
+        ids.iter().for_each(|id| arm(&mut scheduler, id));
+
+        // Dispatch runs in reverse, so slot 3 fires and slot 2 panics.
+        let mut fired = Vec::new();
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            scheduler.update(&mut fired)
+        }));
+        assert!(outcome.is_err());
+        assert_eq!(fired, [3, 2]);
+        assert!(scheduler.batch.is_empty());
+        assert!(scheduler.batch.capacity() >= 4);
+
+        assert_eq!(scheduler.update(&mut fired), Ok(1));
+        assert_eq!(fired, [3, 2, 1, 0]);
+        assert!(scheduler.batch.is_empty());
+        assert_eq!(scheduler.update(&mut fired), Ok(0));
+        assert_eq!(fired, [3, 2, 1, 0]);
     }
 }
