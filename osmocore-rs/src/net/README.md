@@ -73,7 +73,7 @@ streams (including blocking mode) is OS-defined; applications configure accepted
 streams explicitly when they need a specific policy.
 
 `nonblocking` describes the returned socket, **not** asynchronous establishment.
-TCP connect still waits for success/failure/timeout before returning. This slice
+TCP connect still waits for success/failure/timeout before returning. This module
 does not return pending TCP connections, poll readiness, register descriptors,
 spawn workers, own accept loops or bridge timers/FSMs into an I/O runtime.
 Applications can hand standard sockets to their chosen runtime afterward.

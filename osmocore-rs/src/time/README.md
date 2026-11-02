@@ -7,11 +7,10 @@ They stay separate public concepts; this README documents their integration.
 
 ## Implemented scope
 
-Stages 1–4 cover raw time/clock primitives, owned wall-clock scheduling, core
-TDef tables and monotonic cumulative accounting with wall-clock wakeups.
-Stage 5a adds the concrete `RateCtr` sink; Stage 6 completes FSM/TDef and shared
-application-timer integration. Earlier stage exclusions of FSM integration are
-superseded by that completed scope; [FSM details](../fsm/README.md) live with FSMs.
+This covers raw time/clock primitives, owned wall-clock scheduling, core TDef
+tables and monotonic cumulative accounting with wall-clock wakeups, the concrete
+`RateCtr` sink, and FSM/TDef and shared application-timer integration.
+[FSM details](../fsm/README.md) live with FSMs.
 
 Use `time::{TimeVal,TimeSpec,Clock,SystemClock,ClockOverrides}`,
 `timer::TimerScheduler`, `tdef::TDefTable` and `time_accounting::{TimeCc,CounterSink}`.
@@ -200,12 +199,8 @@ Temporary exact-source builds never substitute system libosmocore. Shared
 fingerprints/schema/coverage/provenance/corruption checks are independent from
 Rust behavior replay.
 
-Historical combined validation passed both Rust suites, formatting/whitespace,
-all exact-source verifications, ASan+UBSan successful-domain audits, two golden
-runs per family and two TDef/accounting diagnostic runs matching shared evidence.
 Overflow/NULL/assertion/division diagnostics never generate expected time results;
-leak checking was disabled under ptrace. Current full-suite/package results are
-in the library overview. Ordinary Rust tests need no C build. Sibling runners
+leak checking was disabled under ptrace. Ordinary Rust tests need no C build. Sibling runners
 are `run_time_vector.sh`, `run_tdef_vector.sh` and `run_time_cc_vector.sh` under
 reference; the repository test guide retains complete regeneration commands.
 

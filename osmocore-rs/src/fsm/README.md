@@ -6,10 +6,10 @@
 
 ## Implemented scope
 
-Stage 6 completes the selected execution, timer/TDef, hierarchy and registry/
-identity scope. Use `fsm::FsmRuntime` methods and `state_change*` spellings.
+This covers the selected execution, timer/TDef, hierarchy and registry/identity
+scope. Use `fsm::FsmRuntime` methods and `state_change*` spellings.
 The TDef bridge is `FsmRuntime::state_change_with_tdef`, implemented in this
-runtime rather than under `tdef`. It closes the earlier deferred core adapter.
+runtime rather than under `tdef`.
 `compat::fsm` contains nullable naming, format/sanitize, termination-cause text
 and recorded integer error-status conversion. Trivial forwarding exports were
 removed before the first release; shared types remain under `fsm`.
@@ -183,12 +183,10 @@ Repository tests are `tests/fsm/fsm_{core,timer,tree,registry,shared}_reference_
 fixtures are under `tests/compatibility/vectors/fsm_*`. Exact generation/compare
 commands live in the repository test guide and sibling reference README. Targeted
 runners use `--verify`/`--audit`; source/generator mismatches fail closed. Ordinary
-Cargo tests require no C build. The library overview records the current complete
-suite and independent-package validation, distinct from the historical stage runs.
+Cargo tests require no C build.
 
 ## Remaining work and fundamental differences
 
-The selected FSM scope and shared timer/TDef integration are complete.
 Global C registry/logging hooks, VTY/CTRL, statistics integrations and native
 select/timerfd APIs are separate remaining families. Arbitrary talloc ownership/
 destructors, pointer-address naming, exact C logging levels/source locations/output,

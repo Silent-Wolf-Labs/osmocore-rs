@@ -68,10 +68,6 @@ verify discovery and test multiplicity after registration changes. For example,
 `cargo test --manifest-path osmocore-rs/Cargo.toml --test time` runs the time
 integration target from the repository root.
 
-The functional layout migration preserved all 112 integration tests (formerly 111 in
-`core` and one in `gsmtap`), plus 76 source unit tests and two runnable doctests.
-Evidence locations and reader bytes are unchanged by this organization.
-
 The C reference harnesses live in the sibling `gsmtap-rs/reference/` project.
 They generate the fixtures; ordinary `cargo test` runs only Rust code and reads
 the committed JSON, so it does not require a C library or the harness project.
@@ -93,11 +89,11 @@ Focused evidence:
   runtime integration tests check capacity boundaries, connected/unconnected
   sends, empty payloads and rejection ownership. Isolated preparation diagnostics
   check fields, filtering, context and endpoint/payload privacy.
-- Networking has 12 Linux tests, including six normalized direct-C observations,
+- Networking tests on Linux include six normalized direct-C observations,
   reader corruption validation, IPv4/IPv6 loopback, options, source binding,
   timeout/error phases and cleanup. Its isolated diagnostics target checks fields,
   levels, application context and endpoint privacy.
-- Seven FSM and four isolated timer diagnostics tests check typed fields,
+- FSM and isolated timer diagnostics tests check typed fields,
   filtering, activation context, hierarchy, deferred errors, cancellation/release,
   callback re-arming and panic payload propagation. No formatter text is asserted.
 - Runtime tests combine scripted output/poll/wake failures with loopback,
@@ -105,26 +101,11 @@ Focused evidence:
   [Focused behavioral tests](../../docs/README.md#acceptance-evidence)
   separately establish accounting, catch-up, partial output and drain timeout.
 
-No compatibility fixtures were regenerated for release hardening. Existing C
-harnesses and recorded observations remain the compatibility evidence.
+C harnesses and recorded observations are the compatibility evidence.
 
-## Historical testing productization
+## Preferred API and model checks
 
-As of 2026-10-14, the suite contains 213 tests: 88 source unit tests and 125
-integration tests, plus two runnable doctests. Integration counts are utilities
-25, convolutional coding 29, FSM 14, message buffers 22, rate counters 7,
-time/accounting 27 and GSMTAP 1.
-
-The following paragraphs record the historical 2026-10-12 testing phase;
-these counts describe that historical phase, not the current suite.
-
-The 2026-10-12 testing phase adds 12 tests and extends existing replays, yielding
-200 tests (76 source unit, 124 integration) plus two runnable doctests. Integration
-counts are utilities 25, convolutional coding 28, FSM 14, message buffers 22,
-rate counters 7, time/accounting 27 and GSMTAP 1. Every prior test identity is
-retained exactly once.
-
-Frozen evidence now also checks preferred bitvec and message-buffer methods,
+Frozen evidence also checks preferred bitvec and message-buffer methods,
 CRC whole-slice functions and descriptor methods, primitive construction and
 ordinary event lookup, bounded timeout tables/range helpers, and owned GSMTAP
 encoding. Base64 replays 21 applicable frozen cases through its preferred buffer
@@ -146,87 +127,9 @@ primitive messages and enqueue independent copies; account active periods into
 released-handle rejection. The models preserve partial bit writes, reverse
 expired-timer dispatch and the final non-counting wakeup after accounting pauses.
 
-All 66 evidence/provenance artifacts and 17 shared readers retain their baseline
-SHA-256 values. Runtime source and C harnesses did not change. This phase requires
-no sibling utility or pinned snapshot update; its working tree remains clean.
-Stable formatting, all-target Clippy with warnings denied, tests, warning-denied
-Rust documentation, package-list and whitespace checks passed.
-
-## Line and branch coverage
-
-From the repository root, install an auxiliary coverage toolchain and run:
-
-```bash
-rustup toolchain install nightly-2026-10-12 --profile minimal --component llvm-tools-preview
-python3 scripts/measure-coverage.py --toolchain nightly-2026-10-12 --label review
-```
-
-The crate and CI continue to use stable. The script builds and runs source unit
-and integration tests offline in a fresh ignored directory under
-`..`. It combines every Cargo
-test executable and its profiles using that compiler's matching LLVM tools,
-rejects mismatched/outdated profiles, and writes `coverage.json`, `summary.txt`,
-`source.txt`, HTML reports, `test.log`, `scope.json` and `toolchain.txt`. Avoid
-editing Rust files while measurement runs. No crate dependency is required.
-
-The local before/after measurements used `rustc 1.101.0-nightly (080cc2714
-2026-10-11)` from the 2026-10-12 nightly distribution, x86_64 Linux, debug builds,
-and `-C instrument-coverage -Z coverage-options=branch`. LLVM 23.1.3 supplied by
-that toolchain processed the profiles. The initial baseline was primary revision
-`f7e98fa`; the after run measured this testing phase's working tree.
-
-| Source-file metric | Before | After |
-| --- | --- | --- |
-| Lines | 5,423 / 5,856 (92.61%) | 5,709 / 5,856 (97.49%) |
-| Instrumented branch outcomes | 841 / 918 (91.61%) | 848 / 918 (92.37%) |
-| Functions | 603 / 704 (85.65%) | 688 / 704 (97.73%) |
-
-The historical scope was `src/**` except `src/api_tests.rs` (now
-`tests/public_api.rs`); fixture readers, integration
-bodies, dependencies and standard-library code are excluded. Inline source
-unit-test bodies are included, so these percentages are source-file metrics,
-not a production-only denominator. Doctests are validated by normal stable
-`cargo test` and are excluded from the instrumented run. Branch instrumentation
-is experimental and measures emitted branch outcomes; it is not MC/DC or proof
-that every possible path, macro expansion or platform has been exercised. A
-covered line or branch also says nothing about assertion quality.
-
-The largest improvements are in preferred message-buffer APIs (buffer lines
-73.45% to 100%; formatting 86.47% to 100%), owned GSMTAP construction (87.13% to
-100%), and CRC methods (87.34% to 94.32%). The next useful gaps, in priority order:
-
-1. **FSM validation and callback combinations.** `fsm/runtime.rs` has 22 missed
-   branch outcomes (79.63%); hierarchy has nine (83.33%). Add cases for empty or
-   oversized state tables, invalid instance IDs/embedded NUL, out-of-range target
-   states, absent leave/enter/pre-termination/cleanup hooks, and callback failures
-   during hierarchy changes. Check retained state, timers, observable handles and
-   callback order rather than only error values. Some stale-slot checks require
-   private states that safe public construction prevents; assess reachability first.
-2. **Owned BCD range rejection.** BCD has six missed branch outcomes (83.33%),
-   including the owned decoder's invalid start/end range. Test each boundary
-   independently and check invalid-character errors in the preferred APIs without
-   applying C's invalid-character-to-zero policy to Rust.
-3. **Accounting error delivery across consumers.** Accounting has seven missed
-   outcomes (89.71%). Exercise a raw scheduler callback that stores a failure,
-   then retrieve it through `TimeCc::update`, checking one-time consumption and
-   retained counter/timer mutations. Assess timer-identity mismatch paths before
-   attempting to construct unreachable internal states.
-4. **Consumer accessors and public error rendering.** FSM parent-event/definition
-   accessors remain uncalled; the runtime's default constructor and several error
-   formatters are also uncalled. Add them when they support a concrete consumer
-   scenario or diagnostic contract. They rank below mutation and callback cases.
-
-Compile-time CRC table construction, allocation failures, generation exhaustion,
-private decoder invariants and platform-specific FFI paths need separate
-classification or fault-injection/platform work. Do not add artificial calls just
-to reach 100%, or infer that a missing branch requires additional frozen C data.
-See the official [Rust coverage guide](https://doc.rust-lang.org/rustc/instrument-coverage.html)
-and [branch instrumentation options](https://doc.rust-lang.org/unstable-book/compiler-flags/coverage-options.html)
-for instrumentation and metric definitions.
-
 ## Bit-vector primitives
 
-`utilities/bitvec_reference_vectors.rs` compares the first-stage APIs with all 5,944
+`utilities/bitvec_reference_vectors.rs` compares the bit-vector primitives with all 5,944
 direct C calls in `compatibility/vectors/bitvec_vectors.json`. Cases cover all
 four bit values, every bit position across zero to three bytes, byte boundaries,
 three initial patterns, out-of-range positions/cursors (including `UINT_MAX`),
@@ -431,7 +334,7 @@ gzip -dc osmocore-rs/tests/compatibility/vectors/bit_packing_ext_vectors.json.gz
 For an intentional regeneration, review the fixture diff before accepting it.
 Ordinary Rust tests consume the copied fixture and do not require C or gsmtap-rs.
 
-## Message-buffer stage 1
+## Message-buffer storage
 
 The dedicated `compatibility/vectors/msgb_vectors.json.gz` contains 3,695 direct C
 operation records, with full backing bytes before/after, data/tail offsets,
@@ -474,11 +377,8 @@ empty message. Fixed `u64` control words match the recorded ABI. Raw
 channel/destination pointers and talloc contexts are excluded. Rust allocation
 failure follows standard allocator behavior rather than C's NULL return.
 
-Stage 1 covers data/length, headlen/headroom/tailroom, reserve, put/get,
+This fixture covers data/length, headlen/headroom/tailroom, reserve, put/get,
 push/pull, trim, reset, invariant, and basic construction/drop equivalents.
-Stages 2–3 below add typed/layer helpers and copy/resize. Stage 4 below covers
-queues, equality, hex dumps, formatted append, and the context adapter inventory. No msgb endpoint,
-GSMTAP-loader integration, or vendored crate snapshot refresh is included.
 
 Regenerate and verify from the conversion repository root:
 
@@ -496,9 +396,9 @@ and returns against all records. It also tests Rust-only safety errors. C
 raw destination/channel presence is checked by the shared validator; those
 pointers have no Rust counterpart. Ordinary Cargo tests need no C build.
 
-## Message-buffer typed and layer helpers (stage 2)
+## Message-buffer typed and layer helpers
 
-Stage 2 adds 25 C entry points to `core::msgb`: `msgb_put_u8/u16/u32`,
+`core::msgb` covers 25 more C entry points: `msgb_put_u8/u16/u32`,
 `msgb_push_u8/u16/u32`, `msgb_get_u8/u16/u32`, `msgb_pull_u8/u16/u32`,
 `msgb_l1/l2/l3/l4`, `msgb_sms`, `msgb_l1len/l2len/l3len/l4len`,
 `msgb_pull_to_l2`, `msgb_pull_to_l3`, `msgb_l3trim`, and `msgb_push_tl`.
@@ -534,8 +434,7 @@ values and high-bit results; exact/insufficient room and message lengths;
 layer markers in headroom, active data, and tailroom or unset; wrapping layer
 lengths; successful and failed pull-to-layer; signed L3 trim boundaries;
 tag and length wrapping; and a 14-step mixed sequence. It shares schema helpers
-with stage 1, whose 3,695 records remain byte-for-byte unchanged. Across the two
-stages there are 11,267 operation records, excluding setup and snapshot queries.
+with the storage fixture.
 
 Successful C u16/u32 pushes use aligned destinations: the C wrappers cast to
 typed pointers before byte stores. Rust uses byte slices and supports unaligned
@@ -554,9 +453,6 @@ The generated headers were reproduced from that template using the verified
 pinned in the runner and recorded in each observation. Headers/library still
 come exclusively from the required local C checkout.
 
-Stages 1–3 cover storage, typed/layer helpers, and copy/resize.
-Stage 4 below completes the adapter inventory with explicit exclusions. GSMTAP consumers, endpoints, and the vendored snapshot are unchanged.
-
 `msgb/msgb_layers_reference_vectors.rs` registers conformance, corruption,
 missing/out-of-message-layer, signed-overflow, storage-bound, and unaligned-push
 tests. `support/msgb_layers_fixture.rs` and `support/msgb_fixture.rs` are identical to
@@ -573,7 +469,7 @@ cargo fmt --manifest-path osmocore-rs/Cargo.toml --check
 cargo test --manifest-path osmocore-rs/Cargo.toml
 ```
 
-## Message-buffer copy and area resize (stage 3)
+## Message-buffer copy and area resize
 
 `core::msgb` adds `msgb_copy(&Msgb) -> Result<Msgb, MsgbError>`,
 `msgb_copy_resize(&Msgb, capacity: usize) -> Result<Msgb, MsgbError>`, and
@@ -633,10 +529,6 @@ panic. The logging files were verified byte-for-byte against upstream revision
 was already verified on 2026-10-08. The fixture ABI additionally records 32-bit
 signed int. The runner builds, links, and loads only the required local checkout.
 
-Stages 1–3 cover storage, typed/layer helpers, and copy/resize.
-Stage 4 below completes the adapter inventory with explicit exclusions. GSMTAP consumers, endpoints,
-and the sibling vendored crate snapshot remain unchanged.
-
 `msgb/msgb_resize_reference_vectors.rs` registers conformance, corruption,
 copy independence, checked-error, and nullable-layer/byte-preservation tests.
 `support/msgb_resize_fixture.rs` is identical to the sibling
@@ -654,9 +546,9 @@ cargo fmt --manifest-path osmocore-rs/Cargo.toml --check
 cargo test --manifest-path osmocore-rs/Cargo.toml
 ```
 
-## Message-buffer remaining adapters (stage 4)
+## Message-buffer remaining adapters
 
-Stage 4 completes the planned conversion and adapter inventory. Rust queues
+Rust queues
 own their messages in `MsgbQueue` (`VecDeque<Msgb>`): `msgb_enqueue`,
 `msgb_dequeue`, `msgb_queue_free`, `msgb_enqueue_count`, and
 `msgb_dequeue_count` preserve FIFO order. Counted operations use a separate
@@ -705,7 +597,7 @@ The explicit allocation and context inventory is:
 | `msgb_alloc`, `msgb_alloc_c` | `Msgb::new`; zero-initialized owned storage, maximum `u16::MAX`. Names, parent contexts, talloc reporting, and C NULL-on-allocation-failure behavior are excluded; Rust allocation follows its allocator policy. |
 | `msgb_alloc_headroom`, `msgb_alloc_headroom_c` | `Msgb::with_headroom`; capacity includes headroom. Excess headroom is an error instead of C assertion/panic. Context/name arguments are excluded. |
 | `msgb_free`, `msgb_queue_free` | Rust drop and explicit queue clear/drop. No shared talloc tree lifetime or intrusive linkage. |
-| `msgb_copy`, `msgb_copy_c`, `msgb_copy_resize`, `msgb_copy_resize_c` | Stage-3 owned copies preserve the tested buffer semantics. Context/name variants share the Rust owned entry points. |
+| `msgb_copy`, `msgb_copy_c`, `msgb_copy_resize`, `msgb_copy_resize_c` | Owned copies preserve the tested buffer semantics. Context/name variants share the Rust owned entry points. |
 | `msgb_hexdump_c` | `msgb_hexdump_owned`; owned string replaces talloc output/context. |
 | `msgb_set_talloc_ctx`, `msgb_talloc_ctx_init` | Excluded. Rust has no global talloc root or pool; no process-global allocation state is introduced. |
 | `_msgb_eq` source-location/print arguments; `msgb_eq_data_print`, `msgb_eq_l1_data_print` through `msgb_eq_l4_data_print` | Comparison behavior is represented by the checked equality helpers. Fatal logging, source locations, and print side effects are excluded. |
@@ -714,8 +606,7 @@ The explicit allocation and context inventory is:
 The separate `msgb_adapters_vectors.json.gz` contains **4,055 direct C records**:
 450 slice comparisons (including NULL inputs), 270 message comparisons,
 2,942 caller-buffer dumps, 62 static and 62 allocated dumps, 152 layer dumps,
-90 formatted appends, and 27 queue operations. Across all four stages there
-are **24,210** operation records. Cases cover zero capacity/empty data,
+90 formatted appends, and 27 queue operations. Cases cover zero capacity/empty data,
 nonzero headroom, full buffers, exact dump size thresholds, reordered/unset
 layers, 1364/1365/1366-byte dump limits, 3000-byte segmented output, FIFO
 sequences, and unsigned counter underflow/overflow.
@@ -739,12 +630,9 @@ uses GNU C11 because the upstream list macros use `typeof`. Its libtalloc
 link supplies the existing C library's allocation dependency. Fixtures and
 validators are shared byte-for-byte between repositories.
 
-All four planned stages are complete with the explicit exclusions above;
-this is not a claim of talloc, logging, raw-pointer, or C printf ABI parity.
-GSMTAP consumers, endpoints, and the vendored crate snapshot are unchanged.
-No snapshot refresh is required for these independent conformance fixtures.
+This is not a claim of talloc, logging, raw-pointer, or C printf ABI parity.
 
-Regenerate stage 4 from the testing repository:
+Regenerate these adapters from the testing repository:
 
 ```bash
 ./reference/msgb/run_msgb_vector.sh --adapters > /tmp/msgb_adapters.fresh.json
@@ -802,8 +690,7 @@ cmp tests/support/prim_fixture.rs ../libosmocore-rs/osmocore-rs/tests/support/pr
 
 `./scripts/generate-reference-vectors.sh` includes the prim runner. Fixtures and
 validators are shared byte-for-byte. Review all regeneration diffs; update the
-frozen coverage/fingerprint only from reviewed direct C observations. These
-independent fixtures require no vendored crate snapshot refresh.
+frozen coverage/fingerprint only from reviewed direct C observations.
 
 ## Core CRC observations
 
@@ -872,10 +759,10 @@ cmp tests/vectors/crc/crc_generic_vectors.json.gz ../libosmocore-rs/osmocore-rs/
 cmp tests/support/crc_fixture.rs ../libosmocore-rs/osmocore-rs/tests/support/crc_fixture.rs
 ```
 
-The full generator includes both CRC stages. Fixtures and validators are shared
+The full generator includes every CRC fixture. Fixtures and validators are shared
 byte-for-byte; ordinary Cargo tests require no C build. Review every generation
 diff, including existing fixtures. Update fingerprints only from reviewed direct
-C evidence. No vendored crate refresh is needed for independent fixture support.
+C evidence.
 
 ## PRBS observations
 
@@ -947,8 +834,7 @@ optimized domain and byte-width boundaries; flush/truncation/tail-biting/raw
 termination values; explicit recursive tables; puncture cursor continuation;
 helper-length/write-count divergence; state packing; reset/rewind/reuse;
 clean/erased/noisy/tie/extreme soft inputs; normalization boundaries; and
-independent synthetic length-97 K=7 rate-2 cases (replacing historical upstream
-GMR/WiMax test vectors in the 2026-10-13 evidence cleanup). Generic squared-error
+independent synthetic length-97 K=7 rate-2 cases. Generic squared-error
 metrics and one-shot
 correlation status returns are retained independently.
 
@@ -978,15 +864,13 @@ Correlation returns `Ok(0)`; generic dispatch returns accumulated error bounded
 by `MAX_AE`. Public `K=5/7 && N<=4` dispatch includes `N=1` rejection without
 fallback; direct correlation requires `N=2..=4`, `K=5/7` and positive lengths.
 Nonsystematic recursion maps to `UnsupportedRecursiveCode`; negative traceback
-statuses map to `NoSurvivor`. The final stage adds 15 tests: 13 private unit
-safety/semantics tests and two independent frozen replays. Focused Rust-only tests cover dimensions, slices,
+statuses map to `NoSurvivor`. Focused Rust-only tests cover dimensions, slices,
 recursion, short correlation tail-biting, checked sizing/metric arithmetic and
 atomic output. Selected `i16` metric/normalization narrowing outside range is
 `ArithmeticOverflow`, not a golden implementation-defined C result. All `i8`
 inputs, including `-128`, are supported; output suffixes remain untouched.
-Run this stage with `cargo test --manifest-path osmocore-rs/Cargo.toml conv`
-from the repository root. The existing C harness, fixture, manifests and shared
-reader are unchanged; the sibling utility continues validating their integrity.
+Run these with `cargo test --manifest-path osmocore-rs/Cargo.toml conv` from the
+repository root. The sibling utility validates the fixture's integrity.
 
 The required local C tree has no `.git`: upstream Git revision is unknown.
 The convolutional manifests pin local content hashes; embedded version text is
@@ -996,23 +880,12 @@ without changing the source snapshot. Available scalar/SSE/AVX observations
 agree for this bounded coverage; linked runtime identifies AVX. NEON is not
 executed and is outside claimed backend parity. Review has approved the observed
 scalar/SSE/AVX tie behavior as the CPU-independent portable Rust correlation
-contract, now implemented by a scalar engine without SIMD selection. Linked dispatcher
+contract, implemented without SIMD selection. Linked dispatcher
 observations are pinned-local-binary evidence, not proof of source build lineage;
 exact-source backend observations remain separate.
 
-Historical final-stage external validation passed provenance `--verify`, isolated
-scalar/SSE/AVX ASan/UBSan `--audit`, and two 36,254-record regenerations matching
-both fixture copies and each other. Shared readers and manifests also matched;
-artifacts stay in sibling `target/conv-final-doc-validation/`. This does not
-claim NEON parity, linked-library instrumentation, arbitrary-descriptor parity
-or injected allocation-failure evidence. Final full suites passed: primary
-130 tests (64 unit, 65 core integration, one GSMTAP integration) and sibling
-85 tests. The generic-stage counts above remain historical, not final-stage totals.
-The historical final-stage run used `rustc 1.97.1`, `cargo 1.97.1` and
-`clippy 0.1.97`. Current CI follows Rust `stable`; the latest local toolchain
-reports Rust/Cargo 1.99.0 and Clippy 0.1.99, and all-target Clippy with warnings
-denied passed. IDE build, format and diff-whitespace checks passed; shared
-readers/fixtures were byte-identical and frozen fixtures had no Git diff.
+This evidence doesn't claim NEON parity, linked-library instrumentation,
+arbitrary-descriptor parity or injected allocation-failure evidence.
 
 From the sibling testing repository:
 
@@ -1033,11 +906,11 @@ diffs and preserve the shared manifests/readers byte-for-byte. See
 [the compatibility document](../src/conv/README.md) for safety
 exclusions and source/backend findings.
 
-## Time Stage 1 evidence
+## Time evidence
 
 `tests/time/time_reference_vectors.rs` replays 20,828 direct C time/clock/helper
 observations. `time_fixture.rs` is shared byte-for-byte with gsmtap-rs and validates
-all 20,881 records, including 52 timer traces reserved for Stage 2. Both projects
+all 20,881 records, including 52 timer traces. Both projects
 reject schema, provenance, coverage and output corruption. Ordinary tests require
 no C build. Fixtures and manifests live in `compatibility/vectors/time/`.
 
@@ -1046,10 +919,9 @@ clock independence/retention, callback mutation, safe nested updates, and
 prepare/nearest during dispatch. A bounded pathological peer-nested update is
 kept outside golden data; nested updates are a documented intentional exception
 for the implemented Rust scheduler and its deliberate reentrancy policy. See [time compatibility](../src/time/README.md)
-for exact scope and targeted verification/regeneration commands. Do not claim
-TDef parity beyond core TDef parity excluding FSM integration.
+for exact scope and targeted verification/regeneration commands.
 
-## Standalone rate counters (Stage 5a)
+## Standalone rate counters
 
 `rate_ctr/rate_ctr_reference_vectors.rs` replays all 1,700 direct-C calls from
 `compatibility/vectors/rate_ctr/`, comparing complete initialized/final state
@@ -1062,7 +934,7 @@ the sibling reference README; verify/audit and compare two generations before
 accepting either. See [compatibility](../src/rate_ctr/README.md)
 for the exact scope and ABI boundary.
 
-## FSM execution and TDef/timer integration (Stage 6)
+## FSM execution and TDef/timer integration
 
 `fsm/fsm_*_reference_vectors.rs` replays 14,852 direct-C records from the
 `fsm_core`, `fsm_timer`, `fsm_tree`, `fsm_registry` and `fsm_shared` fixture
@@ -1075,13 +947,13 @@ and `--diagnostics`; follow its reference README for targeted regeneration,
 repeat comparisons and shared-file checks. See
 [FSM compatibility](../src/fsm/README.md).
 
-## Public API ownership after Phase 1
+## Public API ownership
 
 Replay imports functional root modules for shared types and ordinary functions,
 and `compat::<subsystem>` for distinct C contracts. Trivial runtime, scheduler,
-clock and counter adapters were replaced with method calls while assertions and
-recorded operation names stay intact. Decoder histories are read-only through
-`compat::conv::diagnostics`. Shared fixture readers and evidence are unchanged.
+clock and counter adapters are method calls, and recorded operation names keep
+their C spelling. Decoder histories are read-only through
+`compat::conv::diagnostics`.
 These integration tests and fixtures are repository-only and excluded from the
 `.crate`; source unit tests and documentation examples also run from the package.
 
@@ -1092,12 +964,6 @@ Conversion status, ownership differences and remaining gaps live in the
 retains the repository-only fixture/provenance validation and regeneration
 procedures. C API names identify frozen observations even where preferred Rust
 functions have been renamed or forwarding wrappers replaced by method calls.
-
-The 2026-10-13 evidence cleanup revalidated the replacement 36,256-record stream
-with two identical C generations, sanitizer checks and 29 convolution tests.
-The sibling passes 10 convolution integrity tests. The new descriptor/input
-integrity test verifies the synthetic parameter rule and seed, never expected
-encode/decode outputs. The prior validation above is historical.
 
 ## Runtime/lifecycle validation
 

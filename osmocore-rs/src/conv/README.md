@@ -124,8 +124,7 @@ small exhaustive hard patterns, larger independent soft patterns, erasures/ties/
 extremes, recursion, puncture boundaries, normalization intervals, split scans,
 reuse, reset/rewind, no survivors and selected traceback states. Two independently
 selected synthetic rate-2 K=7 length-97 flush cases exercise unpunctured and
-every-third-punctured operation. Historical GMR-1/WiMAX source-extracted vectors
-were removed from active evidence on 2026-10-13. Separate Rust tests cover atomic
+every-third-punctured operation. Separate Rust tests cover atomic
 checked safety errors
 rather than treating unsafe C histories/overflow as golden output.
 
@@ -136,15 +135,13 @@ The linked dispatcher is pinned-local-binary evidence, not proof of build lineag
 to those sources. Isolated scalar/SSE/AVX observations compile unchanged exact
 sources outside that checkout. No installed library or alternate checkout is used.
 
-Historical final-stage verification passed source/generator verification, isolated
-ASan+UBSan audits, two matching 36,254-record generations and both Rust suites.
 Successful scalar/SSE/AVX outputs/statuses agreed over frozen cases, including
 -128/ties/recursion/tail-biting. The actual linked metrics pointer identified AVX.
 This bounded agreement is not arbitrary-descriptor/backend equivalence. NEON
 was not executed and its inspected strict tie rule differs; no NEON parity is
 claimed. The existing linked binary was not sanitizer-instrumented; isolated
 audits do not establish its sanitizer status. Leak checking was disabled under
-ptrace. See the library overview for current full-suite validation.
+ptrace.
 
 From the sibling harness repository, targeted checks use
 `reference/conv/run_conv_vector.sh --verify` and `--audit`; `all` emits fresh NDJSON
@@ -155,7 +152,7 @@ rewriting generator merely to check documentation or module moves.
 
 ## Remaining work and fundamental differences
 
-The selected core scope is complete. GSM channel coding/interleaving,
+Channel coding and interleaving beyond [`gsm0503`](../gsm0503.rs) xCCH,
 AMR/DTX, protocol parity definitions and generated GSM/GMR/WiMax catalogues,
 Rust SIMD selection and NEON parity require separate scope and evidence.
 Allocation failure is checked where fallible reservation is used but was not
@@ -167,13 +164,12 @@ errors replace raw tables, negative-sentinel scanning, nullable storage and C
 undefined behavior. Defined byte narrowing and unknown termination fall-through
 are preserved; they are not normalized into a different coding algorithm.
 
-## Synthetic evidence replacement (2026-10-13)
+## Synthetic evidence
 
-The replacement cases are `synthetic-rate2-k7-l97-unpunctured` and
+The synthetic cases are `synthetic-rate2-k7-l97-unpunctured` and
 `synthetic-rate2-k7-l97-punctured`, with six soft modes each. Their parameters
 were independently selected for this test using the existing local synthetic
-rule, not copied from another upstream or standard vector and not chosen to
-recreate the removed protocol tables. For N=2, K=7 the local rule
+rule, not copied from another upstream or standard vector. For N=2, K=7 the local rule
 `(1 << (K-1)) | 1 | (j % 2 ? 2 : 4)` gives masks `0x45, 0x43`.
 
 For state `s=0..63` and input `b=0..1`, `register=(s<<1)|b`,

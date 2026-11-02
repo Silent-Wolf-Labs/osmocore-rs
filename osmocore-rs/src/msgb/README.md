@@ -5,7 +5,7 @@
 
 ## Implemented scope
 
-All four planned message-buffer stages are complete: fixed storage primitives,
+This covers fixed storage primitives,
 typed and layer helpers, copy/area resize, and queues/comparison/formatting.
 `Msgb` owns zero-initialized fixed-capacity storage (maximum u16::MAX);
 capacity includes headroom. Use its methods for normal Rust code.
@@ -84,13 +84,13 @@ Repository replays are the four `tests/msgb/msgb*_reference_vectors.rs` files;
 fixtures are under `tests/compatibility/vectors/`. They compare full backing
 storage, data/tail/layer/control state, queries, returns and guarded panics.
 
-| Stage | Fixture | Direct C operation records |
+| Area | Fixture | Direct C operation records |
 | --- | --- | ---: |
 | Storage | `msgb_vectors.json.gz` | 3,695 |
 | Typed/layer | `msgb_layers_vectors.json.gz` | 7,572 |
 | Copy/resize | `msgb_resize_vectors.json.gz` | 8,888: 1,131 copies, 7,757 resizes |
 | Remaining adapters | `msgb_adapters_vectors.json.gz` | 4,055 |
-| Total | Four completed stages | 24,210 |
+| Total | All four fixtures | 24,210 |
 
 Coverage includes all 256 u8 values; u16/u32 high-bit boundaries; exact/short
 room; every layer position class; signed L3 totals; tag/length wrapping; overlap,
@@ -121,11 +121,11 @@ normal Cargo tests use committed fixtures without C.
 
 ## Remaining work and fundamental differences
 
-The selected buffer scope is finished. Talloc parent contexts/names/pools,
+Talloc parent contexts/names/pools,
 global talloc roots, intrusive linkage, raw destination/channel pointers,
 logging/source-location/fatal-print side effects, C printf ABI/locale and C
 NULL-on-allocation-failure semantics are deliberately outside the Rust surface.
-These require a separately scoped decision, not completion of an unfinished stage.
+These would need a separately scoped decision.
 
 | C interface | Rust ownership or exclusion |
 | --- | --- |
