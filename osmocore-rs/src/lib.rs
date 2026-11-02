@@ -37,6 +37,7 @@ pub mod conv;
 pub mod crc;
 pub mod fsm;
 pub mod gsm0502;
+pub mod gsm0503;
 pub mod gsmtap;
 pub mod hexparse;
 pub mod msgb;

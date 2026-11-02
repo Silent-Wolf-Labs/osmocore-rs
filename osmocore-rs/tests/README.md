@@ -43,6 +43,7 @@ contents where those are part of the API contract.
 | `public_api` | Cross-subsystem public API contracts and compatibility distinctions |
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
+| `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
 | `msgb` | Message-buffer primitives, layers, resizing and adapters |
@@ -898,6 +899,20 @@ fields. `gsm0502/reference_vectors.rs` replays them against both the preferred a
 The fixture has no C result for an empty allocation, a hopping sequence number
 above 63 or a zero group divisor, because those calls crash or are undefined. Those
 Rust errors have direct tests instead.
+
+## GSM 05.03 xCCH observations
+
+`gsm0503/xcch_vectors.ndjson` records direct `libosmocoding` calls: the code and
+parity descriptors, interleaving, burst mapping, encoded frames and decodes. Decodes
+cover the three frames in upstream's `coding_test.ok`,
+clean frames at several amplitudes, erased bursts, bit flips, additive noise, random
+erasures, altered stealing flags and input with no signal, so they include both
+corrected frames and parity failures. `gsm0503/reference_vectors.rs` replays them
+against the preferred and `compat::gsm0503` APIs, comparing frames and bit-error
+counts. Regenerate it from `gsmtap-rs` with `reference/gsm0503/run_xcch_vector.sh`.
+
+The fixture has no -128 soft bits, because that value is outside the documented
+range and the C backends disagree on it. A direct test checks that Rust accepts it.
 
 ## Convolutional descriptors, encoder, decoders and evidence
 

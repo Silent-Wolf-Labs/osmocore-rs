@@ -31,7 +31,7 @@ modules grouped in the diagram are families, not a dependency chain.
 | Area | Design and contracts |
 | --- | --- |
 | Encoding and coding | Slice-based conversions, CRC, PRBS and [convolutional coding](#convolutional-coding) |
-| GSM helpers | GSM 05.02 frame arithmetic, burst sizes, block mapping, hopping and paging groups |
+| GSM helpers | GSM 05.02 frame arithmetic, burst sizes, block mapping, hopping and paging groups; GSM 05.03 xCCH block coding |
 | Messages | Owned Msgb storage, primitive metadata and [GSMTAP encoding/delivery](#gsmtap-encoding-and-runtime-delivery) |
 | Components | Explicit clocks/schedulers, [FSMs, accounting and rate counters](#timing-fsms-accounting-and-counters) |
 | Socket establishment | Optional [net helpers](#networking-establishment) return owned standard sockets |

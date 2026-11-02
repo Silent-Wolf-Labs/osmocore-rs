@@ -31,6 +31,7 @@ Functional modules live at the crate root:
 
 - `base64`, `bcd`, `hexparse`, `bits`, `bitvec`, `crc`, `conv`, `prbs`: encoding and buffers.
 - `gsm0502`: GSM frame numbers, burst sizes, block mapping, hopping and paging groups.
+- `gsm0503`: SACCH, SDCCH and BCCH block encoding and soft decoding.
 - `msgb`, `prim`, `gsmtap`: message storage, primitive metadata, GSMTAP Vec/Msgb encoding and optional generic UDP runtime integration.
 - `time`, `timer`, `tdef`, `time_accounting`: clocks, scheduling, timeout definitions and accounting.
 - `fsm`, `rate_ctr`: owned state-machine and counter-group runtimes.

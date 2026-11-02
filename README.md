@@ -12,7 +12,7 @@ The crate lives in [osmocore-rs/](osmocore-rs). Its Cargo package is
 ## Capabilities
 
 Message buffers and primitive metadata; bit/bit-vector, Base64/BCD/hexadecimal,
-CRC, PRBS and convolutional coding; GSM 05.02 frame, hopping and paging helpers; timers, FSMs, time accounting and rate counters;
+CRC, PRBS and convolutional coding; GSM 05.02 frame, hopping and paging helpers; GSM 05.03 xCCH block coding; timers, FSMs, time accounting and rate counters;
 GSMTAP Vec/Msgb encoding and generic UDP runtime integration. Distinct observed
 C contracts use always-compiled `compat::<subsystem>` adapters.
 

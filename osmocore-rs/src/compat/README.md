@@ -21,6 +21,7 @@ C library and export no C ABI.
 | [crc.rs](crc.rs) | Signed bit counts, check/set statuses and generated CRC table metadata | [crc](../crc.rs) |
 | [fsm.rs](fsm.rs) | Integer error mapping, names and identifier-formatting adapters | [FSMs](../fsm/README.md) |
 | [gsm0502.rs](gsm0502.rs) | Integer comparison, input-returning remap, negative CCCH codes and wrapping paging values | [gsm0502](../gsm0502.rs) |
+| [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../gsm0503.rs) |
 | [gsmtap.rs](gsmtap.rs) | Positional packet constructors returning owned wire bytes | [GSMTAP](../gsmtap/README.md) |
 | [msgb.rs](msgb.rs) | Buffer/layer operations, comparisons, queues and bounded formatting | [message buffers](../msgb/README.md) |
 | [prim.rs](prim.rs) | Initialization, event-map sentinel and lookup contracts | [primitive metadata](../prim.rs) |
