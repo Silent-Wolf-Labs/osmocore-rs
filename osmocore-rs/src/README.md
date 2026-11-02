@@ -119,8 +119,7 @@ CCCH blocks, frequency hopping and paging groups.
 T2 and T3 from it. Results match C when the `gsm_time` comes from `gsm_fn2gsmtime`.
 A caller with only T1, T2 and T3 has to compute the frame number itself, because
 `gsm_gsmtime2fn` isn't implemented. There is no equivalent of a `gsm_time` whose
-fields disagree, and that C behavior isn't recorded. A `GsmTime` type with both
-conversions is planned for 0.3, alongside `gsm_utils`.
+fields disagree, and that C behavior isn't recorded.
 
 Rust rejects inputs where C crashes, reads out of bounds or computes a meaningless
 result:
@@ -283,9 +282,8 @@ return values, buffers, cursors, metadata and callback traces, not only success.
 The [runtime architecture](https://github.com/Silent-Wolf-Labs/osmocore-rs/blob/main/docs/README.md#runtime-and-lifecycle) describes composition
 and focused behavioral evidence. Preferred-API frozen replays,
 independent operation models and cross-module consumer tests supplement direct-C
-observations. Coverage measurements and their historical scope are recorded in
-the [repository test guide](https://github.com/Silent-Wolf-Labs/osmocore-rs/blob/main/osmocore-rs/tests/README.md).
-Subsystem READMEs retain the earlier direct-C audits and regeneration instructions.
+observations. Subsystem READMEs hold the direct-C audits and regeneration
+instructions.
 
 From the repository root:
 

@@ -6,7 +6,7 @@
 
 ## Implemented scope
 
-Stages 5a and 7 cover standalone arithmetic/reset and the selected owned group,
+This covers standalone arithmetic/reset and the selected owned group,
 registry and interval-rollup behavior. Use `RateCtr::{add,inc,difference,reset}`
 directly; the four redundant C-named forwarding functions were removed.
 `RateCtrPerIntv` and interval constants expose second/minute/hour/day last/rate
@@ -200,21 +200,15 @@ chronology, state continuity, frozen inputs/coverage, full artifact fingerprints
 provenance and diagnostics. Both repositories validate corruptions; only this
 repository replays Rust behavior. Fixtures, reader and manifests are shared
 byte-for-byte, and ordinary Rust tests need no C build. See the sibling reference README and repository test guide
-for targeted verification/regeneration commands. No Stage 5a observations,
-vendored snapshot or C reference files are changed.
+for targeted verification/regeneration commands.
 
-Stage 7 validation passed source verification, ASan+UBSan successful-domain
-and isolated-diagnostic checks, two successful/diagnostic/native generations,
-shared-artifact comparisons and both Rust suites. The native one-second smoke
-check confirmed real timerfd/select dispatch; it is characterization of C, not a
-Rust native-driver claim. The library overview records current full-suite results.
 Normal Rust tests need neither C nor the sibling project. Targeted runners are
 `reference/rate_ctr/run_rate_ctr_vector.sh` and `run_rate_ctr_group_vector.sh` in the
 sibling; full regeneration commands remain in its reference README/test guide.
 
 ## Remaining work and fundamental differences
 
-The selected arithmetic/group/rollup scope is complete. Native
+Native
 `rate_ctr_init`, osmo_fd/select/timerfd, stat_item, separate legacy counter.h,
 stats reporters/TCP, VTY and logging APIs remain separately scoped gaps.
 

@@ -648,14 +648,14 @@ VTY logging configuration and remote logging targets.
 
 ### Networking establishment capability
 
-The optional `net` feature completes the bounded establishment slice using
+The optional `net` feature provides bounded establishment using
 standard Rust endpoint/socket ownership and socket2 configuration. The
 [networking contract](../osmocore-rs/src/net/README.md) maps useful C capabilities,
 deliberate differences, six normalized direct-C observations and independent
 loopback/error/cleanup tests. Multicast setup abstractions, Unix/raw sockets,
 SCTP and pending connections remain deferred. Runtime composition is separately
 available through the independent `runtime` feature. This is not
-C source-file/API parity or a release-readiness claim.
+C source-file/API parity.
 
 Defaults are empty. `tracing`, `net` and `runtime` select independently.
 Pending TCP connect, SCTP/TLS, async integration, native C select/timerfd,
