@@ -18,6 +18,10 @@
 - `conv::decode` is faster for K=5 and K=7 codes, and so is `xcch_decode`, because
   the compiler now vectorizes the correlation decoder's main loop. Results are
   unchanged. See `docs/benchmarks.md`.
+- `TimerScheduler::update` is faster when nothing is due and for small batches,
+  because it returns early and reuses its batch buffer, which stays allocated at
+  the largest batch size so far. Very large batches are about 2% slower. See
+  `docs/benchmarks.md`.
 - The 10 largest test fixtures are stored gzip-compressed. Their decompressed
   content and fingerprints are unchanged.
 
