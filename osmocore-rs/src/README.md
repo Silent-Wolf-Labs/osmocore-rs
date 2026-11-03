@@ -224,6 +224,36 @@ the other:
   last octet hold `<CR>`, even if those bits aren't a whole septet. `encode_7bit_ussd`
   adds a second `<CR>` only if that leaves an octet free, though it would fit without.
 
+### Use counts
+
+[use_count.rs](use_count.rs) counts an object's uses by token, like C's `osmo_use_count`.
+`UseCount::change`, `get` and `put` return what changed, and the caller acts on it, where
+C runs a callback. `compat::use_count::osmo_use_count_get_put` takes that callback.
+Counts, totals, entry order and text match C, with these differences:
+
+| C | Rust |
+| --- | --- |
+| Tokens are pointers the caller keeps valid, and a callback can set one to NULL | `UseCount` owns copies, so tokens can't become invalid and neither API can clear one |
+| Entries are talloc children of the object | Entries live in a `Vec` owned by `UseCount`, with no talloc parent |
+| A callback gets the entry, the old count, and a source file and line | `UseChange` gives the entry's position and both counts, with no file or line |
+| Static entries avoid allocation and can't be freed | `add_idle_entries` adds the same idle entries, which can be removed, and a new token's text is still allocated |
+| `INT32_MIN` as a change to a negative count, or as a count after a negative total, overflows | `change` returns `CountOutOfRange`, and `total` stops at the limit |
+| `osmo_use_count_to_str_buf` or `osmo_use_count_find` with no object crashes | Both need counters; the rest of `compat::use_count` takes an `Option`, as C allows NULL |
+
+Some C results look surprising, and both APIs keep them:
+
+- **Text of an empty object:** this reads `0 ()` until an entry or a call to add idle entries
+  exists, even if that adds none, and `0 (-)` from then on, even if every entry is removed.
+- **Reuse:** a new token takes over the first idle entry, whatever its token was, and an
+  entry leaving zero moves to the end of the list.
+- **Idle `None` entries:** a `None` token finds the first entry with no token. After one
+  moves to the end with a count, `count_of(None)` can find another that's idle and return
+  0, so a later `get(None)` adds a second counted entry. `UseChange::entry` always gives
+  the entry that changed.
+- **The total:** it stops at the limits of `i32` as it adds, so it can depend on list order.
+- **Errors:** a count that would leave the range of `i32` stays as it was, but a callback's
+  error undoes nothing. The callback has to correct the count itself.
+
 ### A5 ciphers
 
 [a5.rs](a5.rs) generates one frame's A5/0, A5/1 or A5/2 stream, as 114 unpacked bits for
@@ -474,6 +504,7 @@ the family names below also cover preferred methods in the functional modules.
 | `hexparse` | `osmo_hexparse` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
 | `gsm0503` | `gsm0503_xcch_encode`, `gsm0503_xcch_decode`, `gsm0503_xcch_interleave`, `gsm0503_xcch_deinterleave`, `gsm0503_xcch_burst_map`, `gsm0503_xcch_burst_unmap`, `gsm0503_xcch`, `gsm0503_fire_crc40`; xCCH only | `src/coding/gsm0503_coding.c`, `gsm0503_interleaving.c`, `gsm0503_mapping.c`, `gsm0503_parity.c`, generated `src/gsm/gsm0503_conv.c` | `include/osmocom/coding/gsm0503_*.h`, `include/osmocom/gsm/gsm0503.h` |
 | `gsm0502` | `GSM_TDMA_FN_SUM`, `GSM_TDMA_FN_SUB`, `GSM_TDMA_FN_DIFF`, `GSM_TDMA_FN_INC`, `GSM_TDMA_FN_DEC`, `gsm0502_fncmp`, `gsm0502_fn_remap`, `gsm0502_fn2ccch_block`, `gsm0502_hop_seq_gen` (frame-number input, no `gsm_time`), `gsm0502_get_n_pag_blocks`, `gsm0502_get_ccch_group`, `gsm0502_get_paging_group`, `gsm0502_calc_paging_group`, `gsm48_number_of_paging_subchannels`, `rsl_ccch_conf_to_bs_cc_chans`, `GSM_NBITS_*` | `src/gsm/gsm0502.c`, `gsm48.c`, `rsl.c` | `include/osmocom/gsm/gsm0502.h` |
+| `use_count` | `_osmo_use_count_get_put` and `osmo_use_count_get_put`, `osmo_use_count_total`, `osmo_use_count_by`, `osmo_use_count_to_str_buf`, `osmo_use_count_name_buf`, `osmo_use_count_to_str_c`, `osmo_use_count_make_static_entries`, `osmo_use_count_free`; see below for what's left out | `src/core/use_count.c` | `include/osmocom/core/use_count.h` |
 | `a5` | `osmo_a5` for A5/0, A5/1 and A5/2, `osmo_a5_fn_count`; see below for what's left out | `src/gsm/a5.c` | `include/osmocom/gsm/a5.h` |
 | `gsm_utils` | `gsm_band_name`, `gsm_band_parse`, `ms_class_gmsk_dbm`, `ms_pwr_ctl_lvl`, `ms_pwr_dbm`, `rxlev2dbm`, `dbm2rxlev`, `gsm_arfcn2band_rc`, `gsm_arfcn2freq10`, `gsm_freq102arfcn`, `gsm_fn2gsmtime`, `gsm_gsmtime2fn`, `gsm_fn_as_gsmtime_str`, `osmo_dump_gsmtime`, `gsm_rfn2fn`, `gsm_fn2rfn`, `gprs_tlli_type`, `gprs_tlli2tmsi`, `gprs_tmsi2tlli`, `ms_cm2_a5n_support`, `ms_cm3_a5n_support`, `rach_max_trans_val2raw`, `rach_max_trans_raw2val`, `rach_tx_integer_raw2val`, `gsm_get_octet_len`, `gsm_septet_encode`, `gsm_septet_pack`, `gsm_7bit_encode_n`, `gsm_7bit_encode_n_ussd`, `gsm_7bit_decode_n`, `gsm_7bit_decode_n_ussd`, `gsm_7bit_decode_n_hdr`; see below for what's left out | `src/gsm/gsm_utils.c` | `include/osmocom/gsm/gsm_utils.h` |
 | `tlv` | `tlv_parse_one`, `tlv_parse`, `tlv_parse2`, `tlv_def_patch`, `tlv_encode_one`, `tlv_encode`, `tlv_encode_ordered`, `osmo_tlvp_merge`, `osmo_tlvp_copy`, `osmo_shift_v_fixed`, `osmo_match_shift_tv_fixed`, `osmo_shift_tlv`, `osmo_match_shift_tlv`, `osmo_shift_lv`, `osmo_tlv_prot_msg_name`, `osmo_tlv_prot_ie_name`, `osmo_tlv_prot_validate_tp`, `osmo_tlv_prot_parse`, `osmo_tlv_prot_msgt_flags`, `tlvp_val8`, `tlvp_val16be`, `tlvp_val32be`, `tlvp_val16_unal`, `tlvp_val32_unal`, `TLVP_*`, `*_GROSS_LEN`, `msgb_*` TLV helpers; not `tlv_dump` or the raw-pointer `*_put` writers | `src/gsm/tlv_parser.c` | `include/osmocom/gsm/tlv.h` |
@@ -495,6 +526,16 @@ the family names below also cover preferred methods in the functional modules.
 | `time_accounting` | `osmo_time_cc_init`, `osmo_time_cc_set_flag`, `osmo_time_cc_cleanup` via owned `TimeCc` methods; optional `CounterSink`, mutable configuration and explicit scheduler dispatch | `src/core/time_cc.c`, `src/core/rate_ctr.c` (`rate_ctr_add` sink only) | `include/osmocom/core/time_cc.h`, `rate_ctr.h` |
 | `time` | `osmo_gettimeofday`, `osmo_clock_gettime`, override globals via `ClockOverrides`, `osmo_gettimeofday_override_add`, `osmo_clock_override_enable`, `osmo_clock_override_add`, `osmo_clock_override_gettimespec`; raw time arithmetic/presence/clear/comparison and seconds helpers | `src/core/timer_gettimeofday.c`, `src/core/timer_clockgettime.c` | `include/osmocom/core/timer.h`, `timer_compat.h` |
 | `gsmtap` | `gsmtap_makemsg_ex`, `gsmtap_makemsg` | `src/core/gsmtap_util.c` | `include/osmocom/core/gsmtap_util.h` |
+
+### C APIs left out of `use_count`
+
+These are in `use_count.h` and have no direct Rust equivalent. Each can be added if a
+consumer needs it.
+
+| C API | Why it's left out |
+| --- | --- |
+| `osmo_use_count_find`, `struct osmo_use_count_entry` | Return or expose list pointers. `UseCount::entries`, `count_of` and `UseChange::entry` cover the same uses |
+| `osmo_use_count_cb_t`'s `file` and `line`, `struct osmo_use_count`'s `talloc_object` | Only for logging from C macros and for talloc. A Rust caller can capture what it needs in its callback |
 
 ### C APIs left out of `a5`
 

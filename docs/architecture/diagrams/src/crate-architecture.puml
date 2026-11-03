@@ -18,7 +18,7 @@ component "Always compiled compat adapters\nstatus, buffer and sentinel contract
 component "base64 / bcd / hexparse / prbs\nbits / bitvec / crc / conv" as utilities
 component "gsm0502 / gsm0503 / gsm_utils / a5 / tlv\nframe numbers, bands, xCCH coding, ciphers and TLV" as gsm
 component "msgb / prim / gsmtap\nVec and Msgb encoding" as messages
-component "time / timer / tdef / fsm\nrate_ctr / time_accounting" as components
+component "time / timer / tdef / fsm\nrate_ctr / time_accounting / use_count" as components
 }
 package "Independent optional features: default = []" {
 component "net\nresolution and completed TCP/UDP setup\nsocket2" as net

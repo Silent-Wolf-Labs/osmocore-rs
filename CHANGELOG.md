@@ -27,6 +27,8 @@
 
 ### Added
 
+- `use_count` module with named use counters for one object, checked against the C
+  library.
 - `a5` module with the A5/0, A5/1 and A5/2 cipher streams, checked against the C
   library.
 - `gsm_utils` module with GSM bands, ARFCN and frequency conversion, mobile power
