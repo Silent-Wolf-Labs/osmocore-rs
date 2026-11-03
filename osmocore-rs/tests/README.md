@@ -46,6 +46,7 @@ contents where those are part of the API contract.
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
 | `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
+| `use_count` | Use counters, entry order and reuse, callbacks and text |
 | `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
@@ -835,6 +836,23 @@ The fixture has no C result for byte 0xff, which reads past C's table, padding a
 which shifts by a negative amount, an empty decode output, which aborts, or input
 shorter than the septets. `gsm_utils/behavior_7bit.rs` tests those Rust results directly,
 and messages over 255 septets, which C's decoders can't take.
+
+## use_count observations
+
+`use_count/use_count_vectors.ndjson` records direct `libosmocore` calls as a stream of
+events on named objects: each change with its result, each callback it runs, static
+entries, freed entries and text at a range of sizes, with the total, text and every entry
+after each change. Scripted objects cover entry order and reuse, NULL and empty tokens
+and the limits of a count, and others make random calls under each callback behaviour.
+The harness also runs the sequence of upstream's test and compares its use count lines
+with `use_count_test.err`. `use_count/reference_vectors.rs` replays the events against
+`compat::use_count`, running the same callbacks, and those without callbacks against the
+preferred API. Regenerate it from `gsmtap-rs` with
+`reference/use_count/run_use_count_vector.sh`.
+
+The fixture has no C result for `INT32_MIN` as a change to a negative count or as a count
+after a negative total, where a negation overflows, or for freeing a static entry, which C
+forbids. `use_count/behavior.rs` tests those Rust results directly.
 
 ## A5 observations
 
