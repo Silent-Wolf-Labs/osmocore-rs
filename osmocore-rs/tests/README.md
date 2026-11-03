@@ -44,6 +44,7 @@ contents where those are part of the API contract.
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
+| `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks and RACH parameters |
 | `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
@@ -804,6 +805,21 @@ fields. `gsm0502/reference_vectors.rs` replays them against both the preferred a
 The fixture has no C result for an empty allocation, a hopping sequence number
 above 63 or a zero group divisor, because those calls crash or are undefined. Those
 Rust errors have direct tests instead.
+
+## gsm_utils observations
+
+`gsm_utils/gsm_utils_numeric_vectors.ndjson` records direct `libosmogsm` calls: bands
+and power for valid and invalid band values, every ARFCN under each flag combination,
+every frequency in the band table, GSM time from frame numbers and from fields that
+disagree, reduced frame numbers around the wrap threshold, TLLIs, classmarks and RACH
+parameters. The harness also replays upstream's RACH output and its checks on power
+classes, GSM time and reduced frame numbers. `gsm_utils/reference_vectors.rs` replays
+the records against both the preferred and `compat::gsm_utils` APIs. Regenerate it
+from `gsmtap-rs` with `reference/gsm_utils/run_gsm_utils_numeric_vector.sh`.
+
+The fixture has no C result for an RFN of 42432 or more, which aborts, or a dBm within
+110 of `INT_MAX`, which overflows. `gsm_utils/behavior.rs` tests those Rust results
+directly.
 
 ## GSM 05.03 xCCH observations
 

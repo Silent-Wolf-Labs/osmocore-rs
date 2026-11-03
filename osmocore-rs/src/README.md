@@ -117,9 +117,9 @@ CCCH blocks, frequency hopping and paging groups.
 
 `hop_index` and `hop_arfcn` take a frame number, not C's `gsm_time`, and derive T1,
 T2 and T3 from it. Results match C when the `gsm_time` comes from `gsm_fn2gsmtime`.
-A caller with only T1, T2 and T3 has to compute the frame number itself, because
-`gsm_gsmtime2fn` isn't implemented. There is no equivalent of a `gsm_time` whose
-fields disagree, and that C behavior isn't recorded.
+A caller with only T1, T2 and T3 gets the frame number from `GsmTime::from_parts`.
+There is no equivalent of a `gsm_time` whose fields disagree, and that C behavior
+isn't recorded for hopping.
 
 Rust rejects inputs where C crashes, reads out of bounds or computes a meaningless
 result:
@@ -152,6 +152,39 @@ have no equivalent, and the C option to pass null count pointers isn't kept.
 documented soft-bit range. All three C backends give identical results on the
 recorded frames. It also accepts -128 without panicking, but that isn't compared
 with C, because the C backends disagree there.
+
+### GSM utilities
+
+[gsm_utils.rs](gsm_utils.rs) provides the numeric helpers from C's `gsm_utils`: bands,
+ARFCNs and frequencies, mobile power levels, RxLev, GSM time, reduced frame numbers,
+TLLIs, classmark A5 support and RACH parameters. Its 7-bit functions aren't
+implemented yet.
+
+Results match C, with these differences in the preferred API. `compat::gsm_utils`
+keeps C's integer and sentinel results for all but the first two rows.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| RFN of 42432 or more | Aborts | `rfn_to_frame` returns `None` |
+| dBm within 110 of `INT_MAX` | Overflows | `dbm_to_rxlev` returns 63 |
+| A band value that names no band | Returns -22 or `"invalid"` | `Band` can't hold one |
+| Frame number from the hyperframe on | Keeps it, and `t1` truncates | `GsmTime::from_frame` returns `None` |
+| T1, T2 or T3 out of range | Reduces the result, possibly oddly | `GsmTime::from_parts` returns `None` |
+| TLLI type with no conversion | `gprs_tmsi2tlli` returns 0 | `local_tlli` and `foreign_tlli` have no such input |
+
+Some C results look surprising, and both APIs keep them:
+
+- **Uplink ARFCNs:** `freq10_to_arfcn` sets `ARFCN_UPLINK` on an uplink result, but
+  `arfcn_to_freq10` returns nothing for an ARFCN with that flag, so the two don't
+  round-trip until the flag is cleared.
+- **The last field of a formatted `GsmTime`:** this is the frame number's low byte
+  modulo 52, not the frame number modulo 52, so the two differ from frame 256 on.
+- **Reduced frame numbers:** an RFN over half the modulus from the current frame's
+  RFN counts as the previous cycle, even when it's the larger of the two.
+
+A local TLLI of `0xffffffff` converts to the P-TMSI `0xffffffff`, the same value C
+uses for an error. `tlli_to_tmsi` tells them apart, and `compat::gsm_utils::gprs_tlli2tmsi`
+doesn't. Text after a NUL in `Band::parse` is ignored, because C would never see it.
 
 ### Base64, BCD and hexadecimal parsing
 
@@ -388,6 +421,7 @@ the family names below also cover preferred methods in the functional modules.
 | `hexparse` | `osmo_hexparse` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
 | `gsm0503` | `gsm0503_xcch_encode`, `gsm0503_xcch_decode`, `gsm0503_xcch_interleave`, `gsm0503_xcch_deinterleave`, `gsm0503_xcch_burst_map`, `gsm0503_xcch_burst_unmap`, `gsm0503_xcch`, `gsm0503_fire_crc40`; xCCH only | `src/coding/gsm0503_coding.c`, `gsm0503_interleaving.c`, `gsm0503_mapping.c`, `gsm0503_parity.c`, generated `src/gsm/gsm0503_conv.c` | `include/osmocom/coding/gsm0503_*.h`, `include/osmocom/gsm/gsm0503.h` |
 | `gsm0502` | `GSM_TDMA_FN_SUM`, `GSM_TDMA_FN_SUB`, `GSM_TDMA_FN_DIFF`, `GSM_TDMA_FN_INC`, `GSM_TDMA_FN_DEC`, `gsm0502_fncmp`, `gsm0502_fn_remap`, `gsm0502_fn2ccch_block`, `gsm0502_hop_seq_gen` (frame-number input, no `gsm_time`), `gsm0502_get_n_pag_blocks`, `gsm0502_get_ccch_group`, `gsm0502_get_paging_group`, `gsm0502_calc_paging_group`, `gsm48_number_of_paging_subchannels`, `rsl_ccch_conf_to_bs_cc_chans`, `GSM_NBITS_*` | `src/gsm/gsm0502.c`, `gsm48.c`, `rsl.c` | `include/osmocom/gsm/gsm0502.h` |
+| `gsm_utils` | `gsm_band_name`, `gsm_band_parse`, `ms_class_gmsk_dbm`, `ms_pwr_ctl_lvl`, `ms_pwr_dbm`, `rxlev2dbm`, `dbm2rxlev`, `gsm_arfcn2band_rc`, `gsm_arfcn2freq10`, `gsm_freq102arfcn`, `gsm_fn2gsmtime`, `gsm_gsmtime2fn`, `gsm_fn_as_gsmtime_str`, `osmo_dump_gsmtime`, `gsm_rfn2fn`, `gsm_fn2rfn`, `gprs_tlli_type`, `gprs_tlli2tmsi`, `gprs_tmsi2tlli`, `ms_cm2_a5n_support`, `ms_cm3_a5n_support`, `rach_max_trans_val2raw`, `rach_max_trans_raw2val`, `rach_tx_integer_raw2val`; see below for what's left out | `src/gsm/gsm_utils.c` | `include/osmocom/gsm/gsm_utils.h` |
 | `tlv` | `tlv_parse_one`, `tlv_parse`, `tlv_parse2`, `tlv_def_patch`, `tlv_encode_one`, `tlv_encode`, `tlv_encode_ordered`, `osmo_tlvp_merge`, `osmo_tlvp_copy`, `osmo_shift_v_fixed`, `osmo_match_shift_tv_fixed`, `osmo_shift_tlv`, `osmo_match_shift_tlv`, `osmo_shift_lv`, `osmo_tlv_prot_msg_name`, `osmo_tlv_prot_ie_name`, `osmo_tlv_prot_validate_tp`, `osmo_tlv_prot_parse`, `osmo_tlv_prot_msgt_flags`, `tlvp_val8`, `tlvp_val16be`, `tlvp_val32be`, `tlvp_val16_unal`, `tlvp_val32_unal`, `TLVP_*`, `*_GROSS_LEN`, `msgb_*` TLV helpers; not `tlv_dump` or the raw-pointer `*_put` writers | `src/gsm/tlv_parser.c` | `include/osmocom/gsm/tlv.h` |
 | `prbs` | `osmo_prbs7`, `osmo_prbs9`, `osmo_prbs11`, `osmo_prbs15`, `osmo_prbs_state_init`, `osmo_prbs_get_ubit`, `osmo_prbs_get_ubits` | `src/core/prbs.c` | `include/osmocom/core/prbs.h` |
 | `msgb` | `msgb_data`, `msgb_length`, `msgb_headlen`, `msgb_headroom`, `msgb_tailroom`, `msgb_reserve`, `msgb_put`, `msgb_get`, `msgb_push`, `msgb_pull`, `msgb_trim`, `msgb_reset`, `msgb_test_invariant`; basic allocation/free equivalents via `Msgb::new`, `Msgb::with_headroom`, and drop | `src/core/msgb.c` (most primitives are inline in the header) | `include/osmocom/core/msgb.h` |
@@ -407,3 +441,18 @@ the family names below also cover preferred methods in the functional modules.
 | `time_accounting` | `osmo_time_cc_init`, `osmo_time_cc_set_flag`, `osmo_time_cc_cleanup` via owned `TimeCc` methods; optional `CounterSink`, mutable configuration and explicit scheduler dispatch | `src/core/time_cc.c`, `src/core/rate_ctr.c` (`rate_ctr_add` sink only) | `include/osmocom/core/time_cc.h`, `rate_ctr.h` |
 | `time` | `osmo_gettimeofday`, `osmo_clock_gettime`, override globals via `ClockOverrides`, `osmo_gettimeofday_override_add`, `osmo_clock_override_enable`, `osmo_clock_override_add`, `osmo_clock_override_gettimespec`; raw time arithmetic/presence/clear/comparison and seconds helpers | `src/core/timer_gettimeofday.c`, `src/core/timer_clockgettime.c` | `include/osmocom/core/timer.h`, `timer_compat.h` |
 | `gsmtap` | `gsmtap_makemsg_ex`, `gsmtap_makemsg` | `src/core/gsmtap_util.c` | `include/osmocom/core/gsmtap_util.h` |
+
+### C APIs left out of `gsm_utils`
+
+These are in `gsm_utils.h` or `gsm_utils.c` but have no Rust equivalent. Each can be
+added if a consumer needs it.
+
+| C API | Why it's left out |
+| --- | --- |
+| `gsm_7bit_*`, `gsm_septet_*`, `gsm_septets2octets`, `gsm_get_octet_len` | Not implemented yet |
+| `gsm_7bit_decode`, `gsm_7bit_decode_ussd`, `gsm_7bit_encode`, `gsm_7bit_encode_ussd`, `gsm_7bit_encode_oct` | Deprecated, and take no output size. The `_n` functions replace them |
+| `gsm_arfcn2band` | Deprecated, and aborts on an invalid ARFCN. `gsm_arfcn2band_rc` replaces it |
+| `osmo_dump_gsmtime_buf`, `osmo_dump_gsmtime_c` | Format like `osmo_dump_gsmtime` into a raw buffer or talloc context |
+| `osmo_rat_type_name`, `gsm_chan_t_name`, `enum osmo_rat_type`, `enum gsm_chan_t`, `enum gsm_phys_chan_config` | No API here uses these types |
+| `osmo_get_rand_id` | Reads OS randomness, so recordings can't pin its results |
+| `gsm0858_rsl_ul_meas_enc`, `bitvec_add_range1024` | Declared in other headers and belong with RSL and system information encoding |

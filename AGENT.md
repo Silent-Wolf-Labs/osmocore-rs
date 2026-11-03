@@ -27,7 +27,7 @@ retains its local `libosmocore-rs` name; the nested crate is `osmocore-rs/`.
   repository that must be kept up to date as the Rust conversion progresses.
 - Rust compatibility tests: `osmocore-rs/tests/`; committed C observations:
   `osmocore-rs/tests/compatibility/vectors/`.
-  Cargo discovers `tests/{utilities,conv,fsm,gsm0502,gsm0503,msgb,rate_ctr,time,gsmtap,net,runtime,tlv}/main.rs`,
+  Cargo discovers `tests/{utilities,conv,fsm,gsm0502,gsm0503,gsm_utils,msgb,rate_ctr,time,gsmtap,net,runtime,tlv}/main.rs`,
   which register their respective conformance test modules. Shared independent
   fixture readers live in `tests/support/` and are selectively registered with
   `#[path]`; keep crate-root reader aliases and nested fixture module names intact.
