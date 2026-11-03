@@ -97,6 +97,9 @@ Focused evidence:
 - FSM and isolated timer diagnostics tests check typed fields,
   filtering, activation context, hierarchy, deferred errors, cancellation/release,
   callback re-arming and panic payload propagation. No formatter text is asserted.
+- Runtime tests in `runtime/boundaries.rs` check every setting, quota, budget and
+  rejection, each callback and driver failure, and connection resets. The remaining
+  uncovered runtime code needs OS failures or an active `tracing` subscriber.
 - Runtime tests combine scripted output/poll/wake failures with loopback,
   mixed clocks, cooperative fairness and acceptance subprocess failure paths.
   [Focused behavioral tests](../../docs/README.md#acceptance-evidence)
