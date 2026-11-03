@@ -5,6 +5,9 @@
 //! See the [compatibility guide](https://github.com/Silent-Wolf-Labs/osmocore-rs/blob/main/osmocore-rs/src/compat/README.md)
 //! for adapter families, preferred APIs, feature availability and safety boundaries.
 
+/// Recorded A5 cipher compatibility contracts.
+pub mod a5;
+
 /// Recorded base64 compatibility contracts.
 pub mod base64;
 
