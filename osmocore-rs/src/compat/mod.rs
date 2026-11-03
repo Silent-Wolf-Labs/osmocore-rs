@@ -26,6 +26,9 @@ pub mod gsm_utils;
 /// Recorded TLV compatibility contracts.
 pub mod tlv;
 
+/// Recorded use_count compatibility contracts.
+pub mod use_count;
+
 /// Recorded prim compatibility contracts.
 pub mod prim;
 

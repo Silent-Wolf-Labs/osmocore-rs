@@ -108,6 +108,11 @@ path = "benches/gsm_utils.rs"
 harness = false
 
 [[bench]]
+name = "use_count"
+path = "benches/use_count.rs"
+harness = false
+
+[[bench]]
 name = "tlv"
 path = "benches/tlv.rs"
 harness = false
