@@ -14,6 +14,7 @@ C library and export no C ABI.
 
 | Module | Distinct contract | Functional implementation |
 | --- | --- | --- |
+| [a5.rs](a5.rs) | Cipher numbers as integers, -95 and -22 results, optional key and output directions | [a5](../a5.rs) |
 | [base64.rs](base64.rs) | Integer statuses, output lengths, termination and nullable size probes | [base64](../base64.rs) |
 | [bcd.rs](bcd.rs) | Signed lengths, terminated inputs/outputs and buffer mutation | [bcd](../bcd.rs) |
 | [bitvec.rs](bitvec.rs) | Cursor, buffer, sentinel and partial-progress operations | [bitvec](../bitvec.rs) |
