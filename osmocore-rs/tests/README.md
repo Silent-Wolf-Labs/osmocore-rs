@@ -44,6 +44,7 @@ contents where those are part of the API contract.
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
+| `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
@@ -834,6 +835,20 @@ The fixture has no C result for byte 0xff, which reads past C's table, padding a
 which shifts by a negative amount, an empty decode output, which aborts, or input
 shorter than the septets. `gsm_utils/behavior_7bit.rs` tests those Rust results directly,
 and messages over 255 septets, which C's decoders can't take.
+
+## A5 observations
+
+`a5/a5_vectors.ndjson` records direct `libosmogsm` calls: frame counts, both directions
+of A5/0, A5/1 and A5/2 with fixed and random keys and frame numbers and with each key and
+frame count bit alone, and `osmo_a5` results for cipher numbers with no algorithm. The
+harness also replays upstream's A5/0, A5/1 and A5/2 output. `a5/reference_vectors.rs`
+replays the records against both APIs. Regenerate it from `gsmtap-rs` with
+`reference/a5/run_a5_vector.sh`.
+
+The fixture has no C result for frame numbers from 1326 x 2^20 on, where a shift
+overflows an `int`, or for A5/1 and A5/2 with no key, which crashes. `a5/behavior.rs`
+tests those Rust results directly, and that `compat::a5` reports A5/3 and A5/4 as
+unsupported.
 
 ## GSM 05.03 xCCH observations
 

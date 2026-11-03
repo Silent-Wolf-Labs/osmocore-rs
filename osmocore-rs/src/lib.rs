@@ -28,6 +28,7 @@
 
 pub mod diagnostics;
 
+pub mod a5;
 pub mod base64;
 pub mod bcd;
 pub mod bits;

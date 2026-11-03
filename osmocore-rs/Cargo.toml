@@ -98,6 +98,11 @@ path = "benches/timer.rs"
 harness = false
 
 [[bench]]
+name = "a5"
+path = "benches/a5.rs"
+harness = false
+
+[[bench]]
 name = "gsm_utils"
 path = "benches/gsm_utils.rs"
 harness = false

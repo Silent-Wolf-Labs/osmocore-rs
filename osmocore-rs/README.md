@@ -33,6 +33,7 @@ Functional modules live at the crate root:
 - `gsm0502`: GSM frame numbers, burst sizes, block mapping, hopping and paging groups.
 - `gsm0503`: SACCH, SDCCH and BCCH block encoding and soft decoding.
 - `gsm_utils`: GSM bands, ARFCNs, power levels, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and SMS and USSD 7-bit coding.
+- `a5`: the A5/0, A5/1 and A5/2 cipher streams.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 - `msgb`, `prim`, `gsmtap`: message storage, primitive metadata, GSMTAP Vec/Msgb encoding and optional generic UDP runtime integration.
 - `time`, `timer`, `tdef`, `time_accounting`: clocks, scheduling, timeout definitions and accounting.

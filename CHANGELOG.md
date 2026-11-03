@@ -27,6 +27,8 @@
 
 ### Added
 
+- `a5` module with the A5/0, A5/1 and A5/2 cipher streams, checked against the C
+  library.
 - `gsm_utils` module with GSM bands, ARFCN and frequency conversion, mobile power
   levels, RxLev, a `GsmTime` type, reduced frame numbers, TLLIs, classmark A5 support,
   RACH parameters and SMS and USSD 7-bit coding with user data header support,
