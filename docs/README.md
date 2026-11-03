@@ -31,7 +31,7 @@ modules grouped in the diagram are families, not a dependency chain.
 | Area | Design and contracts |
 | --- | --- |
 | Encoding and coding | Slice-based conversions, CRC, PRBS and [convolutional coding](#convolutional-coding) |
-| GSM helpers | GSM 05.02 frame arithmetic, burst sizes, block mapping, hopping and paging groups; GSM 05.03 xCCH block coding; TLV parsing, encoding and protocol validation |
+| GSM helpers | GSM 05.02 frame arithmetic, burst sizes, block mapping, hopping and paging groups; GSM 05.03 xCCH block coding; bands, ARFCNs, power levels, GSM time, TLLIs and RACH parameters; TLV parsing, encoding and protocol validation |
 | Messages | Owned Msgb storage, primitive metadata and [GSMTAP encoding/delivery](#gsmtap-encoding-and-runtime-delivery) |
 | Components | Explicit clocks/schedulers, [FSMs, accounting and rate counters](#timing-fsms-accounting-and-counters) |
 | Socket establishment | Optional [net helpers](#networking-establishment) return owned standard sockets |
@@ -591,6 +591,7 @@ where it deliberately differs, they record the Rust safety difference.
 | PRBS | ITU-T O.150 PRBS-7, 9, 11 and 15 and caller-defined sequences | Generators always start from state 1, with no directly seeded C-style state |
 | GSM 05.02 | TDMA frame arithmetic, burst sizes, block starts, CCCH blocks, hopping and paging groups | Hopping takes a frame number, not `gsm_time`; preferred API rejects inputs C mishandles, and `compat::gsm0502` keeps C's results except where C crashes or reads out of bounds |
 | GSM 05.03 | SACCH, SDCCH and BCCH (xCCH) encoding and soft decoding with bit-error counts | No PDTCH, TCH, AMR or RACH; soft bits are compared with C only from -127 to 127 |
+| GSM utilities | Bands, ARFCNs and frequencies, power levels, RxLev, GSM time, reduced frame numbers, TLLIs, classmark A5 support and RACH parameters | No 7-bit functions yet; preferred API rejects out-of-range frames and T1, T2 and T3, and `compat::gsm_utils` keeps C's results except where C aborts or overflows |
 | TLV | Borrowed parsing, encoding, `Msgb` methods, shifting and protocol validation | Preferred API rejects lengths C truncates or can't parse back; `compat::tlv` keeps C's results, including its merge and copy |
 | Message buffers and primitives | Owned buffers, layer helpers, resize/copy, queues, formatting and primitive metadata | No talloc contexts, pointer/layout or allocator-failure parity |
 | Time, timers and TDef | Clock values/overrides, explicit scheduler, timeout tables and FSM bridge | No general native select/timerfd integration; nested scheduler updates follow the documented Rust policy |

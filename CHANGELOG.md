@@ -27,6 +27,9 @@
 
 ### Added
 
+- `gsm_utils` module with GSM bands, ARFCN and frequency conversion, mobile power
+  levels, RxLev, a `GsmTime` type, reduced frame numbers, TLLIs, classmark A5 support
+  and RACH parameters, checked against the C library.
 - `tlv` module for parsing, encoding and validating tag-length-value messages, with
   values borrowed from the input and an encoding method on `Msgb` for each format,
   checked against the C library.
