@@ -44,7 +44,7 @@ contents where those are part of the API contract.
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
-| `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks and RACH parameters |
+| `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
@@ -820,6 +820,20 @@ from `gsmtap-rs` with `reference/gsm_utils/run_gsm_utils_numeric_vector.sh`.
 The fixture has no C result for an RFN of 42432 or more, which aborts, or a dBm within
 110 of `INT_MAX`, which overflows. `gsm_utils/behavior.rs` tests those Rust results
 directly.
+
+`gsm_utils/gsm_utils_7bit_vectors.ndjson` records direct calls to the 7-bit functions:
+octet lengths, the septet of every byte from 0x01 to 0xfe, packing with each padding,
+SMS and USSD encoding under a range of output sizes, every septet alone and after an
+escape, and random input with and without a user data header. The harness replays
+upstream's `sms_test.ok` lines for these functions and its checks on them, and the
+fixture marks the records made from upstream's data. `gsm_utils/reference_vectors_7bit.rs`
+replays the records against both APIs. Regenerate it from `gsmtap-rs` with
+`reference/gsm_utils/run_gsm_utils_7bit_vector.sh`.
+
+The fixture has no C result for byte 0xff, which reads past C's table, padding above 7,
+which shifts by a negative amount, an empty decode output, which aborts, or input
+shorter than the septets. `gsm_utils/behavior_7bit.rs` tests those Rust results directly,
+and messages over 255 septets, which C's decoders can't take.
 
 ## GSM 05.03 xCCH observations
 

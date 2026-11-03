@@ -22,7 +22,7 @@ C library and export no C ABI.
 | [fsm.rs](fsm.rs) | Integer error mapping, names and identifier-formatting adapters | [FSMs](../fsm/README.md) |
 | [gsm0502.rs](gsm0502.rs) | Integer comparison, input-returning remap, negative CCCH codes and wrapping paging values | [gsm0502](../gsm0502.rs) |
 | [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../gsm0503.rs) |
-| [gsm_utils.rs](gsm_utils.rs) | Integer band and type values, -22 and 0xffff error results, `gsm_time` fields that can disagree | [gsm_utils](../gsm_utils.rs) |
+| [gsm_utils.rs](gsm_utils.rs) | Integer band and type values, -22 and 0xffff error results, `gsm_time` fields that can disagree, bounded and NUL-terminated 7-bit buffers, wrapped header lengths | [gsm_utils](../gsm_utils.rs) |
 | [tlv.rs](tlv.rs) | Integer status, partly written parse outputs, truncated and out-of-range lengths, C's merge and copy results | [tlv](../tlv.rs) |
 | [gsmtap.rs](gsmtap.rs) | Positional packet constructors returning owned wire bytes | [GSMTAP](../gsmtap/README.md) |
 | [msgb.rs](msgb.rs) | Buffer/layer operations, comparisons, queues and bounded formatting | [message buffers](../msgb/README.md) |
