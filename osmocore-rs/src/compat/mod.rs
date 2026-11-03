@@ -17,6 +17,9 @@ pub mod gsm0502;
 /// Recorded GSM 05.03 compatibility contracts.
 pub mod gsm0503;
 
+/// Recorded TLV compatibility contracts.
+pub mod tlv;
+
 /// Recorded prim compatibility contracts.
 pub mod prim;
 
