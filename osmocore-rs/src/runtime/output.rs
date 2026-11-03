@@ -66,6 +66,20 @@ mod tests {
         }
     }
     #[test]
+    fn a_transport_claiming_too_much_or_too_little_fails_the_write() {
+        let mut output = entry(b"abc");
+        assert!(matches!(
+            attempt(&mut output, true, 16, |data, _| Ok(data.len() + 1)),
+            Attempt::Failed(_)
+        ));
+        assert_eq!(output.offset, 0);
+        let mut output = entry(b"abc");
+        assert!(matches!(
+            attempt(&mut output, false, 16, |data, _| Ok(data.len() - 1)),
+            Attempt::Failed(_)
+        ));
+    }
+    #[test]
     fn scripted_partial_block_interrupt_and_fifo() {
         let mut wire = Vec::new();
         for text in [b"abcdef".as_slice(), b"ghij"] {

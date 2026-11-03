@@ -9,6 +9,7 @@ use std::{
     sync::{Arc, Barrier, mpsc},
     time::{Duration, Instant},
 };
+mod boundaries;
 mod mixed_drivers;
 fn message(bytes: &[u8]) -> Msgb {
     let mut m = Msgb::new(bytes.len()).unwrap();
