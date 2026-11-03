@@ -15,47 +15,49 @@ column on the right; a `-` means the bench didn't exist yet. Results measure the
 default build with no Cargo features.
 
 <!-- bench-table:begin -->
-| Benchmark | v0.1.0 | v0.1.0 repeat | Decoder saturation fix | Thread-safe handles | xCCH | Conv ACS loop | Timer batch reuse | TLV |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `bits/pack_184` | 105 | 104 | 104 | 105 | 104 | 104 | 104 | 107 |
-| `bits/pack_456` | 256 | 255 | 254 | 256 | 255 | 258 | 258 | 256 |
-| `bits/pack_offset_184` | 119 | 119 | 118 | 119 | 118 | 118 | 118 | 119 |
-| `bits/pack_offset_456` | 298 | 294 | 293 | 294 | 293 | 292 | 292 | 299 |
-| `bits/unpack_184` | 100 | 99.7 | 99.8 | 101 | 100 | 99.7 | 99.7 | 100 |
-| `bits/unpack_456` | 252 | 252 | 251 | 252 | 252 | 251 | 252 | 253 |
-| `bits/unpack_offset_184` | 92.5 | 92.8 | 91.9 | 90.3 | 92.1 | 91.8 | 92.1 | 92.6 |
-| `bits/unpack_offset_456` | 239 | 235 | 233 | 236 | 236 | 235 | 235 | 240 |
-| `conv/k5_n2/decode_clean` | 6,313 | 6,270 | 5,727 | 5,743 | 5,732 | 2,379 | 2,385 | 2,402 |
-| `conv/k5_n2/decode_noisy` | 6,310 | 6,290 | 5,708 | 5,769 | 5,727 | 2,376 | 2,385 | 2,402 |
-| `conv/k5_n2/decoder_reuse_noisy` | 22,669 | 23,131 | 24,220 | 22,279 | 22,458 | 22,174 | 22,222 | 22,427 |
-| `conv/k5_n2/encode` | 608 | 604 | 601 | 560 | 561 | 559 | 559 | 566 |
-| `conv/k7_n3/decode_clean` | 26,003 | 25,988 | 20,067 | 20,124 | 20,140 | 3,959 | 3,974 | 3,973 |
-| `conv/k7_n3/decode_noisy` | 26,328 | 26,100 | 20,071 | 20,288 | 20,122 | 3,949 | 3,958 | 3,975 |
-| `conv/k7_n3/decoder_reuse_noisy` | 113,461 | 112,508 | 111,139 | 109,044 | 118,524 | 107,569 | 107,660 | 107,851 |
-| `conv/k7_n3/encode` | 674 | 680 | 668 | 632 | 639 | 628 | 630 | 631 |
-| `crc/crc16/ccitt_1500_bytes` | 2,317 | 2,311 | 2,302 | 2,311 | 2,311 | 2,381 | 2,311 | 2,320 |
-| `crc/crc16/ccitt_64_bytes` | 81.3 | 82.0 | 80.8 | 81.2 | 80.8 | 80.7 | 80.7 | 81.4 |
-| `crc/crc16/crc16_1500_bytes` | 2,323 | 2,313 | 2,297 | 2,311 | 2,310 | 2,304 | 2,303 | 2,312 |
-| `crc/crc16/crc16_64_bytes` | 81.0 | 80.9 | 80.6 | 81.0 | 81.0 | 82.0 | 80.7 | 81.7 |
-| `crc/generic_fire40/1024_bits` | 1,133 | 1,133 | 1,122 | 1,138 | 1,131 | 1,128 | 1,129 | 1,139 |
-| `crc/generic_fire40/184_bits` | 199 | 201 | 197 | 199 | 199 | 198 | 199 | 200 |
-| `fsm/dispatch` | 3.5 | 3.7 | 3.5 | 3.3 | 3.3 | 3.4 | 3.4 | 3.4 |
-| `fsm/state_change` | 6.6 | 6.5 | 6.5 | 5.9 | 5.8 | 5.9 | 5.9 | 6.5 |
-| `gsm0503/xcch/decode_clean` | - | - | - | - | 7,566 | 4,162 | 4,171 | 4,248 |
-| `gsm0503/xcch/decode_noisy` | - | - | - | - | 7,529 | 4,156 | 4,157 | 4,183 |
-| `gsm0503/xcch/encode` | - | - | - | - | 1,219 | 1,193 | 1,178 | 1,180 |
-| `msgb/alloc_1500` | 45.7 | 40.2 | 39.2 | 40.5 | 46.1 | 39.8 | 40.1 | 48.3 |
-| `msgb/alloc_64` | 34.3 | 34.0 | 33.1 | 34.2 | 33.9 | 34.0 | 34.7 | 35.3 |
-| `msgb/put_pull_1500` | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 |
-| `msgb/put_pull_64` | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 |
-| `msgb/put_pull_u32` | 3.4 | 4.3 | 3.2 | 3.4 | 3.5 | 3.2 | 3.4 | 3.5 |
-| `timer/update/expire/1` | 37.8 | 37.7 | 37.7 | 35.7 | 36.4 | 35.7 | 32.9 | 33.0 |
-| `timer/update/expire/16` | 356 | 344 | 342 | 338 | 332 | 337 | 313 | 313 |
-| `timer/update/expire/256` | 7,337 | 7,318 | 7,265 | 7,172 | 7,194 | 7,300 | 7,236 | 7,300 |
-| `timer/update/idle_256_pending` | 6.2 | 6.2 | 6.1 | 6.1 | 6.2 | 6.2 | 2.2 | 2.2 |
-| `tlv/encode` | - | - | - | - | - | - | - | 85.6 |
-| `tlv/parse` | - | - | - | - | - | - | - | 186 |
-| `tlv/parse_two_occurrences` | - | - | - | - | - | - | - | 130 |
+| Benchmark | v0.1.0 | v0.1.0 repeat | Decoder saturation fix | Thread-safe handles | xCCH | Conv ACS loop | Timer batch reuse | TLV | gsm_utils 7-bit |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `bits/pack_184` | 105 | 104 | 104 | 105 | 104 | 104 | 104 | 107 | 104 |
+| `bits/pack_456` | 256 | 255 | 254 | 256 | 255 | 258 | 258 | 256 | 255 |
+| `bits/pack_offset_184` | 119 | 119 | 118 | 119 | 118 | 118 | 118 | 119 | 118 |
+| `bits/pack_offset_456` | 298 | 294 | 293 | 294 | 293 | 292 | 292 | 299 | 293 |
+| `bits/unpack_184` | 100 | 99.7 | 99.8 | 101 | 100 | 99.7 | 99.7 | 100 | 100 |
+| `bits/unpack_456` | 252 | 252 | 251 | 252 | 252 | 251 | 252 | 253 | 251 |
+| `bits/unpack_offset_184` | 92.5 | 92.8 | 91.9 | 90.3 | 92.1 | 91.8 | 92.1 | 92.6 | 92.5 |
+| `bits/unpack_offset_456` | 239 | 235 | 233 | 236 | 236 | 235 | 235 | 240 | 235 |
+| `conv/k5_n2/decode_clean` | 6,313 | 6,270 | 5,727 | 5,743 | 5,732 | 2,379 | 2,385 | 2,402 | 2,395 |
+| `conv/k5_n2/decode_noisy` | 6,310 | 6,290 | 5,708 | 5,769 | 5,727 | 2,376 | 2,385 | 2,402 | 2,389 |
+| `conv/k5_n2/decoder_reuse_noisy` | 22,669 | 23,131 | 24,220 | 22,279 | 22,458 | 22,174 | 22,222 | 22,427 | 22,323 |
+| `conv/k5_n2/encode` | 608 | 604 | 601 | 560 | 561 | 559 | 559 | 566 | 560 |
+| `conv/k7_n3/decode_clean` | 26,003 | 25,988 | 20,067 | 20,124 | 20,140 | 3,959 | 3,974 | 3,973 | 3,954 |
+| `conv/k7_n3/decode_noisy` | 26,328 | 26,100 | 20,071 | 20,288 | 20,122 | 3,949 | 3,958 | 3,975 | 3,952 |
+| `conv/k7_n3/decoder_reuse_noisy` | 113,461 | 112,508 | 111,139 | 109,044 | 118,524 | 107,569 | 107,660 | 107,851 | 108,432 |
+| `conv/k7_n3/encode` | 674 | 680 | 668 | 632 | 639 | 628 | 630 | 631 | 636 |
+| `crc/crc16/ccitt_1500_bytes` | 2,317 | 2,311 | 2,302 | 2,311 | 2,311 | 2,381 | 2,311 | 2,320 | 2,304 |
+| `crc/crc16/ccitt_64_bytes` | 81.3 | 82.0 | 80.8 | 81.2 | 80.8 | 80.7 | 80.7 | 81.4 | 80.8 |
+| `crc/crc16/crc16_1500_bytes` | 2,323 | 2,313 | 2,297 | 2,311 | 2,310 | 2,304 | 2,303 | 2,312 | 2,303 |
+| `crc/crc16/crc16_64_bytes` | 81.0 | 80.9 | 80.6 | 81.0 | 81.0 | 82.0 | 80.7 | 81.7 | 81.0 |
+| `crc/generic_fire40/1024_bits` | 1,133 | 1,133 | 1,122 | 1,138 | 1,131 | 1,128 | 1,129 | 1,139 | 1,133 |
+| `crc/generic_fire40/184_bits` | 199 | 201 | 197 | 199 | 199 | 198 | 199 | 200 | 199 |
+| `fsm/dispatch` | 3.5 | 3.7 | 3.5 | 3.3 | 3.3 | 3.4 | 3.4 | 3.4 | 3.3 |
+| `fsm/state_change` | 6.6 | 6.5 | 6.5 | 5.9 | 5.8 | 5.9 | 5.9 | 6.5 | 6.0 |
+| `gsm0503/xcch/decode_clean` | - | - | - | - | 7,566 | 4,162 | 4,171 | 4,248 | 4,174 |
+| `gsm0503/xcch/decode_noisy` | - | - | - | - | 7,529 | 4,156 | 4,157 | 4,183 | 4,191 |
+| `gsm0503/xcch/encode` | - | - | - | - | 1,219 | 1,193 | 1,178 | 1,180 | 1,173 |
+| `gsm_utils/decode_7bit` | - | - | - | - | - | - | - | - | 267 |
+| `gsm_utils/encode_7bit` | - | - | - | - | - | - | - | - | 218 |
+| `msgb/alloc_1500` | 45.7 | 40.2 | 39.2 | 40.5 | 46.1 | 39.8 | 40.1 | 48.3 | 39.4 |
+| `msgb/alloc_64` | 34.3 | 34.0 | 33.1 | 34.2 | 33.9 | 34.0 | 34.7 | 35.3 | 33.8 |
+| `msgb/put_pull_1500` | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 | 2.9 |
+| `msgb/put_pull_64` | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 | 2.7 | 2.9 | 2.9 | 2.9 |
+| `msgb/put_pull_u32` | 3.4 | 4.3 | 3.2 | 3.4 | 3.5 | 3.2 | 3.4 | 3.5 | 3.4 |
+| `timer/update/expire/1` | 37.8 | 37.7 | 37.7 | 35.7 | 36.4 | 35.7 | 32.9 | 33.0 | 32.7 |
+| `timer/update/expire/16` | 356 | 344 | 342 | 338 | 332 | 337 | 313 | 313 | 317 |
+| `timer/update/expire/256` | 7,337 | 7,318 | 7,265 | 7,172 | 7,194 | 7,300 | 7,236 | 7,300 | 7,209 |
+| `timer/update/idle_256_pending` | 6.2 | 6.2 | 6.1 | 6.1 | 6.2 | 6.2 | 2.2 | 2.2 | 2.2 |
+| `tlv/encode` | - | - | - | - | - | - | - | 85.6 | 85.9 |
+| `tlv/parse` | - | - | - | - | - | - | - | 186 | 184 |
+| `tlv/parse_two_occurrences` | - | - | - | - | - | - | - | 130 | 129 |
 <!-- bench-table:end -->
 
 | Column | Source | rustc | Date | Notes |
@@ -68,6 +70,7 @@ default build with no Cargo features.
 | Conv ACS loop | `389a5ae` plus the change | 1.99.0 | 2026-11-02 | Compiler-vectorized add-compare-select loop in the correlation decoder; `decoder_reuse_noisy` uses `ConvDecoder`, which didn't change |
 | Timer batch reuse | `a07e35c` plus the change | 1.99.0 | 2026-11-02 | `update` returns early when nothing is due and reuses its batch buffer |
 | TLV | `f7107f5` plus the change | 1.99.0 | 2026-11-02 | Adds `tlv` benches; no existing code path changed, so other rows show only noise |
+| gsm_utils 7-bit | `315f0dd` plus the change | 1.99.0 | 2026-11-03 | Adds `gsm_utils` benches; no existing code path changed, so other rows show only noise |
 
 All columns so far were measured on an AMD Ryzen 9 7900X (Linux, `amd-pstate-epp`
 driver, `powersave` governor), pinned to one core.
