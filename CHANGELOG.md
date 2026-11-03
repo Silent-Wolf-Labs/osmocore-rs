@@ -27,6 +27,9 @@
 
 ### Added
 
+- `tlv` module for parsing, encoding and validating tag-length-value messages, with
+  values borrowed from the input and an encoding method on `Msgb` for each format,
+  checked against the C library.
 - `gsm0503` module with SACCH, SDCCH and BCCH block encoding and soft decoding,
   including bit-error counts, checked against the C library.
 - `gsm0502` module with TDMA frame arithmetic, burst sizes, block starts, CCCH

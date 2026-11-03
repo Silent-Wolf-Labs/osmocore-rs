@@ -44,6 +44,7 @@ contents where those are part of the API contract.
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
+| `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
 | `fsm` | FSM core, timers/TDef integration, trees, registry and shared scheduling |
 | `msgb` | Message-buffer primitives, layers, resizing and adapters |
@@ -800,6 +801,20 @@ counts. Regenerate it from `gsmtap-rs` with `reference/gsm0503/run_xcch_vector.s
 
 The fixture has no -128 soft bits, because that value is outside the documented
 range and the C backends disagree on it. A direct test checks that Rust accepts it.
+
+## TLV observations
+
+`tlv/tlv_vectors.ndjson` records direct `libosmogsm` calls: `tlv_parse_one` for each
+format at its length boundaries, including the outputs C has written by a failure;
+`tlv_parse2` with repeated tags, leading LV tags and truncated or random input;
+`tlv_encode_one`, `tlv_encode` and `tlv_encode_ordered`; each `msgb_*` TLV helper;
+the gross length helpers; the `osmo_shift_*` functions; `osmo_tlvp_merge`,
+`osmo_tlvp_copy`, `tlv_def_patch` and the accessors; and `osmo_tlv_prot_*` validation
+and naming. `tlv/reference_vectors.rs` replays them against the preferred and
+`compat::tlv` APIs. Values are compared by their offset in the input as well as their
+contents. `tlv/behavior.rs` covers what C can't record, such as a message with no
+room, which aborts in C. Regenerate the fixture from `gsmtap-rs` with
+`reference/tlv/run_tlv_vector.sh`.
 
 ## Convolutional descriptors, encoder, decoders and evidence
 

@@ -242,6 +242,45 @@ are atomic. Positive-input full-width CRC-32/64 is a safe Rust extension tested
 by independent polynomial division, not undefined C-shift output. Full-width
 8/16 and nonpositive-length full-width 32/64 have direct-C coverage.
 
+
+### TLV
+
+[tlv.rs](tlv.rs) parses messages described by a `TlvDefinition` into a `TlvParsed`,
+whose values borrow from the input. `encode` and the `Msgb` methods such as `put_tlv`
+write elements back. `shift_*` functions take elements from the front of a slice, and
+`TlvProtocol` checks mandatory elements and minimum lengths per message type.
+
+Results match C, with these differences in the preferred API. `compat::tlv` keeps
+C's behavior for each of them unless noted:
+
+- **Lengths that don't fit:** `tlv_encode_one` truncates a length to its field. Rust
+  returns `ValueTooLong`.
+- **Lengths from `0x8000`:** C writes Tvlv and GAN lengths and GAN tags from `0x8000`
+  whose high bit its parser reads as the other form. Rust rejects them, so whatever
+  it writes parses back.
+- **No room:** `msgb_put` aborts in C. Rust returns an error and leaves the message
+  unchanged. `encode` also undoes earlier elements, while `compat::tlv::tlv_encode`
+  keeps them.
+- **`osmo_tlvp_merge`:** C copies each value but leaves its length at zero. Rust's
+  `TlvParsed::merge` keeps the length, and `compat::tlv::osmo_tlvp_merge` returns C's
+  empty result.
+- **`osmo_tlvp_copy`:** C copies no values, so every tag of the copy is absent with
+  only its length set. Clone a `TlvParsed` instead. `compat::tlv::osmo_tlvp_copy`
+  returns those lengths.
+- **Reading past the input:** C reads one byte past an exhausted buffer for an LV tag,
+  and past a short value in `tlvp_val16_unal` and `tlv_encode_one`. Rust returns an
+  error or `None`, and an LV tag on an exhausted input gives C's status.
+- **Logging:** C logs validation problems. Rust returns the first as an error naming
+  its tag.
+
+Rust keeps one C behavior that looks accidental: when both LV tags name the same tag,
+the second replaces the first in the first `TlvParsed` rather than going in the next.
+A `SingleTv` entry also takes priority over a tag's own entry, and `encode` shifts the
+tag into the upper half, so a `0xN0` tag loses its bits as it does in C.
+
+C's raw-pointer writers such as `tlv_put` have no Rust equivalent, because the `Msgb`
+methods write the same bytes. `msgb_vtvlv_gan_put` returns a wrong pointer in C, and
+Rust returns nothing there.
 ## Testing and evidence
 
 Recorded compatibility observations come exclusively from direct calls into the required ignored
@@ -349,6 +388,7 @@ the family names below also cover preferred methods in the functional modules.
 | `hexparse` | `osmo_hexparse` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
 | `gsm0503` | `gsm0503_xcch_encode`, `gsm0503_xcch_decode`, `gsm0503_xcch_interleave`, `gsm0503_xcch_deinterleave`, `gsm0503_xcch_burst_map`, `gsm0503_xcch_burst_unmap`, `gsm0503_xcch`, `gsm0503_fire_crc40`; xCCH only | `src/coding/gsm0503_coding.c`, `gsm0503_interleaving.c`, `gsm0503_mapping.c`, `gsm0503_parity.c`, generated `src/gsm/gsm0503_conv.c` | `include/osmocom/coding/gsm0503_*.h`, `include/osmocom/gsm/gsm0503.h` |
 | `gsm0502` | `GSM_TDMA_FN_SUM`, `GSM_TDMA_FN_SUB`, `GSM_TDMA_FN_DIFF`, `GSM_TDMA_FN_INC`, `GSM_TDMA_FN_DEC`, `gsm0502_fncmp`, `gsm0502_fn_remap`, `gsm0502_fn2ccch_block`, `gsm0502_hop_seq_gen` (frame-number input, no `gsm_time`), `gsm0502_get_n_pag_blocks`, `gsm0502_get_ccch_group`, `gsm0502_get_paging_group`, `gsm0502_calc_paging_group`, `gsm48_number_of_paging_subchannels`, `rsl_ccch_conf_to_bs_cc_chans`, `GSM_NBITS_*` | `src/gsm/gsm0502.c`, `gsm48.c`, `rsl.c` | `include/osmocom/gsm/gsm0502.h` |
+| `tlv` | `tlv_parse_one`, `tlv_parse`, `tlv_parse2`, `tlv_def_patch`, `tlv_encode_one`, `tlv_encode`, `tlv_encode_ordered`, `osmo_tlvp_merge`, `osmo_tlvp_copy`, `osmo_shift_v_fixed`, `osmo_match_shift_tv_fixed`, `osmo_shift_tlv`, `osmo_match_shift_tlv`, `osmo_shift_lv`, `osmo_tlv_prot_msg_name`, `osmo_tlv_prot_ie_name`, `osmo_tlv_prot_validate_tp`, `osmo_tlv_prot_parse`, `osmo_tlv_prot_msgt_flags`, `tlvp_val8`, `tlvp_val16be`, `tlvp_val32be`, `tlvp_val16_unal`, `tlvp_val32_unal`, `TLVP_*`, `*_GROSS_LEN`, `msgb_*` TLV helpers; not `tlv_dump` or the raw-pointer `*_put` writers | `src/gsm/tlv_parser.c` | `include/osmocom/gsm/tlv.h` |
 | `prbs` | `osmo_prbs7`, `osmo_prbs9`, `osmo_prbs11`, `osmo_prbs15`, `osmo_prbs_state_init`, `osmo_prbs_get_ubit`, `osmo_prbs_get_ubits` | `src/core/prbs.c` | `include/osmocom/core/prbs.h` |
 | `msgb` | `msgb_data`, `msgb_length`, `msgb_headlen`, `msgb_headroom`, `msgb_tailroom`, `msgb_reserve`, `msgb_put`, `msgb_get`, `msgb_push`, `msgb_pull`, `msgb_trim`, `msgb_reset`, `msgb_test_invariant`; basic allocation/free equivalents via `Msgb::new`, `Msgb::with_headroom`, and drop | `src/core/msgb.c` (most primitives are inline in the header) | `include/osmocom/core/msgb.h` |
 | `msgb` | Queue/count/free helpers; all slice/message equality helpers; dump/buffer/layer helpers; `msgb_hexdump_c` via `msgb_hexdump_owned`; `msgb_printf` via Rust formatting and `msgb_append_str`. Allocation/context/logging inventory in the message-buffer README. | `src/core/msgb.c`, `src/core/utils.c`; inline queue, comparison, and layer dump helpers | `include/osmocom/core/msgb.h`, `utils.h`, `linuxlist.h` |

@@ -31,7 +31,7 @@ modules grouped in the diagram are families, not a dependency chain.
 | Area | Design and contracts |
 | --- | --- |
 | Encoding and coding | Slice-based conversions, CRC, PRBS and [convolutional coding](#convolutional-coding) |
-| GSM helpers | GSM 05.02 frame arithmetic, burst sizes, block mapping, hopping and paging groups; GSM 05.03 xCCH block coding |
+| GSM helpers | GSM 05.02 frame arithmetic, burst sizes, block mapping, hopping and paging groups; GSM 05.03 xCCH block coding; TLV parsing, encoding and protocol validation |
 | Messages | Owned Msgb storage, primitive metadata and [GSMTAP encoding/delivery](#gsmtap-encoding-and-runtime-delivery) |
 | Components | Explicit clocks/schedulers, [FSMs, accounting and rate counters](#timing-fsms-accounting-and-counters) |
 | Socket establishment | Optional [net helpers](#networking-establishment) return owned standard sockets |
@@ -588,6 +588,7 @@ where it deliberately differs, they record the Rust safety difference.
 | Bits and bit vectors | Packed/unpacked conversion, cursor/field operations, borrowed storage | Rust checks capacities and invalid storage; selected partial-write behavior is retained |
 | CRC | Byte CRC-16/CCITT and generic 8/16/32/64-bit CRCs | Full-width positive-input CRC-32/64 has independent Rust safety tests rather than undefined C-shift parity |
 | Convolutional coding | Checked descriptors, encoder, generic stateful decoder, portable correlation and one-shot dispatch | Bounded descriptor/backend coverage; no NEON or native SIMD implementation parity claim |
+| TLV | Borrowed parsing, encoding, `Msgb` methods, shifting and protocol validation | Preferred API rejects lengths C truncates or can't parse back; `compat::tlv` keeps C's results, including its merge and copy |
 | Message buffers and primitives | Owned buffers, layer helpers, resize/copy, queues, formatting and primitive metadata | No talloc contexts, pointer/layout or allocator-failure parity |
 | Time, timers and TDef | Clock values/overrides, explicit scheduler, timeout tables and FSM bridge | No general native select/timerfd integration; nested scheduler updates follow the documented Rust policy |
 | FSM | Owned registry/runtime, dispatch, transitions, hierarchy, termination and timeouts | No process-global C registry or logging infrastructure |
