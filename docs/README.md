@@ -588,6 +588,9 @@ where it deliberately differs, they record the Rust safety difference.
 | Bits and bit vectors | Packed/unpacked conversion, cursor/field operations, borrowed storage | Rust checks capacities and invalid storage; selected partial-write behavior is retained |
 | CRC | Byte CRC-16/CCITT and generic 8/16/32/64-bit CRCs | Full-width positive-input CRC-32/64 has independent Rust safety tests rather than undefined C-shift parity |
 | Convolutional coding | Checked descriptors, encoder, generic stateful decoder, portable correlation and one-shot dispatch | Bounded descriptor/backend coverage; no NEON or native SIMD implementation parity claim |
+| PRBS | ITU-T O.150 PRBS-7, 9, 11 and 15 and caller-defined sequences | Generators always start from state 1, with no directly seeded C-style state |
+| GSM 05.02 | TDMA frame arithmetic, burst sizes, block starts, CCCH blocks, hopping and paging groups | Hopping takes a frame number, not `gsm_time`; preferred API rejects inputs C mishandles, and `compat::gsm0502` keeps C's results except where C crashes or reads out of bounds |
+| GSM 05.03 | SACCH, SDCCH and BCCH (xCCH) encoding and soft decoding with bit-error counts | No PDTCH, TCH, AMR or RACH; soft bits are compared with C only from -127 to 127 |
 | TLV | Borrowed parsing, encoding, `Msgb` methods, shifting and protocol validation | Preferred API rejects lengths C truncates or can't parse back; `compat::tlv` keeps C's results, including its merge and copy |
 | Message buffers and primitives | Owned buffers, layer helpers, resize/copy, queues, formatting and primitive metadata | No talloc contexts, pointer/layout or allocator-failure parity |
 | Time, timers and TDef | Clock values/overrides, explicit scheduler, timeout tables and FSM bridge | No general native select/timerfd integration; nested scheduler updates follow the documented Rust policy |
