@@ -177,3 +177,101 @@ pub const fn rach_max_trans_val2raw(value: i32) -> i32 {
 pub const fn rach_max_trans_raw2val(raw: i32) -> i32 {
     gsm_utils::rach_max_trans_from_raw((raw & 3) as u8) as i32
 }
+
+/// Copies `bytes` to the start of `result` and returns their count, or returns -22
+/// and leaves `result` alone if they don't fit.
+fn copy_counted(result: &mut [u8], bytes: &[u8]) -> i32 {
+    match result.get_mut(..bytes.len()) {
+        Some(target) => {
+            target.copy_from_slice(bytes);
+            bytes.len() as i32
+        }
+        None => EINVAL_RESULT,
+    }
+}
+
+/// C sees text only up to its first NUL.
+fn c_string(data: &[u8]) -> &[u8] {
+    data.split(|&byte| byte == 0).next().unwrap_or(data)
+}
+
+/// Returns the octets needed to pack `septets` septets.
+pub const fn gsm_get_octet_len(septets: u8) -> u8 {
+    gsm_utils::septets_to_octets(septets as usize) as u8
+}
+
+/// Writes the septets of `data`, up to its first NUL, to `result` and returns their
+/// count. Returns -22 if they don't fit, where C would overrun.
+pub fn gsm_septet_encode(result: &mut [u8], data: &[u8]) -> i32 {
+    copy_counted(result, &gsm_utils::encode_septets(c_string(data)))
+}
+
+/// Writes packed septets to `result` and returns the octet count. Returns -22 if they
+/// don't fit or `padding` is above 7, where C overruns or shifts by a negative amount.
+pub fn gsm_septet_pack(result: &mut [u8], septets: &[u8], padding: u8) -> i32 {
+    gsm_utils::pack_septets(septets, padding)
+        .map_or(EINVAL_RESULT, |octets| copy_counted(result, &octets))
+}
+
+fn write_packed(result: &mut [u8], packed: &gsm_utils::Packed7bit) -> (i32, i32) {
+    result[..packed.octets.len()].copy_from_slice(&packed.octets);
+    (packed.septets as i32, packed.octets.len() as i32)
+}
+
+/// Encodes `data`, up to its first NUL, into `result`, whose length is C's `n`. Returns
+/// the septet and octet counts.
+pub fn gsm_7bit_encode_n(result: &mut [u8], data: &[u8]) -> (i32, i32) {
+    let packed = gsm_utils::encode_7bit(c_string(data), result.len());
+    write_packed(result, &packed)
+}
+
+/// Encodes `data`, up to its first NUL, for USSD into `result`, whose length is C's
+/// `n`. Returns the septet and octet counts.
+pub fn gsm_7bit_encode_n_ussd(result: &mut [u8], data: &[u8]) -> (i32, i32) {
+    let packed = gsm_utils::encode_7bit_ussd(c_string(data), result.len());
+    write_packed(result, &packed)
+}
+
+/// Writes decoded text and a NUL to `text` and returns the text's length.
+fn write_text(text: &mut [u8], decoded: &[u8]) -> i32 {
+    text[..decoded.len()].copy_from_slice(decoded);
+    text[decoded.len()] = 0;
+    decoded.len() as i32
+}
+
+/// Decodes `length` septets into `text`, whose length is C's `n`, adding a NUL. Returns
+/// the text's length. An empty `text` returns 0, where C aborts. Octets past the end of
+/// `user_data`, which C would read anyway, count as zero.
+pub fn gsm_7bit_decode_n(text: &mut [u8], user_data: &[u8], length: u8) -> i32 {
+    gsm_7bit_decode_n_hdr(text, user_data, length, 0)
+}
+
+/// Decodes like [`gsm_7bit_decode_n`], skipping a user data header if `ud_hdr_ind` isn't
+/// zero. As in C, a header longer than the message makes the septet count wrap
+/// around in 8 bits, and decoding then reads on past the octets `length` implies.
+pub fn gsm_7bit_decode_n_hdr(text: &mut [u8], user_data: &[u8], length: u8, ud_hdr_ind: u8) -> i32 {
+    let Some(limit) = text.len().checked_sub(1) else {
+        return 0;
+    };
+    let octets = gsm_utils::septets_to_octets(usize::from(length));
+    let first = match ud_hdr_ind {
+        0 => 0,
+        _ => gsm_utils::header_septets(user_data.first().copied().unwrap_or(0)),
+    };
+    let count = length.wrapping_sub(first as u8);
+    let decoded = gsm_utils::unpack_text(user_data, first, usize::from(count), octets, limit);
+    write_text(text, &decoded)
+}
+
+/// Decodes like [`gsm_7bit_decode_n`], then drops the last byte if the top seven bits
+/// of the last octet hold `<CR>`.
+pub fn gsm_7bit_decode_n_ussd(text: &mut [u8], user_data: &[u8], length: u8) -> i32 {
+    let count = gsm_7bit_decode_n(text, user_data, length);
+    let last = usize::from(gsm_get_octet_len(length)).wrapping_sub(1);
+    if count > 0 && user_data.get(last).is_some_and(|octet| octet >> 1 == b'\r') {
+        text[count as usize - 1] = 0;
+        count - 1
+    } else {
+        count
+    }
+}
