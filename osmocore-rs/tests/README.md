@@ -46,6 +46,7 @@ contents where those are part of the API contract.
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
 | `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
+| `strrb` | Ring of recent strings, its length limit and C's slot and index results |
 | `use_count` | Use counters, entry order and reuse, callbacks and text |
 | `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
 | `conv` | Convolutional reference validation, encoding, decoding and correlation |
@@ -836,6 +837,18 @@ The fixture has no C result for byte 0xff, which reads past C's table, padding a
 which shifts by a negative amount, an empty decode output, which aborts, or input
 shorter than the septets. `gsm_utils/behavior_7bit.rs` tests those Rust results directly,
 and messages over 255 septets, which C's decoders can't take.
+
+## strrb observations
+
+`strrb/strrb_vectors.ndjson` records direct `libosmocore` calls as a stream of events on
+named ringbuffers: each string added with its result, then the start, end, element count,
+slot checks and the result at indexes past the newest string and near the top of the
+`unsigned int` range. The harness also makes the calls and checks of upstream's test.
+`strrb/reference_vectors.rs` replays the events against both APIs. Regenerate it from
+`gsmtap-rs` with `reference/strrb/run_strrb_vector.sh`.
+
+The fixture has no C result for adding to a ringbuffer of size 0, which crashes.
+`strrb/behavior.rs` tests that Rust result directly, and what the preferred API adds.
 
 ## use_count observations
 
