@@ -32,6 +32,9 @@ pub mod use_count;
 /// Recorded prim compatibility contracts.
 pub mod prim;
 
+/// Recorded strrb compatibility contracts.
+pub mod strrb;
+
 /// Recorded tdef compatibility contracts.
 pub mod tdef;
 
