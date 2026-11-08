@@ -68,6 +68,8 @@ RUN timeout 600 cargo test --locked --no-default-features --features "$FEATURES"
 FROM source AS package
 RUN cargo build --locked --no-default-features --features runtime --example runtime_service \
     && timeout 30 target/debug/examples/runtime_service
+RUN cargo build --locked --example xcch_demo \
+    && timeout 30 target/debug/examples/xcch_demo --blocks 3
 RUN cargo build --release --locked --all-features \
     && cargo package --locked
 

@@ -89,3 +89,60 @@ fn fill_matches_single_steps_and_ignores_previous_contents() {
 fn prbs_fixture_rejects_corruption() {
     prbs_fixture::check_corruptions(FIXTURE);
 }
+
+/// `next_bits` gives C's bits for each recorded fill, most significant first.
+#[test]
+fn next_bits_matches_c_fills() {
+    let mut generator = None;
+    let mut checked = 0;
+    for record in records() {
+        if record.op == Op::Init {
+            generator = Some(PrbsState::new(descriptor(&record)));
+        }
+        let generator = generator.as_mut().unwrap();
+        match record.op {
+            Op::Init => {}
+            Op::Ubit => {
+                generator.next_bit();
+            }
+            Op::Ubits => {
+                if record.out_len <= 64 {
+                    let expected = record.dst[..record.out_len]
+                        .iter()
+                        .fold(0u64, |value, &bit| (value << 1) | u64::from(bit));
+                    let mut copy = generator.clone();
+                    assert_eq!(
+                        copy.next_bits(record.out_len as u32),
+                        expected,
+                        "{}",
+                        record.case
+                    );
+                    checked += 1;
+                }
+                let mut dst = vec![0; record.out_len];
+                generator.fill(&mut dst);
+            }
+        }
+    }
+    assert!(checked > 0);
+}
+
+#[test]
+fn next_bits_takes_up_to_64_bits() {
+    let mut a = PrbsState::new(PRBS15);
+    let mut b = a.clone();
+    assert_eq!(a.next_bits(0), 0);
+    let mut bits = [0u8; 64];
+    b.fill(&mut bits);
+    let expected = bits
+        .iter()
+        .fold(0u64, |value, &bit| (value << 1) | u64::from(bit));
+    assert_eq!(a.next_bits(64), expected);
+    assert_eq!(a, b);
+}
+
+#[test]
+#[should_panic(expected = "count must be at most 64")]
+fn next_bits_rejects_more_than_64() {
+    PrbsState::new(PRBS7).next_bits(65);
+}

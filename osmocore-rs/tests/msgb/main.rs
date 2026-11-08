@@ -13,3 +13,4 @@ mod msgb_resize_reference_vectors;
 mod operation_sequences;
 
 mod consumers;
+mod slices;

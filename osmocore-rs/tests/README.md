@@ -357,6 +357,22 @@ gzip -dc osmocore-rs/tests/compatibility/vectors/bit_packing_ext_vectors.json.gz
 For an intentional regeneration, review the fixture diff before accepting it.
 Ordinary Rust tests consume the copied fixture and do not require C or gsmtap-rs.
 
+## Soft-bit vectors
+
+`compatibility/vectors/bits/soft_bits.ndjson` records C's `osmo_ubit2sbit` on every byte
+value and `osmo_sbit2ubit` on every soft bit from -128 to 127.
+`utilities/soft_bits_reference_vectors.rs` checks `bits::to_soft` and `bits::from_soft`
+against each. Regenerate it from `gsmtap-rs` with
+`reference/bits/run_soft_bits_vector.sh`.
+
+## GSMTAP constants
+
+`compatibility/vectors/gsmtap_constants/gsmtap_constants.ndjson` records the version, UDP
+port, message types and channel types in C's `gsmtap.h`, by name.
+`gsmtap/constants_reference_vectors.rs` checks that `gsmtap`'s constants match them, one
+for one and in order. Regenerate it from `gsmtap-rs` with
+`reference/gsmtap/run_gsmtap_constants_vector.sh`.
+
 ## Message-buffer storage
 
 The dedicated `compatibility/vectors/msgb_vectors.json.gz` contains 3,695 direct C

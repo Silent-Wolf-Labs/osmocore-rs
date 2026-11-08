@@ -86,6 +86,23 @@ impl PrbsState {
         bit as u8
     }
 
+    /// Return the next `count` bits as one number, the first bit most significant. A
+    /// count of 0 returns 0.
+    ///
+    /// # Panics
+    ///
+    /// If `count` is more than 64.
+    pub const fn next_bits(&mut self, count: u32) -> u64 {
+        assert!(count <= 64, "count must be at most 64");
+        let mut value = 0u64;
+        let mut taken = 0;
+        while taken < count {
+            value = (value << 1) | self.next_bit() as u64;
+            taken += 1;
+        }
+        value
+    }
+
     /// Overwrite all of `out` with the next unpacked bits.
     pub fn fill(&mut self, out: &mut [u8]) {
         for bit in out {

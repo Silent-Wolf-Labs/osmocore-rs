@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! MSB-first packed and unpacked bit conversions.
+//! MSB-first packed and unpacked bit conversions, and soft bits.
 //!
 //! Packed bits are ordered most-significant bit first. Unpacked input bytes
 //! follow C semantics: each byte is shifted into its bit position, so values
@@ -16,6 +16,24 @@ pub enum BitError {
     OutputTooShort,
     /// An offset plus the requested bit count cannot be represented by `usize`.
     ArithmeticOverflow,
+}
+
+/// The soft bit for an unpacked bit: 127 for 0 and -127 for any other value, as C's
+/// `osmo_ubit2sbit` gives. Soft bits run from -127 to 127, with positive meaning 0.
+///
+/// ```
+/// use osmocore_rs::bits::{from_soft, to_soft};
+/// assert_eq!([0, 1, 0].map(to_soft), [127, -127, 127]);
+/// assert_eq!([90, -3, 0].map(from_soft), [0, 1, 0]);
+/// ```
+pub const fn to_soft(bit: u8) -> i8 {
+    if bit == 0 { 127 } else { -127 }
+}
+
+/// The unpacked bit for a soft bit: 1 if it's negative, else 0, as C's `osmo_sbit2ubit`
+/// gives. An unknown soft bit of 0 gives 0.
+pub const fn from_soft(soft: i8) -> u8 {
+    (soft < 0) as u8
 }
 
 fn packed_len(num_bits: usize) -> usize {

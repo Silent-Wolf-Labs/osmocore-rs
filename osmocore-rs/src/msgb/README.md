@@ -19,7 +19,10 @@ storage is five u64 words matching the recorded unsigned-long ABI.
 
 ## Buffer, layer, copy and resize semantics
 
-Untyped reserve/put/get/push/pull/trim do not erase backing bytes. Reserve requires
+Untyped reserve/put/get/push/pull/trim do not erase backing bytes. As in C, `put` and
+`push` return an offset into the backing storage. `put_slice` and `push_slice` append or
+prepend bytes in one call, as C code does with `memcpy` into the returned pointer; they
+change nothing when the bytes don't fit. Reserve requires
 an empty buffer; trim can shrink or extend without initialization and checks
 capacity remaining after data. Reset clears headroom/data, L2–L4 and control
 words while preserving L1 and every backing byte. Compatibility headlen retains

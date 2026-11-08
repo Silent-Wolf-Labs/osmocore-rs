@@ -27,6 +27,15 @@
 
 ### Added
 
+- `xcch_demo` example, which sends a BCCH System Information block through a noisy
+  channel and out as GSMTAP to the gsmtap-rs workbench or Wireshark.
+- `Msgb::put_slice` and `Msgb::push_slice`, which append and prepend bytes in one call.
+- `gsmtap::GSMTAP_UDP_PORT` and the `gsmtap::message_type` and `gsmtap::channel`
+  constants, checked against the C header.
+- `bits::to_soft` and `bits::from_soft`, for C's `osmo_ubit2sbit` and `osmo_sbit2ubit`,
+  checked against the C library.
+- `PrbsState::next_bits`, which reads up to 64 bits as one number.
+- `gsm0503::XCCH_STEALING_FLAG_OFFSETS`, where the stealing flags sit in a burst.
 - `strrb` module with a ring of recent log strings, checked against the C library.
 - `sockaddr_str` module with IP addresses kept as text with a port, checked against the C library.
 - `use_count` module with named use counters for one object, checked against the C

@@ -107,7 +107,8 @@ fields, levels, execution context and an application configuration example.
 [prbs.rs](prbs.rs) generates the ITU-T O.150 PRBS-7, 9, 11 and 15 sequences and
 caller-defined ones. `PrbsState::new`, `next_bit` and `fill` replace the C
 functions. `fill` takes its length from the slice, so it doesn't return the count
-that C does. The C state field is public and can be seeded directly; Rust always
+that C does. `next_bits` reads up to 64 bits as one number, first bit most
+significant, which C has no equivalent for. The C state field is public and can be seeded directly; Rust always
 starts from state 1 and exposes the register read-only.
 
 ### GSM 05.02
@@ -147,6 +148,8 @@ and BCCH share this coding. PDTCH, TCH, AMR and RACH aren't implemented.
 `xcch_decode` returns `data: None` where C returns -1. `bit_errors` and `total_bits`
 are set either way. Slices are fixed-size arrays, so C's unchecked pointer lengths
 have no equivalent, and the C option to pass null count pointers isn't kept.
+`XCCH_STEALING_FLAG_OFFSETS` gives where the `hl` and `hn` flags sit in a burst, which
+C leaves implicit in its burst mapping.
 
 `xcch_decode` follows the C SSE and AVX decoders for -127 to 127, which is the
 documented soft-bit range. All three C backends give identical results on the
@@ -348,6 +351,9 @@ Extended packing treats nonzero unpacked bytes as one, preserves surrounding
 bits, and checks offset overflow before capacities. Zero-width offset operations
 perform no accesses; packed offset zero retains the observed 32-bit unsigned
 return quirk of 536870912. These behaviors did not change with the Rust renames.
+`to_soft` and `from_soft` convert one bit to and from a soft bit, as C's
+`osmo_ubit2sbit` and `osmo_sbit2ubit` do for a buffer: 0 gives 127 and any other byte
+-127, and only a negative soft bit gives 1.
 
 [bitvec.rs](bitvec.rs) represents all 30 nonallocation APIs in the local header
 with borrowed mutable backing and `BitValue::{Zero, One, L, H}`. L/H compares
@@ -539,7 +545,7 @@ the family names below also cover preferred methods in the functional modules.
 | --- | --- | --- | --- |
 | `base64` | `osmo_base64_encode`, `osmo_base64_decode` | `src/core/base64.c` | `include/osmocom/core/base64.h` |
 | `bcd` | `osmo_bcd2char`, `osmo_char2bcd`, `osmo_bcd2str`, `osmo_str2bcd` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
-| `bits` | `osmo_ubit2pbit`, `osmo_pbit2ubit`, `osmo_ubit2pbit_ext`, `osmo_pbit2ubit_ext` | `src/core/bits.c` | `include/osmocom/core/bits.h` |
+| `bits` | `osmo_ubit2pbit`, `osmo_pbit2ubit`, `osmo_ubit2pbit_ext`, `osmo_pbit2ubit_ext`, `osmo_ubit2sbit` and `osmo_sbit2ubit` as `to_soft` and `from_soft` on one bit, for use with `map` | `src/core/bits.c` | `include/osmocom/core/bits.h` |
 | `bitvec` (primitives) | `bitvec_get_bit_pos`, `bitvec_get_bit_pos_high`, `bitvec_set_bit_pos`, `bitvec_set_bit`, `bitvec_get_bit_high`, `bitvec_set_bits`, `bitvec_zero`, `bitvec_used_bytes`, `bitvec_tailroom_bits`, `bit_value_to_char` | `src/core/bitvec.c` (capacity helpers are inline in the header) | `include/osmocom/core/bitvec.h` |
 | `bitvec` (integer and buffer operations) | `bitvec_set_u64`, `bitvec_set_uint`, `bitvec_get_uint`, `bitvec_get_int16_msb`, `bitvec_fill`, `bitvec_spare_padding`, `bitvec_get_bytes`, `bitvec_set_bytes` | `src/core/bitvec.c` | `include/osmocom/core/bitvec.h` |
 | `bitvec` (indexed operations and helpers) | `bitvec_read_field`, `bitvec_write_field`, `bitvec_get_nth_set_bit`, `bitvec_find_bit_pos`, `bitvec_rl`, `bitvec_rl_curbit`, `bitvec_shiftl`, `bitvec_add_array` | `src/core/bitvec.c` | `include/osmocom/core/bitvec.h` |
@@ -571,7 +577,7 @@ the family names below also cover preferred methods in the functional modules.
 | `rate_ctr` | Owned equivalents of `rate_ctr_group_alloc/free/set_name/get_ctr`, inline index/add/inc helpers, `rate_ctr_get_group_by_name_idx`, `rate_ctr_get_by_name`, `rate_ctr_for_each_counter/group`, `rate_ctr_group_reset`; static interval engine replay and portable monotonic driver; native `rate_ctr_init`/select/timerfd characterized only | `src/core/rate_ctr.c`, `utils.c` (identifier validation), `select.c` (native evidence only) | `include/osmocom/core/rate_ctr.h`; `select.h` for evidence only |
 | `time_accounting` | `osmo_time_cc_init`, `osmo_time_cc_set_flag`, `osmo_time_cc_cleanup` via owned `TimeCc` methods; optional `CounterSink`, mutable configuration and explicit scheduler dispatch | `src/core/time_cc.c`, `src/core/rate_ctr.c` (`rate_ctr_add` sink only) | `include/osmocom/core/time_cc.h`, `rate_ctr.h` |
 | `time` | `osmo_gettimeofday`, `osmo_clock_gettime`, override globals via `ClockOverrides`, `osmo_gettimeofday_override_add`, `osmo_clock_override_enable`, `osmo_clock_override_add`, `osmo_clock_override_gettimespec`; raw time arithmetic/presence/clear/comparison and seconds helpers | `src/core/timer_gettimeofday.c`, `src/core/timer_clockgettime.c` | `include/osmocom/core/timer.h`, `timer_compat.h` |
-| `gsmtap` | `gsmtap_makemsg_ex`, `gsmtap_makemsg` | `src/core/gsmtap_util.c` | `include/osmocom/core/gsmtap_util.h` |
+| `gsmtap` | `gsmtap_makemsg_ex`, `gsmtap_makemsg`; `GSMTAP_VERSION`, `GSMTAP_UDP_PORT`, `GSMTAP_TYPE_*` as `message_type`, `GSMTAP_CHANNEL_*` as `channel` | `src/core/gsmtap_util.c` | `include/osmocom/core/gsmtap_util.h`, `gsmtap.h` |
 
 ### C APIs left out of `sockaddr_str`
 
