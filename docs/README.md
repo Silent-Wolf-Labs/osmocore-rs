@@ -554,7 +554,7 @@ families are covered by the [source overview](../osmocore-rs/src/README.md).
 
 `osmocore-rs` implements selected telecom and core utility contracts with
 Rust-native APIs. It is not a replacement for every Osmocom/libosmocore API,
-and exports no C ABI. This status describes the 0.1.0 scope.
+and exports no C ABI. This status describes the 0.2.0 scope.
 
 ### Development approach
 

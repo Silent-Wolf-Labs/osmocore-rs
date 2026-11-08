@@ -7,7 +7,7 @@ Behavior is defined by recorded libosmocore outputs and implemented as idiomatic
 Rust rather than translated C; see the [development approach](docs/README.md#development-approach).
 
 The crate lives in [osmocore-rs/](osmocore-rs). Its Cargo package is
-`osmocore-rs`; Rust imports use `osmocore_rs`. The current release is `0.1.0`.
+`osmocore-rs`; Rust imports use `osmocore_rs`. The current release is `0.2.0`.
 
 ## Capabilities
 
@@ -30,8 +30,8 @@ Add the crate from crates.io, selecting optional features as needed:
 
 ```toml
 [dependencies]
-osmocore-rs = "0.1"
-# osmocore-rs = { version = "0.1", features = ["net", "runtime", "tracing"] }
+osmocore-rs = "0.2"
+# osmocore-rs = { version = "0.2", features = ["net", "runtime", "tracing"] }
 ```
 
 ```rust
