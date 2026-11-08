@@ -15,7 +15,9 @@ Output is the 16-byte GSMTAP v2 base header followed by the supplied payload.
 Header fields preserve the recorded byte order and integer widths, including
 signed signal/SNR and high ARFCN/frame values. Antenna number and the reserved
 byte are always zero because the converted constructors do not accept them.
-The module publishes version/header-length/UM wire constants.
+The module publishes version, header-length and UM wire constants, the GSMTAP UDP port,
+and C's message types and Um channel types as the `message_type` and `channel` modules.
+`tests/gsmtap/constants_reference_vectors.rs` checks each against `gsmtap.h`.
 
 Upstream reference: `src/core/gsmtap_util.c` and
 `include/osmocom/core/gsmtap_util.h` within the required ignored C checkout.
