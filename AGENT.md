@@ -110,3 +110,6 @@ Also run the relevant reference harness when changing a harness or regenerating
 fixtures. Ordinary Rust tests consume committed fixtures and do not require a
 C installation. Review the final diff and Git status in each affected
 repository. Do not commit, push, or publish unless requested.
+
+When work depends on an unmerged change, add it to that change's branch in the same
+repository. Do not stack it on a new branch.
