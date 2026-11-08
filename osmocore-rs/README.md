@@ -36,6 +36,7 @@ Functional modules live at the crate root:
 - `a5`: the A5/0, A5/1 and A5/2 cipher streams.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 - `msgb`, `prim`, `gsmtap`: message storage, primitive metadata, GSMTAP Vec/Msgb encoding and optional generic UDP runtime integration.
+- `sockaddr_str`: IP addresses kept as text with a port.
 - `strrb`: a ring of recent log strings.
 - `use_count`: named use counters for one object.
 - `time`, `timer`, `tdef`, `time_accounting`: clocks, scheduling, timeout definitions and accounting.

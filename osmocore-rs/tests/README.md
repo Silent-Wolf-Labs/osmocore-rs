@@ -46,6 +46,7 @@ contents where those are part of the API contract.
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
 | `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
+| `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
 | `use_count` | Use counters, entry order and reuse, callbacks and text |
 | `tlv` | TLV parsing, encoding, `Msgb` methods, shifting and protocol validation |
@@ -837,6 +838,22 @@ The fixture has no C result for byte 0xff, which reads past C's table, padding a
 which shifts by a negative amount, an empty decode output, which aborts, or input
 shorter than the septets. `gsm_utils/behavior_7bit.rs` tests those Rust results directly,
 and messages over 255 septets, which C's decoders can't take.
+
+## sockaddr_str observations
+
+`sockaddr_str/sockaddr_str_vectors.ndjson` records direct `libosmocore` calls in sections:
+the family of each text; every conversion from a stored address, including families
+that don't match the text; conversions into an address over a destination holding junk,
+so writes made before a failure show; and comparisons. The texts cover valid, nearly valid
+and invalid addresses of both families, and lengths around the 46-byte field. The harness
+replays upstream's test and checks its output matches `sockaddr_str_test.ok`.
+`sockaddr_str/reference_vectors.rs` replays the records against both APIs. Regenerate it
+from `gsmtap-rs` with `reference/sockaddr_str/run_sockaddr_str_vector.sh`.
+
+C's results come from glibc's `inet_pton` and `inet_ntop`, and the recording is from a
+little-endian host, where IPv4 addresses compare by their byte-reversed value.
+`sockaddr_str/behavior.rs` tests what the recording can't hold: NUL bytes in the text,
+missing addresses, and where the preferred API differs from C.
 
 ## strrb observations
 
