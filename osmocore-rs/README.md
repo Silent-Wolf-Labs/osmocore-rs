@@ -125,6 +125,22 @@ cargo run --no-default-features --features runtime --example runtime_service
 
 Linux x86_64 is the initial validated target. Pending TCP connect remains deferred.
 
+## xCCH to GSMTAP demo
+
+`examples/xcch_demo.rs` sends a BCCH System Information block through a noisy channel.
+It builds the block in a `Msgb`, encodes it with `gsm0503`, flips bits chosen by a `prbs`
+generator, decodes it, and sends each block that passes the parity check as GSMTAP over
+UDP, numbering frames with `gsm0502` and printing them as `GsmTime`. Without `--errors`,
+the error rate climbs from 0% to 12%, so the output shows where decoding stops working:
+
+```sh
+cargo run --example xcch_demo -- [--errors PERCENT] [--blocks N] [--to ADDRESS]
+```
+
+It sends to `127.0.0.1:4729` by default. To watch the blocks arrive, run the gsmtap-rs
+workbench with `GSMTAP_LISTEN=127.0.0.1:4729`, or capture loopback in Wireshark with the
+`gsmtap` filter.
+
 Default features are empty (`default = []`). `tracing`, `net` and `runtime`
 are independently selectable, including every combination. `compat::<subsystem>`
 adapters are always compiled and are not a Cargo feature.
