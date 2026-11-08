@@ -242,6 +242,32 @@ all at once at 240 bytes a slot as in C. `osmo_strrb_create` takes no talloc con
 every other function in `strrb.h` is ported. The log target built on it in C's
 `loggingrb.c` isn't, because this crate has no port of C's logging.
 
+### IP addresses as text
+
+[sockaddr_str.rs](sockaddr_str.rs) keeps an IP address as text with a port, like C's
+`osmo_sockaddr_str`, and converts it to and from standard-library addresses. Results match
+C on glibc, with these differences in the preferred API:
+
+| Input | C | `SocketAddrText` | `compat::sockaddr_str` |
+| --- | --- | --- | --- |
+| Text with neither `:` nor `.` | Kept with `AF_UNSPEC`, returning -22 | `new` returns `NoFamily` | Same as C |
+| Empty text, or text over 45 bytes | Kept, cut to 45 bytes, returning -5 or -28 | `new` returns `Empty` or `TooLong` | Same as C |
+| A family that doesn't match the text | Can be stored | Can't be: the family comes from the text | Same as C |
+| NUL in the text | Ends the text | An ordinary character | Ends the text |
+| Converting to the other family | -97 for IPv4, -22 for IPv6 | `WrongFamily` | Same as C |
+| Comparing | `osmo_sockaddr_str_cmp` compares addresses, or the text when one doesn't parse. It isn't a total order, and IPv4 order depends on the host's byte order | `==` compares the text and port, with no ordering. Compare `to_socket_addr()` results instead | Same as C, returning -1, 0 or 1 |
+
+Both APIs parse text with the standard library, which accepts the same text as glibc's
+`inet_pton` on every recorded string. They write addresses as glibc's `inet_ntop` does,
+which differs from Rust's `Ipv6Addr` display in one case: an address whose first 96 bits are
+zero, with a nonzero seventh group, ends in dotted IPv4 (`::1.2.3.4`, where Rust writes
+`::102:304`). C on another libc can write or accept different text. IPv6 flow labels and
+scopes are dropped, as in C.
+
+`compat`'s socket address types have Linux's layout and hold ports in network byte order,
+as in C. NULL pointers are only accepted where C gives them a meaning: a NULL text, and a
+missing address when comparing or formatting.
+
 ### Use counts
 
 [use_count.rs](use_count.rs) counts an object's uses by token, like C's `osmo_use_count`.
@@ -522,6 +548,7 @@ the family names below also cover preferred methods in the functional modules.
 | `hexparse` | `osmo_hexparse` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
 | `gsm0503` | `gsm0503_xcch_encode`, `gsm0503_xcch_decode`, `gsm0503_xcch_interleave`, `gsm0503_xcch_deinterleave`, `gsm0503_xcch_burst_map`, `gsm0503_xcch_burst_unmap`, `gsm0503_xcch`, `gsm0503_fire_crc40`; xCCH only | `src/coding/gsm0503_coding.c`, `gsm0503_interleaving.c`, `gsm0503_mapping.c`, `gsm0503_parity.c`, generated `src/gsm/gsm0503_conv.c` | `include/osmocom/coding/gsm0503_*.h`, `include/osmocom/gsm/gsm0503.h` |
 | `gsm0502` | `GSM_TDMA_FN_SUM`, `GSM_TDMA_FN_SUB`, `GSM_TDMA_FN_DIFF`, `GSM_TDMA_FN_INC`, `GSM_TDMA_FN_DEC`, `gsm0502_fncmp`, `gsm0502_fn_remap`, `gsm0502_fn2ccch_block`, `gsm0502_hop_seq_gen` (frame-number input, no `gsm_time`), `gsm0502_get_n_pag_blocks`, `gsm0502_get_ccch_group`, `gsm0502_get_paging_group`, `gsm0502_calc_paging_group`, `gsm48_number_of_paging_subchannels`, `rsl_ccch_conf_to_bs_cc_chans`, `GSM_NBITS_*` | `src/gsm/gsm0502.c`, `gsm48.c`, `rsl.c` | `include/osmocom/gsm/gsm0502.h` |
+| `sockaddr_str` | `osmo_ip_str_type`, `osmo_sockaddr_str_is_set`, `osmo_sockaddr_str_is_nonzero`, `osmo_sockaddr_str_cmp`, `osmo_sockaddr_str_from_str`, `osmo_sockaddr_str_from_str2`, `osmo_sockaddr_str_from_in_addr`, `osmo_sockaddr_str_from_in6_addr`, `osmo_sockaddr_str_from_32`, `osmo_sockaddr_str_from_32h`, `osmo_sockaddr_str_from_sockaddr_in`, `osmo_sockaddr_str_from_sockaddr_in6`, `osmo_sockaddr_str_from_sockaddr`, `osmo_sockaddr_str_to_in_addr`, `osmo_sockaddr_str_to_in6_addr`, `osmo_sockaddr_str_to_32`, `osmo_sockaddr_str_to_32h`, `osmo_sockaddr_str_to_sockaddr_in`, `osmo_sockaddr_str_to_sockaddr_in6`, `osmo_sockaddr_str_to_sockaddr`, `OSMO_SOCKADDR_STR_FMT` with `OSMO_SOCKADDR_STR_FMT_ARGS`; see below for what's left out | `src/core/sockaddr_str.c` | `include/osmocom/core/sockaddr_str.h` |
 | `strrb` | `osmo_strrb_create`, `osmo_strrb_is_empty`, `osmo_strrb_get_nth`, `_osmo_strrb_is_bufindex_valid`, `osmo_strrb_elements`, `osmo_strrb_add` | `src/core/strrb.c` | `include/osmocom/core/strrb.h` |
 | `use_count` | `_osmo_use_count_get_put` and `osmo_use_count_get_put`, `osmo_use_count_total`, `osmo_use_count_by`, `osmo_use_count_to_str_buf`, `osmo_use_count_name_buf`, `osmo_use_count_to_str_c`, `osmo_use_count_make_static_entries`, `osmo_use_count_free`; see below for what's left out | `src/core/use_count.c` | `include/osmocom/core/use_count.h` |
 | `a5` | `osmo_a5` for A5/0, A5/1 and A5/2, `osmo_a5_fn_count`; see below for what's left out | `src/gsm/a5.c` | `include/osmocom/gsm/a5.h` |
@@ -545,6 +572,17 @@ the family names below also cover preferred methods in the functional modules.
 | `time_accounting` | `osmo_time_cc_init`, `osmo_time_cc_set_flag`, `osmo_time_cc_cleanup` via owned `TimeCc` methods; optional `CounterSink`, mutable configuration and explicit scheduler dispatch | `src/core/time_cc.c`, `src/core/rate_ctr.c` (`rate_ctr_add` sink only) | `include/osmocom/core/time_cc.h`, `rate_ctr.h` |
 | `time` | `osmo_gettimeofday`, `osmo_clock_gettime`, override globals via `ClockOverrides`, `osmo_gettimeofday_override_add`, `osmo_clock_override_enable`, `osmo_clock_override_add`, `osmo_clock_override_gettimespec`; raw time arithmetic/presence/clear/comparison and seconds helpers | `src/core/timer_gettimeofday.c`, `src/core/timer_clockgettime.c` | `include/osmocom/core/timer.h`, `timer_compat.h` |
 | `gsmtap` | `gsmtap_makemsg_ex`, `gsmtap_makemsg` | `src/core/gsmtap_util.c` | `include/osmocom/core/gsmtap_util.h` |
+
+### C APIs left out of `sockaddr_str`
+
+These are in `sockaddr_str.h` and have no Rust equivalent. Each can be added if a consumer
+needs it.
+
+| C API | Why it's left out |
+| --- | --- |
+| `osmo_sockaddr_str_from_osa`, `osmo_sockaddr_str_to_osa` | Take C's `struct osmo_sockaddr` from `socket.h`, which isn't ported. It's a union of the same socket addresses, so `from_sockaddr` and `to_sockaddr` give the same results |
+| `osmo_sockaddr_str_from_32n`, `osmo_sockaddr_str_to_32n` | Deprecated, misnamed aliases of `from_32h` and `to_32h` |
+| `OSMO_SOCKADDR_STR_FMT_ARGS_NOT_NULL` | The same text as `OSMO_SOCKADDR_STR_FMT_ARGS` for an address that isn't NULL |
 
 ### C APIs left out of `use_count`
 

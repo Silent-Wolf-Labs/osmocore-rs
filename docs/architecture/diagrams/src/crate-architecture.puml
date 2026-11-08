@@ -15,7 +15,7 @@ component "Application" as app
 package "osmocore-rs: always available" {
 component "Preferred Rust APIs\nmethods, slices and typed errors" as preferred
 component "Always compiled compat adapters\nstatus, buffer and sentinel contracts" as compat
-component "base64 / bcd / hexparse / prbs / strrb\nbits / bitvec / crc / conv" as utilities
+component "base64 / bcd / hexparse / prbs / strrb / sockaddr_str\nbits / bitvec / crc / conv" as utilities
 component "gsm0502 / gsm0503 / gsm_utils / a5 / tlv\nframe numbers, bands, xCCH coding, ciphers and TLV" as gsm
 component "msgb / prim / gsmtap\nVec and Msgb encoding" as messages
 component "time / timer / tdef / fsm\nrate_ctr / time_accounting / use_count" as components
