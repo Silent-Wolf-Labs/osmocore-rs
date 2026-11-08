@@ -84,8 +84,8 @@ impl<A: Application> Default for DriverSet<'_, A> {
     }
 }
 
-fn timer_hint<C: crate::time::Clock, D, E>(
-    scheduler: &mut crate::timer::TimerScheduler<C, D>,
+fn timer_hint<C: crate::base::time::Clock, D, E>(
+    scheduler: &mut crate::base::timer::TimerScheduler<C, D>,
 ) -> Result<WakeHint, DriverFailure<E>> {
     scheduler
         .prepare()
@@ -108,16 +108,16 @@ fn progress(n: i32) -> DriverProgress {
 }
 /// Typed projections borrow application fields only for one operation.
 pub struct TimerDriver<C, D, A> {
-    projection: fn(&mut A) -> (&mut crate::timer::TimerScheduler<C, D>, &mut D),
+    projection: fn(&mut A) -> (&mut crate::base::timer::TimerScheduler<C, D>, &mut D),
 }
 impl<C, D, A> TimerDriver<C, D, A> {
     pub fn new(
-        projection: fn(&mut A) -> (&mut crate::timer::TimerScheduler<C, D>, &mut D),
+        projection: fn(&mut A) -> (&mut crate::base::timer::TimerScheduler<C, D>, &mut D),
     ) -> Self {
         Self { projection }
     }
 }
-impl<C: crate::time::Clock, D, A: Application> RuntimeDriver<A> for TimerDriver<C, D, A> {
+impl<C: crate::base::time::Clock, D, A: Application> RuntimeDriver<A> for TimerDriver<C, D, A> {
     fn prepare(&mut self, app: &mut A) -> Result<WakeHint, DriverFailure<A::Error>> {
         timer_hint((self.projection)(app).0)
     }
@@ -133,8 +133,8 @@ impl<C: crate::time::Clock, D, A: Application> RuntimeDriver<A> for TimerDriver<
     }
 }
 type FsmPair<C, D, E> = (
-    crate::timer::TimerScheduler<C, crate::fsm::FsmRuntime<C, D, E>>,
-    crate::fsm::FsmRuntime<C, D, E>,
+    crate::base::timer::TimerScheduler<C, crate::base::fsm::FsmRuntime<C, D, E>>,
+    crate::base::fsm::FsmRuntime<C, D, E>,
 );
 pub struct FsmDriver<C, D, E, A> {
     projection: fn(&mut A) -> &mut FsmPair<C, D, E>,
@@ -144,7 +144,7 @@ impl<C, D, E, A> FsmDriver<C, D, E, A> {
         Self { projection }
     }
 }
-impl<C: crate::time::Clock + 'static, D: 'static, E: 'static, A: Application> RuntimeDriver<A>
+impl<C: crate::base::time::Clock + 'static, D: 'static, E: 'static, A: Application> RuntimeDriver<A>
     for FsmDriver<C, D, E, A>
 {
     fn prepare(&mut self, app: &mut A) -> Result<WakeHint, DriverFailure<A::Error>> {
@@ -162,8 +162,8 @@ impl<C: crate::time::Clock + 'static, D: 'static, E: 'static, A: Application> Ru
     }
 }
 type AccountingPair<'d, C, S> = (
-    crate::timer::TimerScheduler<C, crate::time_accounting::TimeCc<'d, S>>,
-    crate::time_accounting::TimeCc<'d, S>,
+    crate::base::timer::TimerScheduler<C, crate::base::time_accounting::TimeCc<'d, S>>,
+    crate::base::time_accounting::TimeCc<'d, S>,
 );
 pub struct AccountingDriver<'d, C, S, A> {
     projection: fn(&mut A) -> &mut AccountingPair<'d, C, S>,
@@ -173,8 +173,8 @@ impl<'d, C, S, A> AccountingDriver<'d, C, S, A> {
         Self { projection }
     }
 }
-impl<C: crate::time::Clock, S: crate::time_accounting::CounterSink, A: Application> RuntimeDriver<A>
-    for AccountingDriver<'_, C, S, A>
+impl<C: crate::base::time::Clock, S: crate::base::time_accounting::CounterSink, A: Application>
+    RuntimeDriver<A> for AccountingDriver<'_, C, S, A>
 {
     fn prepare(&mut self, app: &mut A) -> Result<WakeHint, DriverFailure<A::Error>> {
         timer_hint(&mut (self.projection)(app).0)
@@ -194,8 +194,8 @@ pub struct RateDriver<C, A> {
     projection: fn(
         &mut A,
     ) -> (
-        &mut crate::rate_ctr::RateCtrPeriodicDriver<C>,
-        &mut crate::rate_ctr::RateCtrRuntime,
+        &mut crate::base::rate_ctr::RateCtrPeriodicDriver<C>,
+        &mut crate::base::rate_ctr::RateCtrRuntime,
     ),
 }
 impl<C, A> RateDriver<C, A> {
@@ -203,14 +203,14 @@ impl<C, A> RateDriver<C, A> {
         projection: fn(
             &mut A,
         ) -> (
-            &mut crate::rate_ctr::RateCtrPeriodicDriver<C>,
-            &mut crate::rate_ctr::RateCtrRuntime,
+            &mut crate::base::rate_ctr::RateCtrPeriodicDriver<C>,
+            &mut crate::base::rate_ctr::RateCtrRuntime,
         ),
     ) -> Self {
         Self { projection }
     }
 }
-impl<C: crate::time::Clock, A: Application> RuntimeDriver<A> for RateDriver<C, A> {
+impl<C: crate::base::time::Clock, A: Application> RuntimeDriver<A> for RateDriver<C, A> {
     fn prepare(&mut self, app: &mut A) -> Result<WakeHint, DriverFailure<A::Error>> {
         let (d, _) = (self.projection)(app);
         let Some(next) = d.next_deadline() else {
@@ -218,7 +218,7 @@ impl<C: crate::time::Clock, A: Application> RuntimeDriver<A> for RateDriver<C, A
         };
         let now = d
             .clock
-            .clock_gettime(crate::time::ClockId::MONOTONIC)
+            .clock_gettime(crate::base::time::ClockId::MONOTONIC)
             .map_err(DriverFailure::Clock)?;
         now.to_duration().map_err(DriverFailure::Clock)?;
         let wait = if next <= now {

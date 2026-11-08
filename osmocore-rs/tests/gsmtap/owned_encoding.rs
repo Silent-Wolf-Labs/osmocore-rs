@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use osmocore_rs::{gsmtap::GsmtapMessage, msgb::MsgbError};
+use osmocore_rs::{base::gsmtap::GsmtapMessage, base::msgb::MsgbError};
 
 #[test]
 fn msgb_payload_ceiling_is_65519_while_vec_accepts_65520() {

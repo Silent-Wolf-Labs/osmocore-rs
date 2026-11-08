@@ -1,6 +1,6 @@
 use crate::gsm0502_fixture::{self, Record};
 use osmocore_rs::compat::gsm0502 as compat;
-use osmocore_rs::gsm0502::*;
+use osmocore_rs::gsm::gsm0502::*;
 use std::cmp::Ordering;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/gsm0502/gsm0502_vectors.ndjson");

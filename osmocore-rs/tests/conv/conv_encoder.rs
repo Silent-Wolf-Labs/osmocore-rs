@@ -1,8 +1,10 @@
 //! Encoder and length conformance against every committed direct C observation.
 use super::conv_fixture::{Fixture, Record, bytes, list, signed, unsigned};
 use crate::gzip_fixture;
+use osmocore_rs::base::conv::{
+    ConvCode, ConvCodeSpec, ConvEncoder, ConvError, Termination, encode,
+};
 use osmocore_rs::compat::conv::{osmo_conv_get_input_length, osmo_conv_get_output_length};
-use osmocore_rs::conv::{ConvCode, ConvCodeSpec, ConvEncoder, ConvError, Termination, encode};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::LazyLock;
 

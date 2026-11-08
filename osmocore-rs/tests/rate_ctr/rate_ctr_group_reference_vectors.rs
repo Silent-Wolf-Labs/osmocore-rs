@@ -1,6 +1,6 @@
 use super::rate_ctr_group_fixture::{self as fixture, Counter, Group};
-use osmocore_rs::rate_ctr::*;
-use osmocore_rs::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone};
+use osmocore_rs::base::rate_ctr::*;
+use osmocore_rs::base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone};
 const TEXT: &str =
     include_str!("../compatibility/vectors/rate_ctr_group/rate_ctr_group_vectors.tsv");
 const REFERENCE: &str =

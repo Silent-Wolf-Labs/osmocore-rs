@@ -1,5 +1,5 @@
 use crate::soft_bits_fixture;
-use osmocore_rs::bits::{from_soft, to_soft};
+use osmocore_rs::base::bits::{from_soft, to_soft};
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/bits/soft_bits.ndjson");
 

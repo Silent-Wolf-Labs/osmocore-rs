@@ -1,8 +1,8 @@
 use crate::gzip_fixture;
 use crate::msgb_fixture as fixture;
 use fixture::{Record, bytes, number, words};
+use osmocore_rs::base::msgb::*;
 use osmocore_rs::compat::msgb::{msgb_data, msgb_headlen};
-use osmocore_rs::msgb::*;
 
 pub(super) fn snapshot(msg: &Msgb, r: &Record, prefix: &str) {
     let n = |key| number(r, &format!("{prefix}_{key}"));

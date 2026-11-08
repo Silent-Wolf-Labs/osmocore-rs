@@ -135,7 +135,7 @@ fn selected_c_base64_vectors_match_exactly() {
 
 #[test]
 fn preferred_base64_apis_replay_frozen_buffers_with_rust_length_contracts() {
-    use osmocore_rs::base64::{self, Base64Error};
+    use osmocore_rs::base::base64::{self, Base64Error};
 
     let fixture = include_str!("../compatibility/vectors/base64_buffer_vectors.json");
     let mut compared = BTreeSet::new();

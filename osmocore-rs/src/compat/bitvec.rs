@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pub use crate::bitvec::legacy::{
+pub use crate::base::bitvec::legacy::{
     bitvec_add_array, bitvec_fill, bitvec_find_bit_pos, bitvec_get_bit_high, bitvec_get_bit_pos,
     bitvec_get_bit_pos_high, bitvec_get_bytes, bitvec_get_int16_msb, bitvec_get_nth_set_bit,
     bitvec_get_uint, bitvec_pack, bitvec_read_field, bitvec_rl, bitvec_rl_curbit, bitvec_set_bit,

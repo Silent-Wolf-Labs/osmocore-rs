@@ -1,6 +1,6 @@
 use crate::gsm_utils_7bit_fixture::{self, DecodeMode, Record, Source};
 use osmocore_rs::compat::gsm_utils as compat;
-use osmocore_rs::gsm_utils::*;
+use osmocore_rs::gsm::gsm_utils::*;
 
 const FIXTURE: &str =
     include_str!("../compatibility/vectors/gsm_utils/gsm_utils_7bit_vectors.ndjson");

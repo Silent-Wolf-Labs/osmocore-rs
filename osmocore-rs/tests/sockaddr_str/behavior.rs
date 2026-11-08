@@ -1,7 +1,7 @@
 //! Results the C recording can't hold, and where the preferred API differs from C.
 
+use osmocore_rs::base::sockaddr_str::*;
 use osmocore_rs::compat::sockaddr_str::{self as compat, OsmoSockaddrStr};
-use osmocore_rs::sockaddr_str::*;
 use std::net::{Ipv6Addr, SocketAddr, SocketAddrV6};
 
 fn compat_from(ip: &[u8], port: u16) -> OsmoSockaddrStr {

@@ -4,9 +4,9 @@
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use osmocore_rs::{
-    fsm::{EventData, Fsm, FsmId, FsmRuntime, FsmState},
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::TimerScheduler,
+    base::fsm::{EventData, Fsm, FsmId, FsmRuntime, FsmState},
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::TimerScheduler,
 };
 use std::hint::black_box;
 

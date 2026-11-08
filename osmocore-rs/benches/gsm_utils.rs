@@ -3,7 +3,7 @@
 //! Encoding and decoding an SMS of nearly full length in the 7-bit alphabet.
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use osmocore_rs::gsm_utils::{decode_7bit, encode_7bit};
+use osmocore_rs::gsm::gsm_utils::{decode_7bit, encode_7bit};
 use std::hint::black_box;
 
 const MAX_OCTETS: usize = 140;

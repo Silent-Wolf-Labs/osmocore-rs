@@ -1283,7 +1283,7 @@ impl RuntimeCore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::msgb::Msgb;
+    use crate::base::msgb::Msgb;
     fn message(capacity: usize, text: &[u8]) -> Msgb {
         let mut m = Msgb::new(capacity).unwrap();
         m.put(text.len()).unwrap();
@@ -1662,7 +1662,7 @@ mod backend_tests {
             .unwrap();
         rt.core
             .callback(false, |cx| {
-                let mut m = crate::msgb::Msgb::new(16).unwrap();
+                let mut m = crate::base::msgb::Msgb::new(16).unwrap();
                 m.put(8).unwrap();
                 cx.try_send_tcp(h, m).unwrap();
                 Ok::<_, ()>(())
@@ -1726,7 +1726,7 @@ mod boundedness_tests {
             .unwrap();
         rt.core
             .callback(false, |cx| {
-                cx.try_send_tcp(h, crate::msgb::Msgb::new(0).unwrap())
+                cx.try_send_tcp(h, crate::base::msgb::Msgb::new(0).unwrap())
                     .unwrap();
                 Ok::<_, ()>(())
             })
@@ -1738,7 +1738,7 @@ mod boundedness_tests {
         rt.core
             .callback(false, |cx| {
                 assert_eq!(
-                    cx.try_send_tcp(h, crate::msgb::Msgb::new(0).unwrap())
+                    cx.try_send_tcp(h, crate::base::msgb::Msgb::new(0).unwrap())
                         .unwrap_err()
                         .reason,
                     Rejection::Capacity
@@ -1752,7 +1752,7 @@ mod boundedness_tests {
         rt.core.release_message(w.resource.key());
         rt.core
             .callback(false, |cx| {
-                cx.try_send_tcp(h, crate::msgb::Msgb::new(0).unwrap())
+                cx.try_send_tcp(h, crate::base::msgb::Msgb::new(0).unwrap())
                     .unwrap();
                 Ok::<_, ()>(())
             })
@@ -1906,7 +1906,7 @@ mod notification_tests {
                 cx.try_send_udp(
                     handle,
                     Datagram {
-                        message: crate::msgb::Msgb::new(0).unwrap(),
+                        message: crate::base::msgb::Msgb::new(0).unwrap(),
                         destination: Some("127.0.0.1:9".parse().unwrap()),
                     },
                 )

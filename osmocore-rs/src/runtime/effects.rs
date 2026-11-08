@@ -68,9 +68,9 @@ impl RuntimeContext<'_> {
     fn send(
         &mut self,
         resource: ResourceHandle,
-        message: crate::msgb::Msgb,
+        message: crate::base::msgb::Msgb,
         destination: Option<net::SocketAddr>,
-    ) -> Result<WriteId, EnqueueError<crate::msgb::Msgb>> {
+    ) -> Result<WriteId, EnqueueError<crate::base::msgb::Msgb>> {
         let result = (|| {
             if !self.accepting {
                 return Err(Rejection::Lifecycle);
@@ -120,8 +120,8 @@ impl RuntimeContext<'_> {
     pub fn try_send_tcp(
         &mut self,
         handle: TcpHandle,
-        message: crate::msgb::Msgb,
-    ) -> Result<WriteId, EnqueueError<crate::msgb::Msgb>> {
+        message: crate::base::msgb::Msgb,
+    ) -> Result<WriteId, EnqueueError<crate::base::msgb::Msgb>> {
         self.send(handle.into(), message, None)
     }
     pub fn try_send_udp(

@@ -1,6 +1,6 @@
 use crate::a5_fixture::{self, Record};
-use osmocore_rs::a5::*;
 use osmocore_rs::compat::a5 as compat;
+use osmocore_rs::gsm::a5::*;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/a5/a5_vectors.ndjson");
 

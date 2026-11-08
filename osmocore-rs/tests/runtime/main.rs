@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #![cfg(feature = "runtime")]
-use osmocore_rs::{msgb::Msgb, runtime::*};
+use osmocore_rs::{base::msgb::Msgb, runtime::*};
 use std::{
     cell::RefCell,
     io::{Read, Write},

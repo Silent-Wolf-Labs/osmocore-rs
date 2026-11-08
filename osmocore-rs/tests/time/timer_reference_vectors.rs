@@ -1,6 +1,6 @@
 use super::time_fixture::{self, Record, number};
-use osmocore_rs::time::*;
-use osmocore_rs::timer::*;
+use osmocore_rs::base::time::*;
+use osmocore_rs::base::timer::*;
 
 type Scheduler = TimerScheduler<ClockOverrides<Source>, Context>;
 #[derive(Default)]

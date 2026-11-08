@@ -4,8 +4,8 @@
 
 use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use osmocore_rs::{
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::{TimerId, TimerScheduler},
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::{TimerId, TimerScheduler},
 };
 use std::{
     hint::black_box,

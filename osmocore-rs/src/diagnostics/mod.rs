@@ -32,7 +32,7 @@ pub(crate) use observe;
 
 #[cfg(feature = "tracing")]
 mod enabled {
-    use crate::{fsm::FsmError, timer::TimerError};
+    use crate::{base::fsm::FsmError, base::timer::TimerError};
 
     pub(crate) fn timer_category(error: &TimerError) -> &'static str {
         match error {

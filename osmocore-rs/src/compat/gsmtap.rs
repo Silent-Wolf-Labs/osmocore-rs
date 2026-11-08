@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::gsmtap::{GSMTAP_TYPE_UM, GsmtapMessage};
+use crate::base::gsmtap::{GSMTAP_TYPE_UM, GsmtapMessage};
 /// Compatibility counterpart of `gsmtap_makemsg_ex()`.
 // Preserve the parameter list of the C API or reference record.
 #[allow(clippy::too_many_arguments)]

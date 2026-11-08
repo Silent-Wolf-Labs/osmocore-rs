@@ -4,10 +4,10 @@
 //! truncate to their field instead of failing.
 //!
 //! `msgb_put` aborts in C when a message has no room. These functions return
-//! [`TlvError::Msgb`](crate::tlv::TlvError::Msgb) instead, having written nothing for that element.
+//! [`TlvError::Msgb`](crate::gsm::tlv::TlvError::Msgb) instead, having written nothing for that element.
 
-use crate::msgb::Msgb;
-use crate::tlv::{
+use crate::base::msgb::Msgb;
+use crate::gsm::tlv::{
     self, ParseFailure, TlvDefinition, TlvError, TlvParsed, TlvProtocol, TlvType, gan_header,
     parse_layout, tvlv_header,
 };

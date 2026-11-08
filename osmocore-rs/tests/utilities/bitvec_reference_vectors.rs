@@ -1,4 +1,4 @@
-use osmocore_rs::bitvec::*;
+use osmocore_rs::base::bitvec::*;
 use osmocore_rs::compat::bitvec::bitvec_tailroom_bits;
 
 use crate::bitvec_fixture as fixture;

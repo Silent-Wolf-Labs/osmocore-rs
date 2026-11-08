@@ -1,5 +1,7 @@
 use crate::gsmtap_constants_fixture;
-use osmocore_rs::gsmtap::{GSMTAP_TYPE_UM, GSMTAP_UDP_PORT, GSMTAP_VERSION, channel, message_type};
+use osmocore_rs::base::gsmtap::{
+    GSMTAP_TYPE_UM, GSMTAP_UDP_PORT, GSMTAP_VERSION, channel, message_type,
+};
 
 const FIXTURE: &str =
     include_str!("../compatibility/vectors/gsmtap_constants/gsmtap_constants.ndjson");

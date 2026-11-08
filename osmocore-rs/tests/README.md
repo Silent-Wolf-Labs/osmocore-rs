@@ -1044,7 +1044,7 @@ convolutional fixture on runner failure. The isolated golden domain is audited
 with ASan/UBSan; linked library instrumentation and NEON execution are not
 claimed. Invalid-shift/sizing probes are diagnostics only. Review all fixture
 diffs and preserve the shared manifests/readers byte-for-byte. See
-[the compatibility document](../src/conv/README.md) for safety
+[the compatibility document](../src/base/conv/README.md) for safety
 exclusions and source/backend findings.
 
 ## Time evidence
@@ -1059,7 +1059,7 @@ The harness includes abnormal fractional fields, direct override-add, aliasing,
 clock independence/retention, callback mutation, safe nested updates, and
 prepare/nearest during dispatch. A bounded pathological peer-nested update is
 kept outside golden data; nested updates are a documented intentional exception
-for the implemented Rust scheduler and its deliberate reentrancy policy. See [time compatibility](../src/time/README.md)
+for the implemented Rust scheduler and its deliberate reentrancy policy. See [time compatibility](../src/base/time/README.md)
 for exact scope and targeted verification/regeneration commands.
 
 ## Standalone rate counters
@@ -1072,7 +1072,7 @@ validates fixtures, provenance and four separate null diagnostics.
 using the concrete owned `RateCtr` sink. Regenerate only this family with
 `../gsmtap-rs/reference/rate_ctr/run_rate_ctr_vector.sh all` and `--diagnostics`, following
 the sibling reference README; verify/audit and compare two generations before
-accepting either. See [compatibility](../src/rate_ctr/README.md)
+accepting either. See [compatibility](../src/base/rate_ctr/README.md)
 for the exact scope and ABI boundary.
 
 ## FSM execution and TDef/timer integration
@@ -1086,11 +1086,11 @@ mutation prefixes, callback error consumption, hierarchy cycles and unsafe C
 traversals. Each dedicated sibling runner supports `--verify`, `--audit`, `all`
 and `--diagnostics`; follow its reference README for targeted regeneration,
 repeat comparisons and shared-file checks. See
-[FSM compatibility](../src/fsm/README.md).
+[FSM compatibility](../src/base/fsm/README.md).
 
 ## Public API ownership
 
-Replay imports functional root modules for shared types and ordinary functions,
+Replay imports functional modules from their groups for shared types and ordinary functions,
 and `compat::<subsystem>` for distinct C contracts. Trivial runtime, scheduler,
 clock and counter adapters are method calls, and recorded operation names keep
 their C spelling. Decoder histories are read-only through

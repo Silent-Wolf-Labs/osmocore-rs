@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 mod fixture;
 use super::msgb_reference_vectors::{initial, snapshot};
 use fixture::{bytes, number};
-use osmocore_rs::msgb::*;
+use osmocore_rs::base::msgb::*;
 static FIXTURE: LazyLock<String> = LazyLock::new(|| {
     gzip_fixture::text(include_bytes!(
         "../compatibility/vectors/msgb_adapters_vectors.json.gz"

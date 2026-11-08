@@ -2,7 +2,9 @@
 
 //! Rust-native telecom and core primitives with owned buffers and explicit runtimes.
 //!
-//! Functional modules live at the crate root. Use owned runtimes, explicit
+//! Functional modules are grouped like libosmocore's sources: [`base`] for its
+//! `src/core`, [`gsm`] and [`coding`]. The optional `runtime` and `net` modules,
+//! [`diagnostics`] and [`compat`] have no C directory of their own. Use owned runtimes, explicit
 //! schedulers, stable handles and typed buffer APIs for new code. Distinct C
 //! buffer/status/sentinel contracts and evidence introspection live in [`compat`].
 //! Compatibility behavior is documented per subsystem; no C ABI is exported.
@@ -14,7 +16,7 @@
 //! explains feature relationships and design boundaries.
 //!
 //! ```
-//! use osmocore_rs::{base64, bitvec::BitVec, msgb::Msgb};
+//! use osmocore_rs::base::{base64, bitvec::BitVec, msgb::Msgb};
 //! let encoded = base64::encode(b"telecom").unwrap();
 //! assert_eq!(base64::decode(encoded.as_bytes()).unwrap(), b"telecom");
 //! let mut bytes = [0u8; 1];
@@ -28,34 +30,12 @@
 
 pub mod diagnostics;
 
-pub mod a5;
-pub mod base64;
-pub mod bcd;
-pub mod bits;
-pub mod bitvec;
+pub mod base;
+pub mod coding;
 pub mod compat;
-pub mod conv;
-pub mod crc;
-pub mod fsm;
-pub mod gsm0502;
-pub mod gsm0503;
-pub mod gsm_utils;
-pub mod gsmtap;
-pub mod hexparse;
-pub mod msgb;
+pub mod gsm;
 #[cfg(feature = "net")]
 pub mod net;
 mod owner;
-pub mod prbs;
-pub mod prim;
-pub mod rate_ctr;
 #[cfg(feature = "runtime")]
 pub mod runtime;
-pub mod sockaddr_str;
-pub mod strrb;
-pub mod tdef;
-pub mod time;
-pub mod time_accounting;
-pub mod timer;
-pub mod tlv;
-pub mod use_count;

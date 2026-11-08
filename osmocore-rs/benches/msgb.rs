@@ -3,7 +3,7 @@
 //! Message-buffer allocation and cursor operations.
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use osmocore_rs::msgb::Msgb;
+use osmocore_rs::base::msgb::Msgb;
 use std::hint::black_box;
 
 const HEADROOM: usize = 64;

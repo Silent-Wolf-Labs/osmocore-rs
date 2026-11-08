@@ -3,7 +3,7 @@
 //! Generic unpacked-bit CRC and byte-oriented CRC-16 throughput.
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use osmocore_rs::crc::{Crc64Code, crc16, crc16_ccitt};
+use osmocore_rs::base::crc::{Crc64Code, crc16, crc16_ccitt};
 use std::hint::black_box;
 
 /// GSM 05.03 Fire code: g(D) = (D^23 + 1)(D^17 + D^3 + 1), inverted parity.

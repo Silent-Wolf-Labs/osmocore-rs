@@ -1,11 +1,11 @@
 use osmocore_rs::{
-    base64,
-    bitvec::BitVec,
-    crc::crc16_ccitt,
-    gsmtap::GsmtapMessage,
-    hexparse,
-    msgb::{Msgb, MsgbQueue},
-    prim::{PRIM_OP_REQUEST, PrimEventMap, PrimHeader, event_for_primitive},
+    base::base64,
+    base::bitvec::BitVec,
+    base::crc::crc16_ccitt,
+    base::gsmtap::GsmtapMessage,
+    base::hexparse,
+    base::msgb::{Msgb, MsgbQueue},
+    base::prim::{PRIM_OP_REQUEST, PrimEventMap, PrimHeader, event_for_primitive},
 };
 
 #[test]

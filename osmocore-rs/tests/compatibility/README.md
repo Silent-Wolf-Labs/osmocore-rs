@@ -26,4 +26,4 @@ observations agree for the frozen
 coverage and define the approved CPU-independent portable tie contract;
 unexecuted NEON is outside claimed backend parity. Linked dispatcher observations
 are pinned-local-binary evidence, separate from exact-source backend evidence.
-See [the compatibility boundary](../../src/conv/README.md).
+See [the compatibility boundary](../../src/base/conv/README.md).

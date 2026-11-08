@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use osmocore_rs::{base64, bcd, bitvec::BitVec, compat, crc::Crc8Code, msgb::Msgb};
+use osmocore_rs::{
+    base::base64, base::bcd, base::bitvec::BitVec, base::crc::Crc8Code, base::msgb::Msgb, compat,
+};
 
 #[test]
 fn base64_rust_buffers_omit_terminators_and_report_empty_lengths() {
@@ -50,7 +52,7 @@ fn buffer_methods_preserve_partial_bit_writes_and_unused_message_storage() {
     let mut bits = BitVec::new(&mut bytes);
     bits.cur_bit = 7;
     assert!(
-        bits.write_bits(&[osmocore_rs::bitvec::BitValue::One; 2])
+        bits.write_bits(&[osmocore_rs::base::bitvec::BitValue::One; 2])
             .is_err()
     );
     assert_eq!(bits.cur_bit, 8);
@@ -91,7 +93,7 @@ fn crc_methods_use_whole_slices_and_return_boolean_comparisons() {
 
 #[test]
 fn checked_timeout_tables_keep_reset_prefix_on_invalid_defaults() {
-    use osmocore_rs::tdef::{TDef, TDefTable, TDefUnit};
+    use osmocore_rs::base::tdef::{TDef, TDefTable, TDefUnit};
     let mut entries = [
         TDef {
             id: 1,
@@ -119,7 +121,7 @@ fn checked_timeout_tables_keep_reset_prefix_on_invalid_defaults() {
 
 #[test]
 fn ordinary_primitive_maps_do_not_interpret_c_sentinels() {
-    use osmocore_rs::prim::{PrimEventMap, PrimHeader, event_for_primitive};
+    use osmocore_rs::base::prim::{PrimEventMap, PrimHeader, event_for_primitive};
     let header = PrimHeader::default();
     let maps = [PrimEventMap {
         sap: 0,
@@ -135,10 +137,12 @@ fn ordinary_primitive_maps_do_not_interpret_c_sentinels() {
 /// Handles can leave their owner's thread, but only their owner accepts them.
 mod handles {
     use osmocore_rs::{
-        fsm::{Fsm, FsmDefinitionId, FsmError, FsmId, FsmRuntime, FsmState},
-        rate_ctr::{RateCtrDesc, RateCtrError, RateCtrGroupDesc, RateCtrGroupId, RateCtrRuntime},
-        time::SystemClock,
-        timer::{TimerError, TimerId, TimerScheduler},
+        base::fsm::{Fsm, FsmDefinitionId, FsmError, FsmId, FsmRuntime, FsmState},
+        base::rate_ctr::{
+            RateCtrDesc, RateCtrError, RateCtrGroupDesc, RateCtrGroupId, RateCtrRuntime,
+        },
+        base::time::SystemClock,
+        base::timer::{TimerError, TimerId, TimerScheduler},
     };
     use std::thread;
 

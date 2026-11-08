@@ -3,7 +3,7 @@
 //! Bit packing and unpacking at GSM burst-relevant sizes.
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use osmocore_rs::bits::{pack_into, pack_into_offset, unpack_into, unpack_into_offset};
+use osmocore_rs::base::bits::{pack_into, pack_into_offset, unpack_into, unpack_into_offset};
 use std::hint::black_box;
 
 /// Bit offset that defeats any byte-aligned fast path.

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use super::*;
 use osmocore_rs::{
-    rate_ctr::{RateCtrPeriodicDriver, RateCtrRuntime},
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::{TimerId, TimerScheduler},
+    base::rate_ctr::{RateCtrPeriodicDriver, RateCtrRuntime},
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::{TimerId, TimerScheduler},
 };
 #[derive(Clone)]
 struct TestClock(Rc<RefCell<(i64, i64)>>);
@@ -189,6 +189,6 @@ fn monotonic_backwards_error_surfaces_even_before_rate_deadline() {
         .step(&mut app, &mut drivers, Some(Duration::ZERO))
         .unwrap_err();
     assert!(
-        matches!(failure.cause, FailureCause::Driver { label: "rate", failure: DriverFailure::Component(e) } if e.downcast_ref::<osmocore_rs::rate_ctr::RateCtrError>() == Some(&osmocore_rs::rate_ctr::RateCtrError::ClockWentBackwards))
+        matches!(failure.cause, FailureCause::Driver { label: "rate", failure: DriverFailure::Component(e) } if e.downcast_ref::<osmocore_rs::base::rate_ctr::RateCtrError>() == Some(&osmocore_rs::base::rate_ctr::RateCtrError::ClockWentBackwards))
     );
 }

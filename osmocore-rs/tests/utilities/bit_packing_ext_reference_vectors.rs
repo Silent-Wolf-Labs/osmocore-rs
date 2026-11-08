@@ -1,5 +1,5 @@
 use crate::gzip_fixture;
-use osmocore_rs::bits::{pack_into_offset, unpack_into_offset};
+use osmocore_rs::base::bits::{pack_into_offset, unpack_into_offset};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::LazyLock;
 

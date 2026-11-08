@@ -4,7 +4,7 @@ use osmocore_rs::compat::msgb::msgb_sms;
 mod fixture;
 use super::msgb_reference_vectors::{initial, snapshot};
 use fixture::number;
-use osmocore_rs::msgb::*;
+use osmocore_rs::base::msgb::*;
 
 #[test]
 fn typed_and_layer_helpers_match_all_c_observations() {

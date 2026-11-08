@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use osmocore_rs::bits::{pack_into, unpack_into};
+use osmocore_rs::base::bits::{pack_into, unpack_into};
 
 const LIBOSMOCORE_COMMIT: &str = "950430e829a3dc1d162aa241bc0505745c5a7311";
 const CASE_COUNT: usize = 9_016;

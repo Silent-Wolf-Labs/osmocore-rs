@@ -2,10 +2,10 @@
 //! Runtime limits, rejections and failure paths, through the public API.
 
 use osmocore_rs::{
-    msgb::Msgb,
+    base::msgb::Msgb,
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::{TimerId, TimerScheduler},
     runtime::*,
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::{TimerId, TimerScheduler},
 };
 use std::{
     cell::Cell,
@@ -1137,8 +1137,8 @@ struct Typed {
     probe: Probe,
     scheduler: TimerScheduler<LimitedClock, ()>,
     context: (),
-    rate: osmocore_rs::rate_ctr::RateCtrPeriodicDriver<LimitedClock>,
-    counters: osmocore_rs::rate_ctr::RateCtrRuntime,
+    rate: osmocore_rs::base::rate_ctr::RateCtrPeriodicDriver<LimitedClock>,
+    counters: osmocore_rs::base::rate_ctr::RateCtrRuntime,
 }
 
 impl Application for Typed {
@@ -1168,8 +1168,8 @@ fn typed(reads: u32) -> (Typed, Rc<Cell<u32>>) {
             probe: Probe::default(),
             scheduler: TimerScheduler::new(clock.clone()),
             context: (),
-            rate: osmocore_rs::rate_ctr::RateCtrPeriodicDriver::new(clock),
-            counters: osmocore_rs::rate_ctr::RateCtrRuntime::new(),
+            rate: osmocore_rs::base::rate_ctr::RateCtrPeriodicDriver::new(clock),
+            counters: osmocore_rs::base::rate_ctr::RateCtrRuntime::new(),
         },
         budget,
     )

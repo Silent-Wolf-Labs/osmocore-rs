@@ -1,6 +1,6 @@
-use osmocore_rs::base64;
-use osmocore_rs::bitvec::{BitValue, BitVec, BitVecError};
-use osmocore_rs::crc::{crc16, crc16_ccitt};
+use osmocore_rs::base::base64;
+use osmocore_rs::base::bitvec::{BitValue, BitVec, BitVecError};
+use osmocore_rs::base::crc::{crc16, crc16_ccitt};
 
 #[test]
 fn deterministic_bit_writes_reads_and_partial_failures_match_a_boolean_model() {

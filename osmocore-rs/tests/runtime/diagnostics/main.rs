@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #![cfg(all(feature = "runtime", feature = "tracing"))]
-use osmocore_rs::{msgb::Msgb, runtime::*};
+use osmocore_rs::{base::msgb::Msgb, runtime::*};
 use std::{net::UdpSocket, time::Duration};
 fn message(bytes: &[u8]) -> Msgb {
     let mut m = Msgb::new(bytes.len()).unwrap();

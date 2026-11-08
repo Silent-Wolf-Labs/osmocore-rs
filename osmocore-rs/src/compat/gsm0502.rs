@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::gsm0502::{RemapChannel, block_start, ccch_block, frame_cmp};
+use crate::gsm::gsm0502::{RemapChannel, block_start, ccch_block, frame_cmp};
 use std::cmp::Ordering;
 
 /// Compares two frame numbers, returning -1, 0 or 1.
@@ -34,7 +34,7 @@ pub const fn gsm0502_fn2ccch_block(frame: u32) -> i32 {
 
 /// Returns `BS_CC_CHANS` for a `CCCH_CONF` code, or -1 for a reserved one.
 pub const fn rsl_ccch_conf_to_bs_cc_chans(ccch_conf: u8) -> i32 {
-    match crate::gsm0502::CcchConf::from_code(ccch_conf) {
+    match crate::gsm::gsm0502::CcchConf::from_code(ccch_conf) {
         Some(conf) => conf.channels() as i32,
         None => -1,
     }
