@@ -31,6 +31,9 @@ pub const XCCH_BURSTS_BITS: usize = 4 * XCCH_BURST_BITS;
 pub const XCCH_BURST_DATA_BITS: usize = XCCH_BURST_BITS - 2;
 /// Bits after convolutional coding.
 pub const XCCH_CODED_BITS: usize = 4 * XCCH_BURST_DATA_BITS;
+/// Where a burst's `hl` and `hn` stealing flags sit among its [`XCCH_BURST_BITS`], between
+/// the two halves of its data. [`xcch_decode`] ignores them.
+pub const XCCH_STEALING_FLAG_OFFSETS: [usize; 2] = [HALF_BURST, HALF_BURST + 1];
 
 const L2_BITS: usize = 8 * XCCH_L2_BYTES;
 const PARITY_BITS: usize = 40;

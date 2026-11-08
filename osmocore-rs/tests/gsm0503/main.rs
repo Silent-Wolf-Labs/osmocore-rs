@@ -4,3 +4,4 @@
 mod gsm0503_fixture;
 
 mod reference_vectors;
+mod stealing_flags;

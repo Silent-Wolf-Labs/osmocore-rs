@@ -598,6 +598,20 @@ impl Msgb {
     pub fn put(&mut self, len: usize) -> Result<usize, MsgbError> {
         msgb_put(self, len)
     }
+    /// Appends `bytes` after the data. If they don't fit, returns
+    /// [`MsgbError::NotEnoughTailroom`] and leaves the buffer unchanged.
+    pub fn put_slice(&mut self, bytes: &[u8]) -> Result<(), MsgbError> {
+        let start = msgb_put(self, bytes.len())?;
+        self.backing[start..start + bytes.len()].copy_from_slice(bytes);
+        Ok(())
+    }
+    /// Prepends `bytes` before the data. If they don't fit, returns
+    /// [`MsgbError::NotEnoughHeadroom`] and leaves the buffer unchanged.
+    pub fn push_slice(&mut self, bytes: &[u8]) -> Result<(), MsgbError> {
+        let start = msgb_push(self, bytes.len())?;
+        self.backing[start..start + bytes.len()].copy_from_slice(bytes);
+        Ok(())
+    }
     /// See [`crate::compat::msgb::msgb_get`] for mutation and error details.
     pub fn get(&mut self, len: usize) -> Result<usize, MsgbError> {
         msgb_get(self, len)
