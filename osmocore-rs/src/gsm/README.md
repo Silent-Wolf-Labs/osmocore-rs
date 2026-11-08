@@ -7,6 +7,8 @@
 | [gsm0502](gsm0502.rs) | TDMA frame arithmetic, burst sizes, block starts, hopping and paging |
 | [gsm_utils](gsm_utils/mod.rs) | Bands, ARFCNs, power, GSM time, TLLIs, classmarks, RACH and 7-bit coding |
 | [a5](a5.rs) | A5/0, A5/1 and A5/2 cipher streams |
+| [auth](auth.rs) | GSM authentication: key types, SRES and Kc, and XOR-2G |
+| [comp128](comp128/mod.rs) | COMP128 v1, v2 and v3 |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -122,6 +124,25 @@ publicly broken, so use them to interoperate with GSM networks, not to protect d
 
 The ciphers load only the low 22 bits of the count, as in C, so a frame number past the
 hyperframe can give the same stream as a smaller one.
+
+## GSM authentication
+
+[auth.rs](auth.rs) computes SRES and Kc for a GSM subscriber from Ki and RAND.
+`GsmAlgorithm` selects COMP128 v1, v2 or v3 ([comp128](comp128/mod.rs)) or XOR-2G, and
+`GsmAlgorithm::vector` gives the result C's `osmo_auth_gen_vec2` gives for a GSM
+subscriber. Results match C. COMP128v1 is broken and XOR-2G is a test algorithm, so use
+them to interoperate with networks and SIMs, not to protect anything.
+
+`Ki` and `Kc` wrap their bytes, and their `Debug` output doesn't show them. Nothing runs in
+constant time, and keys aren't cleared from memory when dropped, as in C.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| COMP128 with a UMTS subscriber | Reads Ki from the UMTS fields, which share its memory | `GsmAlgorithm::vector` takes a `Ki`, so there's no UMTS subscriber to pass |
+| XOR-2G with a UMTS subscriber | Returns `-ENOTSUP` | `GsmAlgorithm::vector` takes a `Ki`, so there's no UMTS subscriber to pass |
+
+COMP128's substitution tables are part of the algorithm, so the crate holds the same
+values. They come from the public descriptions of COMP128 recovered from SIMs.
 
 ## TLV
 

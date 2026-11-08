@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- `gsm::comp128` with COMP128 v1, v2 and v3, and `gsm::auth` with the `Ki` and `Kc` key
+  types, `GsmAlgorithm` and XOR-2G, giving SRES and Kc for a GSM subscriber. Results
+  match libosmocore.
+
 ## [0.2.0] - 2026-11-08
 
 ### Fixed
