@@ -51,6 +51,7 @@ pub mod prim;
 pub mod rate_ctr;
 #[cfg(feature = "runtime")]
 pub mod runtime;
+pub mod sockaddr_str;
 pub mod strrb;
 pub mod tdef;
 pub mod time;

@@ -32,6 +32,9 @@ pub mod use_count;
 /// Recorded prim compatibility contracts.
 pub mod prim;
 
+/// Recorded sockaddr_str compatibility contracts.
+pub mod sockaddr_str;
+
 /// Recorded strrb compatibility contracts.
 pub mod strrb;
 
