@@ -15,10 +15,12 @@ retains its local `libosmocore-rs` name; the nested crate is `osmocore-rs/`.
 - Repository root: `/home/jshilts-test-env/RustroverProjects/libosmocore-rs`.
 - Rust crate: `osmocore-rs/` within this repository. Its manifest is
   `osmocore-rs/Cargo.toml`; implementation is in `osmocore-rs/src/`.
-  Functional modules live directly in `src/`; substantial FSM, message-buffer,
-  time and rate-counter implementations have private subsystem files. GSMTAP
-  lives in `src/gsmtap/mod.rs`. Distinct C contracts are exported through
-  `compat::<subsystem>`; there is no public `core` namespace.
+  Functional modules are grouped like libosmocore's sources: `src/base/` for C's
+  `src/core` (named `base` because `core` collides with Rust's `core` crate),
+  `src/gsm/` and `src/coding/`. A new module goes in the group of the C directory it
+  comes from. `runtime`, `net`, `diagnostics` and `compat` stay at the crate root, and
+  `compat::<subsystem>` stays flat. Large modules split into private files without
+  changing their public path.
   Target current stable Rust, edition 2024, without a declared MSRV.
 - **Required C reference:** `libosmocore/` within this repository, at
   `/home/jshilts-test-env/RustroverProjects/libosmocore-rs/libosmocore`.

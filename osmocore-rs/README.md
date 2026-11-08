@@ -27,27 +27,37 @@ deliberate Rust safety differences.
 
 ## Usage
 
-Functional modules live at the crate root:
+Functional modules are grouped like libosmocore's sources.
+
+`base`, for C's `src/core`:
 
 - `base64`, `bcd`, `hexparse`, `bits`, `bitvec`, `crc`, `conv`, `prbs`: encoding and buffers.
-- `gsm0502`: GSM frame numbers, burst sizes, block mapping, hopping and paging groups.
-- `gsm0503`: SACCH, SDCCH and BCCH block encoding and soft decoding.
-- `gsm_utils`: GSM bands, ARFCNs, power levels, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and SMS and USSD 7-bit coding.
-- `a5`: the A5/0, A5/1 and A5/2 cipher streams.
-- `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 - `msgb`, `prim`, `gsmtap`: message storage, primitive metadata, GSMTAP Vec/Msgb encoding and optional generic UDP runtime integration.
+- `time`, `timer`, `tdef`, `time_accounting`: clocks, scheduling, timeout definitions and accounting.
+- `fsm`, `rate_ctr`: owned state-machine and counter-group runtimes.
 - `sockaddr_str`: IP addresses kept as text with a port.
 - `strrb`: a ring of recent log strings.
 - `use_count`: named use counters for one object.
-- `time`, `timer`, `tdef`, `time_accounting`: clocks, scheduling, timeout definitions and accounting.
-- `fsm`, `rate_ctr`: owned state-machine and counter-group runtimes.
+
+`gsm`, for C's `src/gsm`:
+
+- `gsm0502`: GSM frame numbers, burst sizes, block mapping, hopping and paging groups.
+- `gsm_utils`: GSM bands, ARFCNs, power levels, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and SMS and USSD 7-bit coding.
+- `a5`: the A5/0, A5/1 and A5/2 cipher streams.
+- `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
+
+`coding`, for C's `src/coding`:
+
+- `gsm0503`: SACCH, SDCCH and BCCH block encoding and soft decoding.
+
+`runtime`, `net`, `diagnostics` and `compat` stay at the crate root.
 
 Use methods on owned types such as `Msgb`, `FsmRuntime`, `TimerScheduler` and
 `RateCtrRuntime`. Clocks and scheduler ownership are explicit; runtime handles
 are checked for identity and lifetime. `BitVec` borrows caller-owned storage.
 
 ```rust
-use osmocore_rs::{base64, msgb::Msgb};
+use osmocore_rs::base::{base64, msgb::Msgb};
 
 let encoded = base64::encode(b"telecom").unwrap();
 assert_eq!(base64::decode(encoded.as_bytes()).unwrap(), b"telecom");
@@ -84,9 +94,9 @@ held by Josh Shilts.
 
 [Library source overview](src/README.md) documents utilities, API ownership,
 C-source mapping, validation and package boundaries. Detailed subsystem guides:
-[convolutional coding](src/conv/README.md), [FSMs](src/fsm/README.md),
-[GSMTAP](src/gsmtap/README.md), [message buffers](src/msgb/README.md),
-[rate counters](src/rate_ctr/README.md), and [time/timing](src/time/README.md).
+[convolutional coding](src/base/conv/README.md), [FSMs](src/base/fsm/README.md),
+[GSMTAP](src/base/gsmtap/README.md), [message buffers](src/base/msgb/README.md),
+[rate counters](src/base/rate_ctr/README.md), and [time/timing](src/base/time/README.md).
 Each records completed work, tests, remaining gaps and Rust/C differences.
 
 ## Structured diagnostics

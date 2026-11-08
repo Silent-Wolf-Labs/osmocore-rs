@@ -35,7 +35,7 @@ osmocore-rs = "0.1"
 ```
 
 ```rust
-use osmocore_rs::{base64, msgb::Msgb};
+use osmocore_rs::base::{base64, msgb::Msgb};
 
 let encoded = base64::encode(b"telecom").unwrap();
 assert_eq!(base64::decode(encoded.as_bytes()).unwrap(), b"telecom");

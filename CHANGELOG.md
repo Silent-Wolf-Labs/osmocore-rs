@@ -11,6 +11,15 @@
 
 ### Changed
 
+- **Breaking:** functional modules are grouped like libosmocore's sources. Import them
+  from `base` (C's `src/core`), `gsm` or `coding`: `osmocore_rs::bits` is now
+  `osmocore_rs::base::bits`, and the same for `bitvec`, `prbs`, `base64`, `bcd`,
+  `hexparse`, `crc`, `conv`, `msgb`, `prim`, `gsmtap`, `time`, `timer`, `tdef`,
+  `time_accounting`, `fsm`, `rate_ctr`, `use_count`, `strrb` and `sockaddr_str`.
+  `gsm0502`, `gsm_utils`, `a5` and `tlv` are under `gsm`, and `gsm0503` under `coding`.
+  Item names are unchanged. `compat::<subsystem>`, `runtime`, `net` and `diagnostics` keep
+  their paths, and so do the tracing targets `osmocore_rs::fsm`, `osmocore_rs::timer` and
+  `osmocore_rs::gsmtap`.
 - `TimerId`, `FsmId`, `FsmDefinitionId` and `RateCtrGroupId` are now `Copy`, `Send`
   and `Sync`, and `TimerScheduler` and `RateCtrRuntime` can move between threads.
   Existing code still compiles, but `.clone()` on these handles now triggers
