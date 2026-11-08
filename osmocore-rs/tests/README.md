@@ -45,6 +45,7 @@ contents where those are part of the API contract.
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
 | `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
+| `comp128` | COMP128 v1, v2 and v3 and XOR-2G SRES and Kc |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
@@ -913,6 +914,20 @@ The fixture has no C result for frame numbers from 1326 x 2^20 on, where a shift
 overflows an `int`, or for A5/1 and A5/2 with no key, which crashes. `a5/behavior.rs`
 tests those Rust results directly, and that `compat::a5` reports A5/3 and A5/4 as
 unsupported.
+
+## COMP128 observations
+
+`comp128/comp128_vectors.ndjson` records direct `libosmogsm` calls:
+- SRES and Kc from COMP128 v1, v2 and v3 for upstream's 2,048 v2 and v3 vectors, and for a
+  sweep of fixed patterns, single Ki and RAND bits and random pairs;
+- SRES and Kc from XOR-2G through `osmo_auth_gen_vec2` over the same sweep.
+
+The harness checks each COMP128 result against `osmo_auth_gen_vec2`, and replays upstream's
+`comp128_test` and `xor2g_test` output. `comp128/reference_vectors.rs` replays the records
+against `comp128v1`, `comp128v2`, `comp128v3`, `xor_2g` and `GsmAlgorithm::vector`.
+Regenerate it from `gsmtap-rs` with `reference/comp128/run_comp128_vector.sh`.
+
+The fixture has no result for a UMTS subscriber, which the Rust API can't express.
 
 ## GSM 05.03 xCCH observations
 

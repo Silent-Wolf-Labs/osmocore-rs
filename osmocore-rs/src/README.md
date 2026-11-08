@@ -14,7 +14,7 @@ exclusions. Durable API details and runnable examples belong in module Rustdoc.
 | Location | Completed functionality |
 | --- | --- |
 | [Core utilities](base/README.md) | The `base` group, C's `src/core`: bits, encodings, CRCs, messages, time, FSMs, counters and small utilities |
-| [GSM utilities](gsm/README.md) | The `gsm` group, C's `src/gsm`: TDMA frames, bands and power, A5, 7-bit coding and TLV |
+| [GSM utilities](gsm/README.md) | The `gsm` group, C's `src/gsm`: TDMA frames, bands and power, A5, GSM authentication, 7-bit coding and TLV |
 | [Channel coding](coding/README.md) | The `coding` group, C's `src/coding`: GSM 05.03 xCCH |
 | [Convolutional coding](base/conv/README.md) | Checked descriptors, encoding, stateful decoding, portable correlation and dispatch |
 | [FSMs](base/fsm/README.md) | Owned registry/runtime, hierarchy, transitions, termination and timer/TDef integration |
@@ -223,6 +223,8 @@ the family names below also cover preferred methods in the functional modules.
 | `strrb` | `osmo_strrb_create`, `osmo_strrb_is_empty`, `osmo_strrb_get_nth`, `_osmo_strrb_is_bufindex_valid`, `osmo_strrb_elements`, `osmo_strrb_add` | `src/core/strrb.c` | `include/osmocom/core/strrb.h` |
 | `use_count` | `_osmo_use_count_get_put` and `osmo_use_count_get_put`, `osmo_use_count_total`, `osmo_use_count_by`, `osmo_use_count_to_str_buf`, `osmo_use_count_name_buf`, `osmo_use_count_to_str_c`, `osmo_use_count_make_static_entries`, `osmo_use_count_free`; see below for what's left out | `src/core/use_count.c` | `include/osmocom/core/use_count.h` |
 | `a5` | `osmo_a5` for A5/0, A5/1 and A5/2, `osmo_a5_fn_count`; see below for what's left out | `src/gsm/a5.c` | `include/osmocom/gsm/a5.h` |
+| `comp128` | `comp128v1`, `comp128v2`, `comp128v3` | `src/gsm/comp128.c`, `src/gsm/comp128v23.c` | `include/osmocom/gsm/comp128.h`, `include/osmocom/gsm/comp128v23.h` |
+| `auth` | `osmo_auth_gen_vec2` for a GSM subscriber with COMP128v1, COMP128v2, COMP128v3 or XOR-2G, as `GsmAlgorithm::vector`; see below for what's left out | `src/gsm/auth_core.c`, `auth_comp128v1.c`, `auth_comp128v23.c`, `auth_xor_2g.c` | `include/osmocom/crypt/auth.h` |
 | `gsm_utils` | `gsm_band_name`, `gsm_band_parse`, `ms_class_gmsk_dbm`, `ms_pwr_ctl_lvl`, `ms_pwr_dbm`, `rxlev2dbm`, `dbm2rxlev`, `gsm_arfcn2band_rc`, `gsm_arfcn2freq10`, `gsm_freq102arfcn`, `gsm_fn2gsmtime`, `gsm_gsmtime2fn`, `gsm_fn_as_gsmtime_str`, `osmo_dump_gsmtime`, `gsm_rfn2fn`, `gsm_fn2rfn`, `gprs_tlli_type`, `gprs_tlli2tmsi`, `gprs_tmsi2tlli`, `ms_cm2_a5n_support`, `ms_cm3_a5n_support`, `rach_max_trans_val2raw`, `rach_max_trans_raw2val`, `rach_tx_integer_raw2val`, `gsm_get_octet_len`, `gsm_septet_encode`, `gsm_septet_pack`, `gsm_7bit_encode_n`, `gsm_7bit_encode_n_ussd`, `gsm_7bit_decode_n`, `gsm_7bit_decode_n_ussd`, `gsm_7bit_decode_n_hdr`; see below for what's left out | `src/gsm/gsm_utils.c` | `include/osmocom/gsm/gsm_utils.h` |
 | `tlv` | `tlv_parse_one`, `tlv_parse`, `tlv_parse2`, `tlv_def_patch`, `tlv_encode_one`, `tlv_encode`, `tlv_encode_ordered`, `osmo_tlvp_merge`, `osmo_tlvp_copy`, `osmo_shift_v_fixed`, `osmo_match_shift_tv_fixed`, `osmo_shift_tlv`, `osmo_match_shift_tlv`, `osmo_shift_lv`, `osmo_tlv_prot_msg_name`, `osmo_tlv_prot_ie_name`, `osmo_tlv_prot_validate_tp`, `osmo_tlv_prot_parse`, `osmo_tlv_prot_msgt_flags`, `tlvp_val8`, `tlvp_val16be`, `tlvp_val32be`, `tlvp_val16_unal`, `tlvp_val32_unal`, `TLVP_*`, `*_GROSS_LEN`, `msgb_*` TLV helpers; not `tlv_dump` or the raw-pointer `*_put` writers | `src/gsm/tlv_parser.c` | `include/osmocom/gsm/tlv.h` |
 | `prbs` | `osmo_prbs7`, `osmo_prbs9`, `osmo_prbs11`, `osmo_prbs15`, `osmo_prbs_state_init`, `osmo_prbs_get_ubit`, `osmo_prbs_get_ubits` | `src/core/prbs.c` | `include/osmocom/core/prbs.h` |
@@ -276,6 +278,18 @@ be added if a consumer needs it.
 | `_kasumi`, `_kasumi_key_expand`, `_kasumi_kgcore`, `osmo_c4` | Only A5/3 and A5/4 use them here |
 | `osmo_a5_1`, `osmo_a5_2` | Deprecated wrappers for `osmo_a5` |
 | `_a5_1`, `_a5_2` | Exported only for `osmo_a5` and not in a public header |
+
+### C APIs left out of `comp128` and `auth`
+
+These are in `comp128.h`, `comp128v23.h` or `auth.h`. The UMTS algorithms and the rest of
+the auth core are planned; the others can be added if a consumer needs them.
+
+| C API | Why it's left out |
+| --- | --- |
+| `comp128` | Deprecated wrapper for `comp128v1` |
+| `osmo_auth_gen_vec2` for UMTS subscribers, `osmo_auth_gen_vec_auts2`, `osmo_auth_c2`, `osmo_auth_c3`, `osmo_auth_alg_name`, `osmo_auth_alg_parse`, `osmo_sub_auth_type_names` | Come with Milenage and XOR-3G |
+| `osmo_auth_gen_vec`, `osmo_auth_gen_vec_auts` | Deprecated forms taking `osmo_sub_auth_data` |
+| `osmo_auth_register`, `osmo_auth_load`, `osmo_auth_supported` | C selects algorithms through registered plugins. Rust has no plugins, and every algorithm in `GsmAlgorithm` is always there |
 
 ### C APIs left out of `gsm_utils`
 
