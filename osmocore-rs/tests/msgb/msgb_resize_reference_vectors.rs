@@ -3,7 +3,7 @@ mod fixture;
 use super::msgb_reference_vectors::{initial, snapshot};
 use crate::gzip_fixture;
 use fixture::number;
-use osmocore_rs::msgb::*;
+use osmocore_rs::base::msgb::*;
 
 #[test]
 fn copies_and_area_resizes_match_all_c_observations() {

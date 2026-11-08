@@ -19,7 +19,7 @@ fn tdef_evidence_corruptions() {
     tdef_fixture::checks::corruptions(TEXT, REFERENCE, GENERATOR, DIAGNOSTICS);
 }
 
-use osmocore_rs::tdef::*;
+use osmocore_rs::base::tdef::*;
 use tdef_fixture::{signed as s, unsigned as u};
 
 fn lookup_table() -> Vec<TDef<'static>> {

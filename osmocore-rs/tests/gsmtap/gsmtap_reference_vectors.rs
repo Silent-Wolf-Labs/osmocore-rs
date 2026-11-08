@@ -1,5 +1,5 @@
+use osmocore_rs::base::gsmtap::GsmtapMessage;
 use osmocore_rs::compat::gsmtap::{gsmtap_makemsg, gsmtap_makemsg_ex};
-use osmocore_rs::gsmtap::GsmtapMessage;
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
@@ -161,7 +161,7 @@ fn selected_c_constructor_vectors_match_byte_for_byte() {
             message_type: vector
                 .input
                 .message_type
-                .unwrap_or(osmocore_rs::gsmtap::GSMTAP_TYPE_UM),
+                .unwrap_or(osmocore_rs::base::gsmtap::GSMTAP_TYPE_UM),
             arfcn: vector.input.arfcn,
             timeslot: vector.input.timeslot,
             channel_type: vector.input.channel_type,

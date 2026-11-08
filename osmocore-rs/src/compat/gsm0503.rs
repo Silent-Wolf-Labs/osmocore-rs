@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::gsm0503::{XCCH_BURSTS_BITS, XCCH_L2_BYTES, xcch_decode, xcch_encode};
+use crate::coding::gsm0503::{XCCH_BURSTS_BITS, XCCH_L2_BYTES, xcch_decode, xcch_encode};
 
 /// Encodes a frame into `bursts` and returns 0.
 pub fn gsm0503_xcch_encode(

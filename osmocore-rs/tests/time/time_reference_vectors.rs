@@ -1,5 +1,5 @@
 use super::time_fixture::{self, number};
-use osmocore_rs::time::*;
+use osmocore_rs::base::time::*;
 
 const TEXT: &str = include_str!("../compatibility/vectors/time/time_vectors.ndjson");
 const REFERENCE: &str = include_str!("../compatibility/vectors/time/time_provenance.json");

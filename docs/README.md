@@ -19,7 +19,9 @@ runnable examples remain in module Rustdoc and the subsystem source guides.
 
 ### Crate organization
 
-Functional modules are public at the crate root. Applications use preferred
+Functional modules are grouped like libosmocore's sources: `base` for its `src/core`,
+`gsm` and `coding`. The optional `runtime` and `net`, `diagnostics` and `compat` sit at
+the crate root. Applications use preferred
 Rust APIs or always-compiled `compat::<subsystem>` adapters for selected observed
 C contracts. Both interfaces share functional implementations and owned types;
 modules grouped in the diagram are families, not a dependency chain.
@@ -471,7 +473,7 @@ protocol-specific sinks, SCTP, runtime redesign, protocol frameworks and metrics
 exporters remain outside scope. General GSMTAP parsing is not provided.
 
 
-The [GSMTAP module contract](../osmocore-rs/src/gsmtap/README.md) includes a
+The [GSMTAP module contract](../osmocore-rs/src/base/gsmtap/README.md) includes a
 runnable callback/runtime example.
 
 ## Timing, FSMs, accounting and counters
@@ -518,9 +520,9 @@ Each runtime adapter computes relative waits using its component's own clock;
 existing update methods decide what is due. Whole timer batches and rate catch-up
 are cooperative calls and cannot be preempted by the runtime.
 
-See [time and timing contracts](../osmocore-rs/src/time/README.md),
-[FSM contracts](../osmocore-rs/src/fsm/README.md) and
-[rate counter contracts](../osmocore-rs/src/rate_ctr/README.md) for precise
+See [time and timing contracts](../osmocore-rs/src/base/time/README.md),
+[FSM contracts](../osmocore-rs/src/base/fsm/README.md) and
+[rate counter contracts](../osmocore-rs/src/base/rate_ctr/README.md) for precise
 mutation, callback, clock-error and compatibility semantics.
 
 ## Convolutional coding
@@ -544,7 +546,7 @@ that route rejects unsupported cases, including N = 1, without generic fallback.
 Other descriptors use the generic decoder. Correlation is portable scalar code;
 the diagram does not imply CPU-specific SIMD or NEON implementation parity.
 
-The [coding contract](../osmocore-rs/src/conv/README.md) documents termination,
+The [coding contract](../osmocore-rs/src/base/conv/README.md) documents termination,
 punctures, backend evidence and supported domains. Other conversion and CRC
 families are covered by the [source overview](../osmocore-rs/src/README.md).
 
@@ -552,7 +554,7 @@ families are covered by the [source overview](../osmocore-rs/src/README.md).
 
 `osmocore-rs` implements selected telecom and core utility contracts with
 Rust-native APIs. It is not a replacement for every Osmocom/libosmocore API,
-and exports no C ABI. This status describes the 0.1.0 scope.
+and exports no C ABI. This status describes the 0.2.0 scope.
 
 ### Development approach
 

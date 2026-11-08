@@ -2,8 +2,8 @@
 //! no equivalent.
 
 use osmocore_rs::compat::gsm_utils as compat;
-use osmocore_rs::gsm_utils::*;
-use osmocore_rs::gsm0502::TDMA_HYPERFRAME;
+use osmocore_rs::gsm::gsm_utils::*;
+use osmocore_rs::gsm::gsm0502::TDMA_HYPERFRAME;
 
 #[test]
 fn an_rfn_that_aborts_in_c_is_none() {

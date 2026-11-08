@@ -1,6 +1,6 @@
 use crate::use_count_fixture::{self, Event, Record, State};
+use osmocore_rs::base::use_count::{UseChange, UseCount};
 use osmocore_rs::compat::use_count as compat;
-use osmocore_rs::use_count::{UseChange, UseCount};
 use std::collections::HashMap;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/use_count/use_count_vectors.ndjson");

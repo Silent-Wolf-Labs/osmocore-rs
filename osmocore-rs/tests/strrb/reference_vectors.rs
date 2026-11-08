@@ -1,6 +1,6 @@
 use crate::strrb_fixture::{self, Event, Record};
+use osmocore_rs::base::strrb::{MAX_STRING_BYTES, StringRing};
 use osmocore_rs::compat::strrb as compat;
-use osmocore_rs::strrb::{MAX_STRING_BYTES, StringRing};
 use std::collections::HashMap;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/strrb/strrb_vectors.ndjson");

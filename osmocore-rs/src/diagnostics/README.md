@@ -16,7 +16,9 @@ applications can select any compatible subscriber.
 ## Targets and events
 
 Targets and the operation/field names below are the filtering and structured
-observation contract. Human-readable messages and source locations are not.
+observation contract. Human-readable messages and source locations are not. Targets
+keep their names when modules move: `osmocore_rs::fsm`, `osmocore_rs::timer` and
+`osmocore_rs::gsmtap` stayed the same when those modules moved into `base`.
 Fields whose context is unavailable (for example, a foreign or released handle)
 are omitted. Numeric events/states need no application `Debug` implementation.
 Instance-private values, application instance IDs/names, event payloads, buffers
@@ -120,7 +122,7 @@ An application can depend on `osmocore-rs` with `features = ["tracing"]` and on
 ```rust
 # #[cfg(feature = "tracing")]
 # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-use osmocore_rs::{time::ClockOverrides, timer::TimerScheduler};
+use osmocore_rs::{base::time::ClockOverrides, base::timer::TimerScheduler};
 
 // Application startup, never library initialization.
 tracing_subscriber::fmt()

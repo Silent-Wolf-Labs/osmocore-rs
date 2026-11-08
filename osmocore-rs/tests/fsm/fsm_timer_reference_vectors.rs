@@ -1,9 +1,9 @@
 use super::fsm_fixture;
 use osmocore_rs::{
-    fsm::*,
-    tdef::{StateTimeout, TDef, TDefUnit},
-    time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::TimerScheduler,
+    base::fsm::*,
+    base::tdef::{StateTimeout, TDef, TDefUnit},
+    base::time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::TimerScheduler,
 };
 const TEXT: &str = include_str!("../compatibility/vectors/fsm_timer/fsm_timer_vectors.tsv");
 const REFERENCE: &str =
@@ -261,7 +261,7 @@ fn fsm_timer_errors_preserve_completed_mutation_prefix() {
     assert_eq!(
         r.state_change_with_tdef(&mut s, &id, 1, &map, None, -1),
         Err(FsmError::TDef(
-            osmocore_rs::tdef::TDefError::NegativeFallback {
+            osmocore_rs::base::tdef::TDefError::NegativeFallback {
                 id: 23,
                 fallback: -1
             }

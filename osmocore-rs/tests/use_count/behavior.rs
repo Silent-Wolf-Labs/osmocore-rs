@@ -1,8 +1,8 @@
 //! Results the C recording can't hold: inputs where C overflows or crashes, and what
 //! this API adds.
 
+use osmocore_rs::base::use_count::*;
 use osmocore_rs::compat::use_count as compat;
-use osmocore_rs::use_count::*;
 
 #[test]
 fn a_change_of_int_min_on_a_negative_count_is_out_of_range() {

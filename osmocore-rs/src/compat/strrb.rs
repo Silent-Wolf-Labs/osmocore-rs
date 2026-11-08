@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::strrb::StringRing;
+use crate::base::strrb::StringRing;
 
 /// C's limit on a stored string, including its NUL.
-pub const RB_MAX_MESSAGE_SIZE: usize = crate::strrb::MAX_STRING_BYTES + 1;
+pub const RB_MAX_MESSAGE_SIZE: usize = crate::base::strrb::MAX_STRING_BYTES + 1;
 
 const EINVAL_RESULT: i32 = -22;
 

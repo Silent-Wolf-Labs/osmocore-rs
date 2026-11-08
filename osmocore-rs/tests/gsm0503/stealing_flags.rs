@@ -1,6 +1,6 @@
 //! Where the stealing flags sit in a burst.
 
-use osmocore_rs::gsm0503::{
+use osmocore_rs::coding::gsm0503::{
     XCCH_BURST_BITS, XCCH_BURST_DATA_BITS, XCCH_STEALING_FLAG_OFFSETS, xcch_burst_map,
     xcch_burst_unmap, xcch_encode,
 };

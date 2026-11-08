@@ -3,7 +3,7 @@
 //! xCCH block encoding and decoding.
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use osmocore_rs::gsm0503::{XCCH_L2_BYTES, xcch_decode, xcch_encode};
+use osmocore_rs::coding::gsm0503::{XCCH_L2_BYTES, xcch_decode, xcch_encode};
 use std::hint::black_box;
 
 fn xcch(c: &mut Criterion) {

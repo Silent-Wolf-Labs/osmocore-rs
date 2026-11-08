@@ -1,7 +1,7 @@
 //! Results the C recording can't hold: inputs where C crashes, and what this API adds.
 
+use osmocore_rs::base::strrb::*;
 use osmocore_rs::compat::strrb as compat;
-use osmocore_rs::strrb::*;
 
 #[test]
 fn a_ring_with_no_capacity_keeps_nothing_but_reports_truncation() {

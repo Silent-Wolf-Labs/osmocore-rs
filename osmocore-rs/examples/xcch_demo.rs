@@ -12,16 +12,16 @@
 //! where decoding stops working. `--to` defaults to `127.0.0.1:4729`, where the
 //! workbench listens.
 use osmocore_rs::{
-    bits::to_soft,
-    gsm_utils::GsmTime,
-    gsm0502::{TDMA_FRAME_DURATION_US, frame_add},
-    gsm0503::{
+    base::bits::to_soft,
+    base::gsmtap::{GSMTAP_UDP_PORT, GsmtapMessage, channel},
+    base::msgb::Msgb,
+    base::prbs::{PRBS15, PrbsState},
+    coding::gsm0503::{
         XCCH_BURST_BITS, XCCH_BURSTS_BITS, XCCH_CODED_BITS, XCCH_L2_BYTES,
         XCCH_STEALING_FLAG_OFFSETS, xcch_decode, xcch_encode,
     },
-    gsmtap::{GSMTAP_UDP_PORT, GsmtapMessage, channel},
-    msgb::Msgb,
-    prbs::{PRBS15, PrbsState},
+    gsm::gsm_utils::GsmTime,
+    gsm::gsm0502::{TDMA_FRAME_DURATION_US, frame_add},
 };
 use std::{
     env,

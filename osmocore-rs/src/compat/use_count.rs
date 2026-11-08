@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::use_count::{UseChange, UseCount};
+use crate::base::use_count::{UseChange, UseCount};
 
 const EINVAL_RESULT: i32 = -22;
 const ERANGE_RESULT: i32 = -34;

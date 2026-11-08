@@ -3,8 +3,10 @@
 //! Parsing and encoding a message with one element of each format.
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use osmocore_rs::msgb::Msgb;
-use osmocore_rs::tlv::{TlvDef, TlvDefinition, TlvParsed, TlvType, encode, parse, parse_multiple};
+use osmocore_rs::base::msgb::Msgb;
+use osmocore_rs::gsm::tlv::{
+    TlvDef, TlvDefinition, TlvParsed, TlvType, encode, parse, parse_multiple,
+};
 use std::hint::black_box;
 
 const MESSAGE: [u8; 25] = [

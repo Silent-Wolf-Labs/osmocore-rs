@@ -2,9 +2,9 @@ use crate::tlv_fixture::{
     self, DefEntry, FILL, IS_NULL, MSG_PREFIX, MSG_SIZE, Output, PUSH_HEADROOM, PUT_HEADROOM,
     Record, UNTOUCHED, value,
 };
+use osmocore_rs::base::msgb::Msgb;
 use osmocore_rs::compat::tlv as compat;
-use osmocore_rs::msgb::Msgb;
-use osmocore_rs::tlv::*;
+use osmocore_rs::gsm::tlv::*;
 use std::collections::HashMap;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/tlv/tlv_vectors.ndjson");

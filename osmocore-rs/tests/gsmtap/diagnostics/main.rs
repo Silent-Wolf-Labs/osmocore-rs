@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #![cfg(all(feature = "runtime", feature = "tracing"))]
 
-use osmocore_rs::{gsmtap::GsmtapMessage, msgb::MsgbError};
+use osmocore_rs::{base::gsmtap::GsmtapMessage, base::msgb::MsgbError};
 #[path = "../../support/diagnostics_capture.rs"]
 mod capture;
 

@@ -1,6 +1,6 @@
 use crate::sockaddr_str_fixture::{self, Body, Case, Conversion, FromOp, Record, Sockaddr};
+use osmocore_rs::base::sockaddr_str::{Family, SocketAddrText, SocketAddrTextError, family_of};
 use osmocore_rs::compat::sockaddr_str::{self as compat, OsmoSockaddrStr};
-use osmocore_rs::sockaddr_str::{Family, SocketAddrText, SocketAddrTextError, family_of};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 const FIXTURE: &str =
@@ -81,7 +81,7 @@ fn constants_match_c() {
         .collect();
     assert_eq!(constants, expected);
     assert_eq!(
-        osmocore_rs::sockaddr_str::MAX_IP_LEN,
+        osmocore_rs::base::sockaddr_str::MAX_IP_LEN,
         compat::INET6_ADDRSTRLEN - 1
     );
 }

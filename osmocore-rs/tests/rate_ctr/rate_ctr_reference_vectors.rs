@@ -1,5 +1,5 @@
 use super::rate_ctr_fixture;
-use osmocore_rs::{rate_ctr::*, time_accounting::CounterSink};
+use osmocore_rs::{base::rate_ctr::*, base::time_accounting::CounterSink};
 const TEXT: &str = include_str!("../compatibility/vectors/rate_ctr/rate_ctr_vectors.tsv");
 const REFERENCE: &str = include_str!("../compatibility/vectors/rate_ctr/rate_ctr_provenance.json");
 const GENERATOR: &str =

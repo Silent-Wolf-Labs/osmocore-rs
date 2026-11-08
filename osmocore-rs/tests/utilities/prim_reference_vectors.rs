@@ -4,8 +4,8 @@ use osmocore_rs::compat::prim::{osmo_event_for_prim, osmo_prim_init};
 mod fixture;
 
 use fixture::{Record, number};
-use osmocore_rs::msgb::Msgb;
-use osmocore_rs::prim::*;
+use osmocore_rs::base::msgb::Msgb;
+use osmocore_rs::base::prim::*;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/prim_vectors.json");
 

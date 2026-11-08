@@ -4,9 +4,9 @@ use osmocore_rs::compat::fsm::{
     osmo_fsm_term_cause_name,
 };
 use osmocore_rs::{
-    fsm::*,
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::TimerScheduler,
+    base::fsm::*,
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::TimerScheduler,
 };
 const TEXT: &str = include_str!("../compatibility/vectors/fsm_registry/fsm_registry_vectors.tsv");
 const REFERENCE: &str =

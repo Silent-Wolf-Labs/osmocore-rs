@@ -2,8 +2,8 @@
 use super::conv_encoder::descriptor;
 use super::conv_fixture::{Fixture, bytes, signed};
 use crate::gzip_fixture;
+use osmocore_rs::base::conv::*;
 use osmocore_rs::compat::conv::osmo_conv_decode_acc;
-use osmocore_rs::conv::*;
 use std::collections::BTreeMap;
 use std::sync::LazyLock;
 

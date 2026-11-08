@@ -1,8 +1,8 @@
 //! Results the C recording can't hold: inputs where C crashes or overflows, and the
 //! ciphers this crate doesn't implement.
 
-use osmocore_rs::a5::*;
 use osmocore_rs::compat::a5 as compat;
+use osmocore_rs::gsm::a5::*;
 
 const KEY: [u8; KEY_BYTES] = [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef];
 

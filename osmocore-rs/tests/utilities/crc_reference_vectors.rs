@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 #[path = "../support/crc_fixture.rs"]
 mod fixture;
 use fixture::{bytes, number, signed};
-use osmocore_rs::crc::*;
+use osmocore_rs::base::crc::*;
 const BYTE: &str = include_str!("../compatibility/vectors/crc_byte_vectors.json");
 static GENERIC: LazyLock<String> = LazyLock::new(|| {
     gzip_fixture::text(include_bytes!(

@@ -8,7 +8,7 @@ pub(crate) enum Socket {
     Listener(mio::net::TcpListener, ListenerOptions),
 }
 pub(crate) struct Output {
-    pub message: crate::msgb::Msgb,
+    pub message: crate::base::msgb::Msgb,
     pub destination: Option<std::net::SocketAddr>,
     pub offset: usize,
     pub id: WriteId,

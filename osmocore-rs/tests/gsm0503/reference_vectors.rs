@@ -1,7 +1,7 @@
 use crate::gsm0503_fixture::{self, FILL, Record};
+use osmocore_rs::base::conv::Termination;
+use osmocore_rs::coding::gsm0503::*;
 use osmocore_rs::compat::gsm0503 as compat;
-use osmocore_rs::conv::Termination;
-use osmocore_rs::gsm0503::*;
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/gsm0503/xcch_vectors.ndjson");
 

@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use osmocore_rs::hexparse::parse_into;
+use osmocore_rs::base::hexparse::parse_into;
 
 const LIBOSMOCORE_COMMIT: &str = "950430e829a3dc1d162aa241bc0505745c5a7311";
 const EXPECTED_CASES: &[&str] = &[

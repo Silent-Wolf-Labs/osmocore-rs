@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use crate::msgb::Msgb;
+use crate::base::msgb::Msgb;
 use std::{io, net::SocketAddr, time::Duration};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -270,7 +270,7 @@ pub enum StepOutcome {
 pub enum DriverFailure<E> {
     Application(E),
     Component(Box<dyn std::error::Error>),
-    Clock(crate::time::TimeError),
+    Clock(crate::base::time::TimeError),
 }
 pub enum RuntimeEvent<'a> {
     Accepted {

@@ -14,25 +14,25 @@ C library and export no C ABI.
 
 | Module | Distinct contract | Functional implementation |
 | --- | --- | --- |
-| [a5.rs](a5.rs) | Cipher numbers as integers, -95 and -22 results, optional key and output directions | [a5](../a5.rs) |
-| [base64.rs](base64.rs) | Integer statuses, output lengths, termination and nullable size probes | [base64](../base64.rs) |
-| [bcd.rs](bcd.rs) | Signed lengths, terminated inputs/outputs and buffer mutation | [bcd](../bcd.rs) |
-| [bitvec.rs](bitvec.rs) | Cursor, buffer, sentinel and partial-progress operations | [bitvec](../bitvec.rs) |
-| [conv.rs](conv.rs) | Signed lengths, low-level encode/scan contracts and read-only decoder inspection | [convolutional coding](../conv/README.md) |
-| [crc.rs](crc.rs) | Signed bit counts, check/set statuses and generated CRC table metadata | [crc](../crc.rs) |
-| [fsm.rs](fsm.rs) | Integer error mapping, names and identifier-formatting adapters | [FSMs](../fsm/README.md) |
-| [gsm0502.rs](gsm0502.rs) | Integer comparison, input-returning remap, negative CCCH codes and wrapping paging values | [gsm0502](../gsm0502.rs) |
-| [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../gsm0503.rs) |
-| [gsm_utils.rs](gsm_utils.rs) | Integer band and type values, -22 and 0xffff error results, `gsm_time` fields that can disagree, bounded and NUL-terminated 7-bit buffers, wrapped header lengths | [gsm_utils](../gsm_utils.rs) |
-| [sockaddr_str.rs](sockaddr_str.rs) | C's struct with any family, errno results, writes made before a failure, glibc's address text, Linux socket address layouts, comparison that falls back to text | [sockaddr_str](../sockaddr_str.rs) |
-| [strrb.rs](strrb.rs) | C's size with one unused slot, 16-bit sizes, slot checks, indexes past the newest string, text up to a NUL | [strrb](../strrb.rs) |
-| [use_count.rs](use_count.rs) | Integer results, a callback after each change, optional counters, bounded text buffers | [use_count](../use_count.rs) |
-| [tlv.rs](tlv.rs) | Integer status, partly written parse outputs, truncated and out-of-range lengths, C's merge and copy results | [tlv](../tlv.rs) |
-| [gsmtap.rs](gsmtap.rs) | Positional packet constructors returning owned wire bytes | [GSMTAP](../gsmtap/README.md) |
-| [msgb.rs](msgb.rs) | Buffer/layer operations, comparisons, queues and bounded formatting | [message buffers](../msgb/README.md) |
-| [prim.rs](prim.rs) | Initialization, event-map sentinel and lookup contracts | [primitive metadata](../prim.rs) |
-| [tdef.rs](tdef.rs) | Sentinel tables/groups, fallback lookup, status mapping and range buffers | [timeout definitions](../tdef.rs) |
-| [timer.rs](timer.rs) | Optional-handle pending query | [timer scheduler](../timer.rs) |
+| [a5.rs](a5.rs) | Cipher numbers as integers, -95 and -22 results, optional key and output directions | [a5](../gsm/a5.rs) |
+| [base64.rs](base64.rs) | Integer statuses, output lengths, termination and nullable size probes | [base64](../base/base64.rs) |
+| [bcd.rs](bcd.rs) | Signed lengths, terminated inputs/outputs and buffer mutation | [bcd](../base/bcd.rs) |
+| [bitvec.rs](bitvec.rs) | Cursor, buffer, sentinel and partial-progress operations | [bitvec](../base/bitvec/mod.rs) |
+| [conv.rs](conv.rs) | Signed lengths, low-level encode/scan contracts and read-only decoder inspection | [convolutional coding](../base/conv/README.md) |
+| [crc.rs](crc.rs) | Signed bit counts, check/set statuses and generated CRC table metadata | [crc](../base/crc.rs) |
+| [fsm.rs](fsm.rs) | Integer error mapping, names and identifier-formatting adapters | [FSMs](../base/fsm/README.md) |
+| [gsm0502.rs](gsm0502.rs) | Integer comparison, input-returning remap, negative CCCH codes and wrapping paging values | [gsm0502](../gsm/gsm0502.rs) |
+| [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../coding/gsm0503.rs) |
+| [gsm_utils.rs](gsm_utils.rs) | Integer band and type values, -22 and 0xffff error results, `gsm_time` fields that can disagree, bounded and NUL-terminated 7-bit buffers, wrapped header lengths | [gsm_utils](../gsm/gsm_utils/mod.rs) |
+| [sockaddr_str.rs](sockaddr_str.rs) | C's struct with any family, errno results, writes made before a failure, glibc's address text, Linux socket address layouts, comparison that falls back to text | [sockaddr_str](../base/sockaddr_str.rs) |
+| [strrb.rs](strrb.rs) | C's size with one unused slot, 16-bit sizes, slot checks, indexes past the newest string, text up to a NUL | [strrb](../base/strrb.rs) |
+| [use_count.rs](use_count.rs) | Integer results, a callback after each change, optional counters, bounded text buffers | [use_count](../base/use_count.rs) |
+| [tlv.rs](tlv.rs) | Integer status, partly written parse outputs, truncated and out-of-range lengths, C's merge and copy results | [tlv](../gsm/tlv/mod.rs) |
+| [gsmtap.rs](gsmtap.rs) | Positional packet constructors returning owned wire bytes | [GSMTAP](../base/gsmtap/README.md) |
+| [msgb.rs](msgb.rs) | Buffer/layer operations, comparisons, queues and bounded formatting | [message buffers](../base/msgb/README.md) |
+| [prim.rs](prim.rs) | Initialization, event-map sentinel and lookup contracts | [primitive metadata](../base/prim.rs) |
+| [tdef.rs](tdef.rs) | Sentinel tables/groups, fallback lookup, status mapping and range buffers | [timeout definitions](../base/tdef.rs) |
+| [timer.rs](timer.rs) | Optional-handle pending query | [timer scheduler](../base/timer.rs) |
 
 [mod.rs](mod.rs) declares the public namespace and links to this guide.
 Subsystem files re-export the relevant functional operations or provide

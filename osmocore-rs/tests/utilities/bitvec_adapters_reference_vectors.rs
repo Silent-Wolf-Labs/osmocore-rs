@@ -1,5 +1,5 @@
 use crate::gzip_fixture;
-use osmocore_rs::bitvec::*;
+use osmocore_rs::base::bitvec::*;
 use osmocore_rs::compat::bitvec::{bitvec_to_string_r, bitvec_unhex};
 use std::sync::LazyLock;
 #[path = "../support/bitvec_adapters_fixture.rs"]

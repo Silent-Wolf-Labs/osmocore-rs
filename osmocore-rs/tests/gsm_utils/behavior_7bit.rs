@@ -2,7 +2,7 @@
 //! and inputs its 8-bit lengths and C strings can't express.
 
 use osmocore_rs::compat::gsm_utils as compat;
-use osmocore_rs::gsm_utils::*;
+use osmocore_rs::gsm::gsm_utils::*;
 
 #[test]
 fn byte_0xff_is_a_byte_with_no_septet() {

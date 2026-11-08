@@ -3,7 +3,7 @@
 //! Generating one frame's cipher stream.
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use osmocore_rs::a5::{a5_1, a5_2};
+use osmocore_rs::gsm::a5::{a5_1, a5_2};
 use std::hint::black_box;
 
 const KEY: [u8; 8] = [0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef];

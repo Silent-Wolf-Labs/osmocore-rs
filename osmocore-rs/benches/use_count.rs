@@ -3,7 +3,7 @@
 //! Getting and putting a use on an object with six tokens, a typical maximum.
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use osmocore_rs::use_count::UseCount;
+use osmocore_rs::base::use_count::UseCount;
 use std::hint::black_box;
 
 const TOKENS: [&str; 6] = ["attached", "paging", "sms", "sms-pending", "cm", "lu"];

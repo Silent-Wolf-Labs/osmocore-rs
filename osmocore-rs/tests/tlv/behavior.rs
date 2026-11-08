@@ -1,9 +1,9 @@
 //! Rust checks that C can't record: running out of room, rejected inputs and what an
 //! error leaves behind.
 
+use osmocore_rs::base::msgb::{Msgb, MsgbError};
 use osmocore_rs::compat::tlv as compat;
-use osmocore_rs::msgb::{Msgb, MsgbError};
-use osmocore_rs::tlv::*;
+use osmocore_rs::gsm::tlv::*;
 
 type Call<'a> = (
     &'static str,

@@ -4,16 +4,16 @@
 //! Accounting/rate drivers compose here; focused tests verify their timed effects.
 //! Run with `cargo run --no-default-features --features runtime --example runtime_service`.
 use osmocore_rs::{
-    fsm::{EventData, Fsm, FsmId, FsmRuntime, FsmState},
-    msgb::Msgb,
-    rate_ctr::{
+    base::fsm::{EventData, Fsm, FsmId, FsmRuntime, FsmState},
+    base::msgb::Msgb,
+    base::rate_ctr::{
         RateCtr, RateCtrDesc, RateCtrGroupDesc, RateCtrGroupId, RateCtrPeriodicDriver,
         RateCtrRuntime,
     },
+    base::time::SystemClock,
+    base::time_accounting::TimeCc,
+    base::timer::TimerScheduler,
     runtime::*,
-    time::SystemClock,
-    time_accounting::TimeCc,
-    timer::TimerScheduler,
 };
 use std::{
     collections::{HashMap, VecDeque},

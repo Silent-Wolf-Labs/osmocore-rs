@@ -4,9 +4,9 @@
 mod capture;
 use capture::{Capture, Record, Value};
 use osmocore_rs::{
-    fsm::{EventData, Fsm, FsmError, FsmId, FsmRuntime, FsmState, TermCause},
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::TimerScheduler,
+    base::fsm::{EventData, Fsm, FsmError, FsmId, FsmRuntime, FsmState, TermCause},
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::TimerScheduler,
 };
 
 // Neither the context, event payload, nor private data implements Debug.

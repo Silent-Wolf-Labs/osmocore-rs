@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use osmocore_rs::{gsmtap::GsmtapMessage, runtime::*};
+use osmocore_rs::{base::gsmtap::GsmtapMessage, runtime::*};
 use std::{net::UdpSocket, time::Duration};
 
 struct Sender {

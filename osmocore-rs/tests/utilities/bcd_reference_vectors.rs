@@ -1,7 +1,7 @@
 use osmocore_rs::compat::bcd::{osmo_bcd2str, osmo_char2bcd, osmo_str2bcd};
 use std::collections::BTreeSet;
 
-use osmocore_rs::bcd::{BcdError, nibble_to_char};
+use osmocore_rs::base::bcd::{BcdError, nibble_to_char};
 
 const LIBOSMOCORE_COMMIT: &str = "950430e829a3dc1d162aa241bc0505745c5a7311";
 const BUFFER_CASES: &[&str] = &[
@@ -163,7 +163,7 @@ fn c_bcd_vectors_match_return_and_complete_destination() {
 
 #[test]
 fn preferred_owned_bcd_replays_the_nontruncating_frozen_domain() {
-    use osmocore_rs::bcd;
+    use osmocore_rs::base::bcd;
 
     let fixture = include_str!("../compatibility/vectors/bcd_conversion_vectors.json");
     let mut compared = BTreeSet::new();

@@ -9,7 +9,7 @@ pub struct DecoderDiagnostics<'a> {
     pub predecessor_history: &'a [Option<u8>],
 }
 /// Inspect initialized decoder state without exposing mutation of its scratch buffers.
-pub fn diagnostics<'a>(decoder: &'a crate::conv::ConvDecoder<'_>) -> DecoderDiagnostics<'a> {
+pub fn diagnostics<'a>(decoder: &'a crate::base::conv::ConvDecoder<'_>) -> DecoderDiagnostics<'a> {
     DecoderDiagnostics {
         output_index: decoder.output_index(),
         puncture_index: decoder.puncture_index(),
@@ -19,7 +19,7 @@ pub fn diagnostics<'a>(decoder: &'a crate::conv::ConvDecoder<'_>) -> DecoderDiag
     }
 }
 
-pub use crate::conv::correlation::osmo_conv_decode_acc;
-pub use crate::conv::decoder::osmo_conv_decode_scan;
-pub use crate::conv::encoder::osmo_conv_encode_raw;
-pub use crate::conv::legacy::{osmo_conv_get_input_length, osmo_conv_get_output_length};
+pub use crate::base::conv::correlation::osmo_conv_decode_acc;
+pub use crate::base::conv::decoder::osmo_conv_decode_scan;
+pub use crate::base::conv::encoder::osmo_conv_encode_raw;
+pub use crate::base::conv::legacy::{osmo_conv_get_input_length, osmo_conv_get_output_length};

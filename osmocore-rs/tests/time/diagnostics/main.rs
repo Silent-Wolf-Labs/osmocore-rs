@@ -5,8 +5,8 @@
 mod capture;
 use capture::{Capture, Value};
 use osmocore_rs::{
-    time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::{TimerError, TimerId, TimerScheduler},
+    base::time::{Clock, ClockId, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::{TimerError, TimerId, TimerScheduler},
 };
 
 struct TestClock {

@@ -1,6 +1,6 @@
 [package]
 name = "osmocore-rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 description = "Rust-native telecom and core primitives with checked buffers, explicit runtimes and compatibility adapters"
 repository = "https://github.com/Silent-Wolf-Labs/osmocore-rs"

@@ -15,11 +15,11 @@ fn time_cc_evidence_corruptions() {
 }
 
 use osmocore_rs::{
-    rate_ctr::{RateCtr, RateCtrPerIntv},
-    tdef::{TDef, TDefError, TDefUnit},
-    time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
-    time_accounting::{CounterSink, TimeCc, TimeCcError},
-    timer::{TimerError, TimerId, TimerScheduler},
+    base::rate_ctr::{RateCtr, RateCtrPerIntv},
+    base::tdef::{TDef, TDefError, TDefUnit},
+    base::time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::time_accounting::{CounterSink, TimeCc, TimeCcError},
+    base::timer::{TimerError, TimerId, TimerScheduler},
 };
 use std::{cell::RefCell, rc::Rc};
 use time_cc_fixture::{signed as s, unsigned as u};

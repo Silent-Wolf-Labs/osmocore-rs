@@ -1,7 +1,7 @@
 use crate::gsm_utils_fixture::{self, Record};
 use osmocore_rs::compat::gsm_utils as compat;
-use osmocore_rs::gsm_utils::*;
-use osmocore_rs::gsm0502::TDMA_HYPERFRAME;
+use osmocore_rs::gsm::gsm_utils::*;
+use osmocore_rs::gsm::gsm0502::TDMA_HYPERFRAME;
 
 const FIXTURE: &str =
     include_str!("../compatibility/vectors/gsm_utils/gsm_utils_numeric_vectors.ndjson");

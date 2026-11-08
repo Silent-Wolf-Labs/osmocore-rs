@@ -1,8 +1,8 @@
 use super::fsm_fixture;
 use osmocore_rs::{
-    fsm::*,
-    time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
-    timer::TimerScheduler,
+    base::fsm::*,
+    base::time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::timer::TimerScheduler,
 };
 const TEXT: &str = include_str!("../compatibility/vectors/fsm_core/fsm_core_vectors.tsv");
 const REFERENCE: &str = include_str!("../compatibility/vectors/fsm_core/fsm_core_provenance.json");

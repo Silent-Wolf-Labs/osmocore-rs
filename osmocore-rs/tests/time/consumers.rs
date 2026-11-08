@@ -1,8 +1,8 @@
 use osmocore_rs::{
-    rate_ctr::RateCtr,
-    time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
-    time_accounting::TimeCc,
-    timer::{TimerError, TimerId, TimerScheduler},
+    base::rate_ctr::RateCtr,
+    base::time::{Clock, ClockId, ClockOverrides, TimeError, TimeSpec, TimeVal, TimeZone},
+    base::time_accounting::TimeCc,
+    base::timer::{TimerError, TimerId, TimerScheduler},
 };
 
 struct UnusedSource;

@@ -52,7 +52,7 @@ pub(crate) fn attempt(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{msgb::Msgb, runtime::WriteId};
+    use crate::{base::msgb::Msgb, runtime::WriteId};
     fn entry(bytes: &[u8]) -> Output {
         let mut message = Msgb::new(64).unwrap();
         message.put(bytes.len()).unwrap();
@@ -145,7 +145,7 @@ mod datagram_tests {
     use super::*;
     #[test]
     fn blocked_and_failed_datagrams_keep_packet_identity_and_destination() {
-        let mut message = crate::msgb::Msgb::new(32).unwrap();
+        let mut message = crate::base::msgb::Msgb::new(32).unwrap();
         message.put(3).unwrap();
         message.data_mut().copy_from_slice(b"abc");
         let destination = Some("127.0.0.1:9".parse().unwrap());

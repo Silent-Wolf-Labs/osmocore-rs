@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::a5::{CipherStream, KEY_BYTES, STREAM_BITS, a5_0, a5_1, a5_2, frame_count};
+use crate::gsm::a5::{CipherStream, KEY_BYTES, STREAM_BITS, a5_0, a5_1, a5_2, frame_count};
 
 const EINVAL_RESULT: i32 = -22;
 const ENOTSUP_RESULT: i32 = -95;

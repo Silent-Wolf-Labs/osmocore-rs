@@ -1,7 +1,7 @@
 //! Appending and prepending slices, which C does with `memcpy` into `msgb_put` and
 //! `msgb_push`.
 
-use osmocore_rs::msgb::{Msgb, MsgbError};
+use osmocore_rs::base::msgb::{Msgb, MsgbError};
 
 #[test]
 fn put_and_push_slices_build_a_message() {

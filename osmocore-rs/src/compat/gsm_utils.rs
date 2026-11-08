@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use crate::gsm_utils::{
+use crate::gsm::gsm_utils::{
     self, Band, Direction, TlliType, cm2_supports_a5, cm3_supports_a5, foreign_tlli, local_tlli,
 };
-use crate::gsm0502::{TDMA_HYPERFRAME, TDMA_SUPERFRAME};
+use crate::gsm::gsm0502::{TDMA_HYPERFRAME, TDMA_SUPERFRAME};
 
 const EINVAL_RESULT: i32 = -22;
 const NO_FREQUENCY: u16 = 0xffff;
@@ -112,7 +112,7 @@ pub const fn gsm_gsmtime2fn(time: &GsmTimeFields) -> u32 {
     (51 * cycle as u32 + time.t3 as u32 + TDMA_SUPERFRAME * time.t1 as u32) % TDMA_HYPERFRAME
 }
 
-/// Formats the fields like [`GsmTime`](crate::gsm_utils::GsmTime). `tc` isn't shown.
+/// Formats the fields like [`GsmTime`](crate::gsm::gsm_utils::GsmTime). `tc` isn't shown.
 pub fn osmo_dump_gsmtime(time: &GsmTimeFields) -> String {
     let mut text = String::new();
     gsm_utils::format_time(&mut text, time.frame, time.t1, time.t2, time.t3)
@@ -121,7 +121,7 @@ pub fn osmo_dump_gsmtime(time: &GsmTimeFields) -> String {
 }
 
 /// Formats a frame number's fields. Unlike
-/// [`GsmTime`](crate::gsm_utils::GsmTime), this accepts any frame number.
+/// [`GsmTime`](crate::gsm::gsm_utils::GsmTime), this accepts any frame number.
 pub fn gsm_fn_as_gsmtime_str(frame: u32) -> String {
     osmo_dump_gsmtime(&gsm_fn2gsmtime(frame))
 }

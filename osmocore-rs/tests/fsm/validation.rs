@@ -1,10 +1,10 @@
 //! Rust checks on FSM definitions, instance names and optional hooks. C doesn't
 //! record these, either because it asserts or because Rust strings differ.
 
-use osmocore_rs::fsm::EventData;
-use osmocore_rs::fsm::{Fsm, FsmError, FsmRuntime, FsmState, TermCause};
-use osmocore_rs::time::SystemClock;
-use osmocore_rs::timer::TimerScheduler;
+use osmocore_rs::base::fsm::EventData;
+use osmocore_rs::base::fsm::{Fsm, FsmError, FsmRuntime, FsmState, TermCause};
+use osmocore_rs::base::time::SystemClock;
+use osmocore_rs::base::timer::TimerScheduler;
 
 type Runtime = FsmRuntime<SystemClock, ()>;
 type Scheduler = TimerScheduler<SystemClock, Runtime>;

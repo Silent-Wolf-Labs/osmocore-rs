@@ -1,5 +1,5 @@
 use crate::prbs_fixture::{self, FILL, GUARD, Op, Record};
-use osmocore_rs::prbs::{PRBS7, PRBS9, PRBS11, PRBS15, Prbs, PrbsState};
+use osmocore_rs::base::prbs::{PRBS7, PRBS9, PRBS11, PRBS15, Prbs, PrbsState};
 
 const FIXTURE: &str = include_str!("../compatibility/vectors/prbs/prbs_vectors.ndjson");
 

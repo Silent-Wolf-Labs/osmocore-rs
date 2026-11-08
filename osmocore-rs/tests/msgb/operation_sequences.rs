@@ -1,4 +1,4 @@
-use osmocore_rs::msgb::{Msgb, MsgbError};
+use osmocore_rs::base::msgb::{Msgb, MsgbError};
 
 #[derive(Clone, Copy, Debug)]
 enum Operation {

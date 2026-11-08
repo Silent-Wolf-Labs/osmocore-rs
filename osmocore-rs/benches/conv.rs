@@ -4,7 +4,7 @@
 //! routes through the correlation decoder, plus the reusable `ConvDecoder`.
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use osmocore_rs::conv::{ConvCode, ConvCodeSpec, ConvDecoder, Termination, decode, encode};
+use osmocore_rs::base::conv::{ConvCode, ConvCodeSpec, ConvDecoder, Termination, decode, encode};
 use std::hint::black_box;
 
 const INPUT_BITS: usize = 224;

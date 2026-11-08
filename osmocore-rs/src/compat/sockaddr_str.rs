@@ -3,7 +3,7 @@
 use std::cmp::Ordering;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use crate::sockaddr_str::ipv6_text;
+use crate::base::sockaddr_str::ipv6_text;
 
 /// Linux's `AF_UNSPEC`.
 pub const AF_UNSPEC: i32 = 0;
