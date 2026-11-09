@@ -105,6 +105,16 @@ path = "benches/a5.rs"
 harness = false
 
 [[bench]]
+name = "kasumi"
+path = "benches/kasumi.rs"
+harness = false
+
+[[bench]]
+name = "gea"
+path = "benches/gea.rs"
+harness = false
+
+[[bench]]
 name = "gsm_utils"
 path = "benches/gsm_utils.rs"
 harness = false

@@ -43,7 +43,8 @@ Functional modules are grouped like libosmocore's sources.
 
 - `gsm0502`: GSM frame numbers, burst sizes, block mapping, hopping and paging groups.
 - `gsm_utils`: GSM bands, ARFCNs, power levels, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and SMS and USSD 7-bit coding.
-- `a5`: the A5/0, A5/1 and A5/2 cipher streams.
+- `a5`: the A5/0 to A5/4 cipher streams.
+- `kasumi`, `gea`: the KASUMI block cipher, its KGCORE keystream, and the GEA3 and GEA4 GPRS ciphers.
 - `auth`, `comp128`, `milenage`: GSM and UMTS authentication with COMP128 v1, v2 and v3,
   XOR-2G, XOR-3G and, with the `auth` feature, Milenage.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! The GSM A5/1 and A5/2 cipher streams, and the empty A5/0.
+//! The GSM A5/1 to A5/4 cipher streams, and the empty A5/0.
 //!
 //! Each call gives one frame's stream for each direction, as unpacked bits to XOR with
 //! a burst's 114 data bits. A5/1 and A5/2 are publicly broken: use them to interoperate
-//! with GSM networks, not to protect data.
+//! with GSM networks, not to protect data. A5/3 and A5/4 run
+//! [KGCORE](crate::gsm::kasumi) as 3GPP TS 55.216 and 55.226 describe: A5/3 with the
+//! 64-bit Kc, repeated to 128 bits by C4, and A5/4 with a 128-bit key.
 //!
 //! ```
 //! use osmocore_rs::gsm::a5::a5_1;
@@ -13,12 +15,19 @@
 //! assert_eq!(stream.uplink[..8], [1, 1, 0, 1, 1, 0, 0, 1]);
 //! ```
 
+use crate::gsm::auth::{Kc, c4};
+use crate::gsm::kasumi::{Bearer, KgcoreInput, kgcore};
+
 /// Unpacked bits in each direction of a stream.
 pub const STREAM_BITS: usize = 114;
-/// Bytes in a key.
+/// Bytes in an A5/1, A5/2 or A5/3 key.
 pub const KEY_BYTES: usize = 8;
+/// Bytes in an A5/4 key.
+pub const A5_4_KEY_BYTES: usize = 16;
 
 const FRAME_COUNT_BITS: u32 = 22;
+/// KGCORE's CA input for A5/3 and A5/4.
+const A5_KGCORE_CA: u8 = 0x0f;
 const REGISTER_LENGTHS: [u32; 4] = [19, 22, 23, 17];
 const REGISTER_TAPS: [u32; 4] = [0x07_2000, 0x30_0000, 0x70_0080, 0x01_0800];
 /// Each register's clocking bit in A5/1.
@@ -39,9 +48,9 @@ pub struct CipherStream {
     pub uplink: [u8; STREAM_BITS],
 }
 
-/// Returns a frame number's T1, T3 and T2 as the count the A5 ciphers load. A cipher
-/// uses its low 22 bits, so frames past the hyperframe add bits it ignores. Bits past
-/// the top of 32 are dropped.
+/// Returns a frame number's T1, T3 and T2 as the count the A5 ciphers load. A5/1 and
+/// A5/2 use its low 22 bits, so frames past the hyperframe add bits they ignore; A5/3
+/// and A5/4 use all 32. Bits past the top of 32 are dropped.
 pub const fn frame_count(frame: u32) -> u32 {
     ((frame / (26 * 51)) << 11) | ((frame % 51) << 5) | (frame % 26)
 }
@@ -155,4 +164,39 @@ pub fn a5_2(key: &[u8; KEY_BYTES], frame: u32) -> CipherStream {
             (top_bits(registers) as u8) ^ u8::from(mixed)
         },
     )
+}
+
+/// Returns a frame's A5/3 stream.
+pub fn a5_3(kc: &[u8; KEY_BYTES], frame: u32) -> CipherStream {
+    a5_3_count(kc, frame_count(frame))
+}
+
+/// Returns a frame's A5/4 stream.
+pub fn a5_4(key: &[u8; A5_4_KEY_BYTES], frame: u32) -> CipherStream {
+    a5_4_count(key, frame_count(frame))
+}
+
+/// Returns the A5/3 stream for a count given directly, rather than from a frame number,
+/// as the test data of 3GPP TS 55.217 gives it.
+pub fn a5_3_count(kc: &[u8; KEY_BYTES], count: u32) -> CipherStream {
+    a5_4_count(c4(&Kc::new(*kc)).as_bytes(), count)
+}
+
+/// Returns the A5/4 stream for a count given directly, rather than from a frame number.
+pub fn a5_4_count(key: &[u8; A5_4_KEY_BYTES], count: u32) -> CipherStream {
+    // The downlink takes the first 114 bits of a 228-bit keystream, and the uplink the
+    // rest.
+    let mut keystream = [0; (2 * STREAM_BITS).div_ceil(8)];
+    let input = KgcoreInput {
+        ca: A5_KGCORE_CA,
+        bearer: Bearer::ZERO,
+        count,
+        direction: false,
+    };
+    kgcore(key, &input, &mut keystream);
+    let bit = |index: usize| keystream[index / 8] >> (7 - index % 8) & 1;
+    CipherStream {
+        downlink: std::array::from_fn(bit),
+        uplink: std::array::from_fn(|index| bit(STREAM_BITS + index)),
+    }
 }

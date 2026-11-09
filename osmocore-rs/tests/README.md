@@ -44,7 +44,9 @@ contents where those are part of the API contract.
 | `utilities` | Base64, BCD, bit packing, bitvec, hex parsing, PRBS, primitive metadata and CRC |
 | `gsm0502` | GSM 05.02 frame arithmetic, block mapping, hopping and paging groups |
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
-| `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
+| `a5` | A5/0 to A5/4 cipher streams and frame counts |
+| `kasumi` | KASUMI subkeys and blocks, the KGCORE keystream and count-based A5/3 and A5/4 |
+| `gea` | GEA3 and GEA4 keystreams, UI and I frame inputs, algorithm names, key lengths and C's results |
 | `comp128` | COMP128 v1, v2 and v3 and XOR-2G SRES and Kc |
 | `auth` | Authentication core, Milenage and XOR-3G vectors, resync, names and key conversions |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
@@ -905,16 +907,45 @@ forbids. `use_count/behavior.rs` tests those Rust results directly.
 ## A5 observations
 
 `a5/a5_vectors.ndjson` records direct `libosmogsm` calls: frame counts, both directions
-of A5/0, A5/1 and A5/2 with fixed and random keys and frame numbers and with each key and
+of A5/0 to A5/4 with fixed and random keys and frame numbers and with each key and
 frame count bit alone, and `osmo_a5` results for cipher numbers with no algorithm. The
 harness also replays upstream's A5/0, A5/1 and A5/2 output. `a5/reference_vectors.rs`
 replays the records against both APIs. Regenerate it from `gsmtap-rs` with
 `reference/a5/run_a5_vector.sh`.
 
 The fixture has no C result for frame numbers from 1326 x 2^20 on, where a shift
-overflows an `int`, or for A5/1 and A5/2 with no key, which crashes. `a5/behavior.rs`
-tests those Rust results directly, and that `compat::a5` reports A5/3 and A5/4 as
-unsupported.
+overflows an `int`, for A5/1 to A5/4 with no key, which crashes, or for A5/4 with a key
+shorter than 16 bytes, which C reads past. `a5/behavior.rs` tests those Rust results
+directly, and that A5/3 is A5/4 with its key repeated.
+
+## KASUMI observations
+
+`kasumi/kasumi_vectors.ndjson` records direct calls into `libosmogsm`'s internal archive,
+since these functions aren't exported: subkeys from `_kasumi_key_expand`, blocks from
+`_kasumi`, keystream from `_kasumi_kgcore` across lengths, CA, COUNT, bearer and direction,
+and `_a5_3` and `_a5_4` with a raw count. Each part covers upstream's vectors, fixed
+patterns, single bits and random inputs. The harness replays upstream's `kasumi_test`
+output and the A5/3 and A5/4 lines of `a5_test`. `kasumi/reference_vectors.rs` replays the
+records against `compat::kasumi`, `Subkeys`, `Kasumi`, `kgcore`, `a5_3_count` and
+`a5_4_count`. Regenerate it from `gsmtap-rs` with `reference/kasumi/run_kasumi_vector.sh`.
+
+`kasumi/behavior.rs` covers what the recording can't: keystreams longer than C's 16-bit
+bit count, an output too short for the length, which C writes past, and that a shorter
+keystream is a prefix of a longer one.
+
+## GEA observations
+
+`gea/gea_vectors.ndjson` records direct `libosmogsm` calls: `gprs_cipher_supported`,
+`gprs_cipher_key_length` and the names for each algorithm, `gprs_cipher_gen_input_ui` and
+`gprs_cipher_gen_input_i`, and `gprs_cipher_run` for GEA3 and GEA4 across lengths up to
+1,523 bytes, keys, inputs and directions, with the results for other algorithms and longer
+blocks. The harness replays upstream's `gea_test` output. `gea/reference_vectors.rs`
+replays the records against `compat::gea`, `gea3`, `gea4`, `input_ui`, `input_i` and
+`GprsAlgorithm`. Regenerate it from `gsmtap-rs` with `reference/gea/run_gea_vector.sh`.
+
+`gea/behavior.rs` covers what the recording can't: keys and outputs too short for the
+cipher, which C reads or writes past, SAPIs from 16 on, where C overflows, and keystreams
+longer than C's limit.
 
 ## COMP128 observations
 

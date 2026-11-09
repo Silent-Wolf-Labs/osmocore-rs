@@ -6,7 +6,9 @@
 | --- | --- |
 | [gsm0502](gsm0502.rs) | TDMA frame arithmetic, burst sizes, block starts, hopping and paging |
 | [gsm_utils](gsm_utils/mod.rs) | Bands, ARFCNs, power, GSM time, TLLIs, classmarks, RACH and 7-bit coding |
-| [a5](a5.rs) | A5/0, A5/1 and A5/2 cipher streams |
+| [a5](a5.rs) | A5/0 to A5/4 cipher streams |
+| [kasumi](kasumi/mod.rs) | The KASUMI block cipher and the KGCORE keystream |
+| [gea](gea.rs) | GEA3 and GEA4 GPRS ciphers and their LLC frame input |
 | [auth](auth/mod.rs) | GSM and UMTS authentication: key types, vectors, SQN, resync, XOR-2G and XOR-3G |
 | [comp128](comp128/mod.rs) | COMP128 v1, v2 and v3 |
 | [milenage](milenage.rs) | Milenage f1 to f5*, AUTS and the USIM's AUTN check (`auth` feature) |
@@ -113,18 +115,58 @@ the other:
 
 ## A5 ciphers
 
-[a5.rs](a5.rs) generates one frame's A5/0, A5/1 or A5/2 stream, as 114 unpacked bits for
-each direction. Results match C, and `frame_count` gives C's count. A5/1 and A5/2 are
+[a5.rs](a5.rs) generates one frame's A5/0 to A5/4 stream, as 114 unpacked bits for each
+direction. Results match C, and `frame_count` gives C's count. A5/3 and A5/4 run KGCORE:
+A5/3 with the 8-byte Kc repeated by C4, and A5/4 with a 16-byte key. `a5_3_count` and
+`a5_4_count` take the count directly, as 3GPP's test data gives it. A5/1 and A5/2 are
 publicly broken, so use them to interoperate with GSM networks, not to protect data.
 
 | Input | C | Rust |
 | --- | --- | --- |
-| A5/3 or A5/4 | Generates a stream | Not implemented. `compat::a5::osmo_a5` returns -95 |
-| A5/1 or A5/2 with no key | Crashes | `a5_1` and `a5_2` require a key. `compat::a5::osmo_a5` returns -22 |
+| A5/1 to A5/4 with no key | Crashes | Each function requires a key. `compat::a5::osmo_a5` returns -22 |
+| A5/4 with an 8-byte key | Reads past it | `a5_4` takes 16 bytes. `compat::a5::osmo_a5` returns -22 for a key shorter than the cipher reads |
 | Frame number from 1326 x 2^20 on | A shift overflows an `int` | Uses unsigned 32-bit arithmetic |
 
-The ciphers load only the low 22 bits of the count, as in C, so a frame number past the
-hyperframe can give the same stream as a smaller one.
+A5/1 and A5/2 load only the low 22 bits of the count, as in C, so a frame number past
+the hyperframe can give the same stream as a smaller one. A5/3 and A5/4 use all 32 bits.
+
+## KASUMI
+
+[kasumi](kasumi/mod.rs) gives the KASUMI block cipher of 3GPP TS 35.202: `Subkeys` derives
+the eight rounds' subkeys from a 16-byte key, and `Kasumi::encrypt` encrypts a 64-bit
+block. `kgcore` runs it in output feedback mode, as the A5/3 and GEA3 specification
+(3GPP TS 55.216) describes, to fill a buffer of any length with keystream. Results match
+C. The S7 and S9 S-boxes come from the decimal tables of TS 35.202, and the key constants
+from its table 2. `Kasumi` and `Subkeys` don't show the subkeys in their `Debug` output.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| A bearer past 5 bits or a direction past 1 bit | Shifted into the bits above their fields | `Bearer::new` returns `None` past 31, and the direction is a `bool`. `compat::kasumi` keeps C's result |
+| A length that isn't a whole number of bytes | Writes whole bytes, with keystream bits past the length | `kgcore` fills whole bytes. `compat::kasumi::_kasumi_kgcore` writes C's bytes |
+| Output shorter than the length | Writes past it | `compat::kasumi::_kasumi_kgcore` panics |
+| More than 65,535 bits | The bit count is 16 bits, so can't be asked for | `kgcore` fills any length |
+
+libosmogsm declares `_kasumi`, `_kasumi_key_expand` and `_kasumi_kgcore` in `kasumi.h`
+but doesn't export them. They're recorded by linking its internal archive, as its tests
+do.
+
+## GEA ciphers
+
+[gea.rs](gea.rs) gives the GPRS ciphers GEA3, which takes the 8-byte Kc and repeats it by
+C4, and GEA4, which takes a 16-byte key. Each fills a buffer with keystream from the
+32-bit input and the direction. `input_ui` and `input_i` give the input for UI and I
+frames, as 3GPP TS 44.064 section A.2.1 defines it, and `GprsAlgorithm` gives each
+algorithm's name and key length. Results match C. libosmocore doesn't implement GEA1 or
+GEA2, and nor does this crate.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| A frame longer than 1,523 bytes | `gprs_cipher_run` returns `-ERANGE` | `gea3` and `gea4` fill any length. `compat::gea` returns -34 |
+| A key or output shorter than the cipher needs | Reads or writes past it | The functions take fixed-size keys. `compat::gea::gprs_cipher_run` returns -22 |
+| A direction past 1 | Shifted into the bearer bits | `Direction` has two values. `compat::gea` keeps C's result |
+| A SAPI from 16 on | Overflows an `int` | `input_ui` returns `None`, and `compat::gea` wraps |
+
+`compat::gea` has GEA3 and GEA4 and nothing else, as C does with no plugins loaded.
 
 ## GSM and UMTS authentication
 

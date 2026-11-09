@@ -14,7 +14,7 @@ C library and export no C ABI.
 
 | Module | Distinct contract | Functional implementation |
 | --- | --- | --- |
-| [a5.rs](a5.rs) | Cipher numbers as integers, -95 and -22 results, optional key and output directions | [a5](../gsm/a5.rs) |
+| [a5.rs](a5.rs) | Cipher numbers as integers, -95 and -22 results, an optional key of any length, optional output directions | [a5](../gsm/a5.rs) |
 | [auth.rs](auth.rs) | C's subscriber and vector structs, integer algorithms and results, SQN changes on a failed resync, names for unknown values | [auth](../gsm/auth/mod.rs), [milenage](../gsm/milenage.rs) |
 | [base64.rs](base64.rs) | Integer statuses, output lengths, termination and nullable size probes | [base64](../base/base64.rs) |
 | [bcd.rs](bcd.rs) | Signed lengths, terminated inputs/outputs and buffer mutation | [bcd](../base/bcd.rs) |
@@ -22,9 +22,11 @@ C library and export no C ABI.
 | [conv.rs](conv.rs) | Signed lengths, low-level encode/scan contracts and read-only decoder inspection | [convolutional coding](../base/conv/README.md) |
 | [crc.rs](crc.rs) | Signed bit counts, check/set statuses and generated CRC table metadata | [crc](../base/crc.rs) |
 | [fsm.rs](fsm.rs) | Integer error mapping, names and identifier-formatting adapters | [FSMs](../base/fsm/README.md) |
+| [gea.rs](gea.rs) | Integer algorithms and directions, -34 and -22 results, C's 1,523-byte limit, names for C's table, wrapping SAPI arithmetic | [gea](../gsm/gea.rs) |
 | [gsm0502.rs](gsm0502.rs) | Integer comparison, input-returning remap, negative CCCH codes and wrapping paging values | [gsm0502](../gsm/gsm0502.rs) |
 | [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../coding/gsm0503.rs) |
 | [gsm_utils.rs](gsm_utils.rs) | Integer band and type values, -22 and 0xffff error results, `gsm_time` fields that can disagree, bounded and NUL-terminated 7-bit buffers, wrapped header lengths | [gsm_utils](../gsm/gsm_utils/mod.rs) |
+| [kasumi.rs](kasumi.rs) | Eight separate subkey arrays, KGCORE's length in bits, whole-byte bearer and direction inputs | [kasumi](../gsm/kasumi/mod.rs) |
 | [sockaddr_str.rs](sockaddr_str.rs) | C's struct with any family, errno results, writes made before a failure, glibc's address text, Linux socket address layouts, comparison that falls back to text | [sockaddr_str](../base/sockaddr_str.rs) |
 | [strrb.rs](strrb.rs) | C's size with one unused slot, 16-bit sizes, slot checks, indexes past the newest string, text up to a NUL | [strrb](../base/strrb.rs) |
 | [use_count.rs](use_count.rs) | Integer results, a callback after each change, optional counters, bounded text buffers | [use_count](../base/use_count.rs) |

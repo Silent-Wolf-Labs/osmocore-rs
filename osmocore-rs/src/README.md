@@ -14,7 +14,7 @@ exclusions. Durable API details and runnable examples belong in module Rustdoc.
 | Location | Completed functionality |
 | --- | --- |
 | [Core utilities](base/README.md) | The `base` group, C's `src/core`: bits, encodings, CRCs, messages, time, FSMs, counters and small utilities |
-| [GSM utilities](gsm/README.md) | The `gsm` group, C's `src/gsm`: TDMA frames, bands and power, A5, GSM authentication, 7-bit coding and TLV |
+| [GSM utilities](gsm/README.md) | The `gsm` group, C's `src/gsm`: TDMA frames, bands and power, A5, KASUMI and GEA ciphers, GSM authentication, 7-bit coding and TLV |
 | [Channel coding](coding/README.md) | The `coding` group, C's `src/coding`: GSM 05.03 xCCH |
 | [Convolutional coding](base/conv/README.md) | Checked descriptors, encoding, stateful decoding, portable correlation and dispatch |
 | [FSMs](base/fsm/README.md) | Owned registry/runtime, hierarchy, transitions, termination and timer/TDef integration |
@@ -222,7 +222,9 @@ the family names below also cover preferred methods in the functional modules.
 | `sockaddr_str` | `osmo_ip_str_type`, `osmo_sockaddr_str_is_set`, `osmo_sockaddr_str_is_nonzero`, `osmo_sockaddr_str_cmp`, `osmo_sockaddr_str_from_str`, `osmo_sockaddr_str_from_str2`, `osmo_sockaddr_str_from_in_addr`, `osmo_sockaddr_str_from_in6_addr`, `osmo_sockaddr_str_from_32`, `osmo_sockaddr_str_from_32h`, `osmo_sockaddr_str_from_sockaddr_in`, `osmo_sockaddr_str_from_sockaddr_in6`, `osmo_sockaddr_str_from_sockaddr`, `osmo_sockaddr_str_to_in_addr`, `osmo_sockaddr_str_to_in6_addr`, `osmo_sockaddr_str_to_32`, `osmo_sockaddr_str_to_32h`, `osmo_sockaddr_str_to_sockaddr_in`, `osmo_sockaddr_str_to_sockaddr_in6`, `osmo_sockaddr_str_to_sockaddr`, `OSMO_SOCKADDR_STR_FMT` with `OSMO_SOCKADDR_STR_FMT_ARGS`; see below for what's left out | `src/core/sockaddr_str.c` | `include/osmocom/core/sockaddr_str.h` |
 | `strrb` | `osmo_strrb_create`, `osmo_strrb_is_empty`, `osmo_strrb_get_nth`, `_osmo_strrb_is_bufindex_valid`, `osmo_strrb_elements`, `osmo_strrb_add` | `src/core/strrb.c` | `include/osmocom/core/strrb.h` |
 | `use_count` | `_osmo_use_count_get_put` and `osmo_use_count_get_put`, `osmo_use_count_total`, `osmo_use_count_by`, `osmo_use_count_to_str_buf`, `osmo_use_count_name_buf`, `osmo_use_count_to_str_c`, `osmo_use_count_make_static_entries`, `osmo_use_count_free`; see below for what's left out | `src/core/use_count.c` | `include/osmocom/core/use_count.h` |
-| `a5` | `osmo_a5` for A5/0, A5/1 and A5/2, `osmo_a5_fn_count`; see below for what's left out | `src/gsm/a5.c` | `include/osmocom/gsm/a5.h` |
+| `a5` | `osmo_a5` for A5/0 to A5/4, `osmo_a5_fn_count`; `_a5_3` and `_a5_4` with a raw count as `a5_3_count` and `a5_4_count`; see below for what's left out | `src/gsm/a5.c` | `include/osmocom/gsm/a5.h` |
+| `kasumi` | `_kasumi`, `_kasumi_key_expand`, `_kasumi_kgcore` | `src/gsm/kasumi.c` | `include/osmocom/gsm/kasumi.h`; declared, but not exported by libosmogsm |
+| `gea` | `gprs_cipher_run` for GEA3 and GEA4, `gea3`, `gea4`, `gprs_cipher_gen_input_ui`, `gprs_cipher_gen_input_i`, `gprs_cipher_key_length`, `gprs_cipher_supported`, `gprs_cipher_names`; see below for what's left out | `src/gsm/gea.c`, `gprs_gea.c`, `gprs_cipher_core.c` | `include/osmocom/crypt/gprs_cipher.h`, `include/osmocom/gsm/gea.h` |
 | `comp128` | `comp128v1`, `comp128v2`, `comp128v3` | `src/gsm/comp128.c`, `src/gsm/comp128v23.c` | `include/osmocom/gsm/comp128.h`, `include/osmocom/gsm/comp128v23.h` |
 | `auth` | `osmo_auth_gen_vec2` and `osmo_auth_gen_vec_auts2` for COMP128 v1 to v3, XOR-2G, XOR-3G and Milenage, `osmo_auth_c2`, `osmo_auth_c3`, `osmo_c4`, `osmo_auth_3g_from_2g`, `osmo_auth_alg_name`, `osmo_auth_alg_parse`, `osmo_sub_auth_type_names`; see below for what's left out | `src/gsm/auth_core.c`, `auth_comp128v1.c`, `auth_comp128v23.c`, `auth_xor_2g.c`, `auth_xor.c`, `auth_milenage.c` | `include/osmocom/crypt/auth.h` |
 | `milenage` (`auth` feature) | `milenage_opc_gen`, `milenage_f1`, `milenage_f2345`, `milenage_generate`, `milenage_auts`, `milenage_check`, `gsm_milenage` | `src/gsm/milenage/milenage.c` | none: exported, but declared only in the uninstalled `milenage/milenage.h` |
@@ -275,10 +277,18 @@ be added if a consumer needs it.
 
 | C API | Why it's left out |
 | --- | --- |
-| `osmo_a5` for A5/3 and A5/4, `_a5_3`, `_a5_4` | Need KASUMI |
-| `_kasumi`, `_kasumi_key_expand`, `_kasumi_kgcore`, `osmo_c4` | Only A5/3 and A5/4 use them here |
 | `osmo_a5_1`, `osmo_a5_2` | Deprecated wrappers for `osmo_a5` |
 | `_a5_1`, `_a5_2` | Exported only for `osmo_a5` and not in a public header |
+| `_a5_3`, `_a5_4` as C declares them, with `fn_correct` | Internal to `osmo_a5` and not in a public header. `a5_3`, `a5_4`, `a5_3_count` and `a5_4_count` give both forms |
+
+### C APIs left out of `gea`
+
+These are in `gprs_cipher.h` and have no Rust equivalent.
+
+| C API | Why it's left out |
+| --- | --- |
+| GEA1 and GEA2 | libosmocore doesn't implement them. `compat::gea::gprs_cipher_run` returns -22 for them, as C does |
+| `gprs_cipher_register`, `gprs_cipher_load`, `struct gprs_cipher_impl` | C selects ciphers through registered plugins. Rust has no plugins: GEA3 and GEA4 are always there |
 
 ### C APIs left out of `comp128` and `auth`
 

@@ -15,6 +15,17 @@
   AUTN check. It needs the new `auth` feature, which adds the RustCrypto `aes` crate.
 - `compat::auth`: C's `osmo_auth_gen_vec2`, `osmo_auth_gen_vec_auts2`, name helpers and
   key conversions, with C's structs, status codes and SQN changes.
+- `gsm::kasumi`: the KASUMI block cipher and the KGCORE keystream. Also
+  `compat::kasumi` with C's `_kasumi`, `_kasumi_key_expand` and `_kasumi_kgcore`.
+- A5/3 and A5/4 in `gsm::a5`, from a frame number or a raw count. `compat::a5::osmo_a5`
+  generates them too.
+- `gsm::gea`: the GEA3 and GEA4 GPRS ciphers, the UI and I frame inputs and
+  `GprsAlgorithm`. Also `compat::gea` with C's `gprs_cipher_run` and helpers.
+
+### Changed
+
+- `compat::a5::osmo_a5` takes its key as `Option<&[u8]>`, so it can take A5/4's 16
+  bytes. It returns -22 for a key shorter than the cipher reads.
 
 ## [0.2.0] - 2026-11-08
 
