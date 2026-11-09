@@ -46,6 +46,7 @@ contents where those are part of the API contract.
 | `gsm0503` | GSM 05.03 xCCH code tables, interleaving, burst mapping, encoding and decoding |
 | `a5` | A5/0, A5/1 and A5/2 cipher streams and frame counts |
 | `comp128` | COMP128 v1, v2 and v3 and XOR-2G SRES and Kc |
+| `auth` | Authentication core, Milenage and XOR-3G vectors, resync, names and key conversions |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
@@ -86,7 +87,7 @@ compatibility with the C reference at the public API boundary.
 ## Current validation
 
 All eight combinations of the independent `tracing`, `net` and `runtime` features
-are supported. Run `cargo test` with each selected combination for current counts.
+are supported. `auth` is independent of them too; CI tests it alone and with all three. Run `cargo test` with each selected combination for current counts.
 The [diagnostics guide](../../docs/README.md#features-and-structured-diagnostics) explains the
 single-dispatcher callsite cache issue and timer test isolation.
 
@@ -928,6 +929,26 @@ against `comp128v1`, `comp128v2`, `comp128v3`, `xor_2g` and `GsmAlgorithm::vecto
 Regenerate it from `gsmtap-rs` with `reference/comp128/run_comp128_vector.sh`.
 
 The fixture has no result for a UMTS subscriber, which the Rust API can't express.
+
+## Authentication observations
+
+`auth/auth_vectors.ndjson` records direct `libosmogsm` calls:
+- algorithm and subscriber type names, and name parsing;
+- `osmo_auth_c2`, `osmo_auth_c3`, `osmo_c4` and `osmo_auth_3g_from_2g`;
+- the Milenage functions, with the inputs of 3GPP TS 35.207 test set 1, fixed patterns and
+  random values: OPc derivation, f1 to f5*, GSM Milenage, AUTS and the USIM's AUTN check;
+- `osmo_auth_gen_vec2` and `osmo_auth_gen_vec_auts2` for Milenage and XOR-3G across SQN,
+  IND, RES length, key length, OP and subscriber type, including every error C returns.
+  Each record holds the whole vector and the subscriber's SQNs after the call.
+
+The harness replays upstream's `milenage_test` output. `auth/reference_vectors.rs` replays
+the records against `compat::auth` and, where the preferred API can express the inputs,
+against `UmtsSubscriber`, `GsmAlgorithm::Xor3g` and `gsm::milenage`. Milenage records need
+the `auth` feature; without it, the tests check that `compat::auth` reports Milenage as
+missing. Regenerate it from `gsmtap-rs` with `reference/auth/run_auth_vector.sh`.
+
+`auth/behavior.rs` covers what the recording can't: the C2 inputs C aborts on, key and RES
+lengths, hidden keys, IND being checked before AUTS, and TUAK, which isn't implemented yet.
 
 ## GSM 05.03 xCCH observations
 

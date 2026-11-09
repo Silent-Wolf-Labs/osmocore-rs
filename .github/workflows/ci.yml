@@ -57,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        features: ['', tracing, net, 'net,tracing', runtime, 'runtime,tracing', 'runtime,net', 'runtime,net,tracing']
+        features: ['', tracing, net, 'net,tracing', runtime, 'runtime,tracing', 'runtime,net', 'runtime,net,tracing', auth, 'auth,runtime,net,tracing']
     name: test (${{ matrix.features || 'none' }})
     permissions:
       contents: read

@@ -41,7 +41,7 @@ modules grouped in the diagram are families, not a dependency chain.
 | Observation | Independent [features and diagnostics](#features-and-structured-diagnostics) with application-owned subscribers |
 
 The [source overview](../osmocore-rs/src/README.md) links precise API contracts
-and source locations. Default features are empty; net, runtime and tracing select
+and source locations. Default features are empty; net, runtime, tracing and auth select
 independently.
 
 ### Ownership and compatibility
@@ -313,11 +313,11 @@ feature and target selection.
 
 ### Features and targets
 
-Default features are empty. `net`, `runtime` and `tracing` select independently;
-all eight combinations are supported. Compatibility adapters are always compiled.
-`net` selects socket2 for establishment; `runtime` selects Mio for readiness.
-Neither feature enables the other or tracing. With features disabled there are
-no normal/build dependencies.
+Default features are empty. `net`, `runtime`, `tracing` and `auth` select
+independently, and every combination is supported. Compatibility adapters are always
+compiled. `net` selects socket2 for establishment; `runtime` selects Mio for readiness;
+`auth` selects the RustCrypto `aes` crate for Milenage. No feature enables another.
+With features disabled there are no normal/build dependencies.
 
 ![Independent features and diagnostic targets](architecture/diagrams/generated/features-diagnostics.svg)
 
@@ -597,7 +597,7 @@ where it deliberately differs, they record the Rust safety difference.
 | IP addresses as text | An address as text with a port, converted to and from addresses as C on glibc does | The preferred API takes its family from the text, rejects text C would keep with an error and compares by text; `compat::sockaddr_str` keeps C's struct, results, partial writes and comparison |
 | String ringbuffers | A ring of recent strings with C's length limit | The preferred API takes the number of strings to hold and returns nothing past the newest; `compat::strrb` keeps C's size, slots and index results except where C crashes |
 | Use counts | Named counters with C's entry order and reuse, text and range checks | The preferred API reports each change instead of running a callback, and owns its tokens; `compat::use_count` runs C's callback without its source file and line, and has no talloc parent or entry pointers |
-| GSM authentication | SRES and Kc from COMP128 v1, v2 and v3 and XOR-2G | GSM subscribers only for now; no constant-time code or key clearing, as in C |
+| GSM and UMTS authentication | SRES and Kc from COMP128 v1, v2 and v3, XOR-2G and XOR-3G; UMTS vectors and resync from Milenage (`auth` feature) and XOR-3G, with SQN and IND handling; the Milenage functions; C2 to C5 | No TUAK yet; no constant-time claim or key clearing, as in C; the preferred resync checks its inputs before AUTS and changes nothing when it fails, and `compat::auth` keeps C's codes and SQN changes |
 | A5 ciphers | A5/0, A5/1 and A5/2 cipher streams and frame counts | No A5/3 or A5/4, which need KASUMI; `compat::a5` keeps C's results except where C crashes or overflows, and reports A5/3 and A5/4 as unsupported |
 | TLV | Borrowed parsing, encoding, `Msgb` methods, shifting and protocol validation | Preferred API rejects lengths C truncates or can't parse back; `compat::tlv` keeps C's results, including its merge and copy |
 | Message buffers and primitives | Owned buffers, layer helpers, resize/copy, queues, formatting and primitive metadata | No talloc contexts, pointer/layout or allocator-failure parity |
@@ -669,7 +669,7 @@ SCTP and pending connections remain deferred. Runtime composition is separately
 available through the independent `runtime` feature. This is not
 C source-file/API parity.
 
-Defaults are empty. `tracing`, `net` and `runtime` select independently.
+Defaults are empty. `tracing`, `net`, `runtime` and `auth` select independently.
 Pending TCP connect, SCTP/TLS, async integration, native C select/timerfd,
 exporters, VTY/CTRL, supervision, general GSMTAP parsing and full libosmocore
 parity remain intentionally excluded.

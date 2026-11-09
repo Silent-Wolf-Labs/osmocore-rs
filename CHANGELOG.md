@@ -7,6 +7,14 @@
 - `gsm::comp128` with COMP128 v1, v2 and v3, and `gsm::auth` with the `Ki` and `Kc` key
   types, `GsmAlgorithm` and XOR-2G, giving SRES and Kc for a GSM subscriber. Results
   match libosmocore.
+- UMTS authentication in `gsm::auth`: `UmtsSubscriber` generates vectors and resyncs
+  from AUTS with Milenage or XOR-3G, with SQN and IND handling. Also the `K`, `Op`, `Opc`,
+  `Ck` and `Ik` key types, the C2 to C5 conversions, algorithm names and XOR-3G for GSM
+  subscribers.
+- `gsm::milenage`: the Milenage functions f1 to f5*, OPc derivation, AUTS and the USIM's
+  AUTN check. It needs the new `auth` feature, which adds the RustCrypto `aes` crate.
+- `compat::auth`: C's `osmo_auth_gen_vec2`, `osmo_auth_gen_vec_auts2`, name helpers and
+  key conversions, with C's structs, status codes and SQN changes.
 
 ## [0.2.0] - 2026-11-08
 

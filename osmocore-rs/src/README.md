@@ -224,7 +224,8 @@ the family names below also cover preferred methods in the functional modules.
 | `use_count` | `_osmo_use_count_get_put` and `osmo_use_count_get_put`, `osmo_use_count_total`, `osmo_use_count_by`, `osmo_use_count_to_str_buf`, `osmo_use_count_name_buf`, `osmo_use_count_to_str_c`, `osmo_use_count_make_static_entries`, `osmo_use_count_free`; see below for what's left out | `src/core/use_count.c` | `include/osmocom/core/use_count.h` |
 | `a5` | `osmo_a5` for A5/0, A5/1 and A5/2, `osmo_a5_fn_count`; see below for what's left out | `src/gsm/a5.c` | `include/osmocom/gsm/a5.h` |
 | `comp128` | `comp128v1`, `comp128v2`, `comp128v3` | `src/gsm/comp128.c`, `src/gsm/comp128v23.c` | `include/osmocom/gsm/comp128.h`, `include/osmocom/gsm/comp128v23.h` |
-| `auth` | `osmo_auth_gen_vec2` for a GSM subscriber with COMP128v1, COMP128v2, COMP128v3 or XOR-2G, as `GsmAlgorithm::vector`; see below for what's left out | `src/gsm/auth_core.c`, `auth_comp128v1.c`, `auth_comp128v23.c`, `auth_xor_2g.c` | `include/osmocom/crypt/auth.h` |
+| `auth` | `osmo_auth_gen_vec2` and `osmo_auth_gen_vec_auts2` for COMP128 v1 to v3, XOR-2G, XOR-3G and Milenage, `osmo_auth_c2`, `osmo_auth_c3`, `osmo_c4`, `osmo_auth_3g_from_2g`, `osmo_auth_alg_name`, `osmo_auth_alg_parse`, `osmo_sub_auth_type_names`; see below for what's left out | `src/gsm/auth_core.c`, `auth_comp128v1.c`, `auth_comp128v23.c`, `auth_xor_2g.c`, `auth_xor.c`, `auth_milenage.c` | `include/osmocom/crypt/auth.h` |
+| `milenage` (`auth` feature) | `milenage_opc_gen`, `milenage_f1`, `milenage_f2345`, `milenage_generate`, `milenage_auts`, `milenage_check`, `gsm_milenage` | `src/gsm/milenage/milenage.c` | none: exported, but declared only in the uninstalled `milenage/milenage.h` |
 | `gsm_utils` | `gsm_band_name`, `gsm_band_parse`, `ms_class_gmsk_dbm`, `ms_pwr_ctl_lvl`, `ms_pwr_dbm`, `rxlev2dbm`, `dbm2rxlev`, `gsm_arfcn2band_rc`, `gsm_arfcn2freq10`, `gsm_freq102arfcn`, `gsm_fn2gsmtime`, `gsm_gsmtime2fn`, `gsm_fn_as_gsmtime_str`, `osmo_dump_gsmtime`, `gsm_rfn2fn`, `gsm_fn2rfn`, `gprs_tlli_type`, `gprs_tlli2tmsi`, `gprs_tmsi2tlli`, `ms_cm2_a5n_support`, `ms_cm3_a5n_support`, `rach_max_trans_val2raw`, `rach_max_trans_raw2val`, `rach_tx_integer_raw2val`, `gsm_get_octet_len`, `gsm_septet_encode`, `gsm_septet_pack`, `gsm_7bit_encode_n`, `gsm_7bit_encode_n_ussd`, `gsm_7bit_decode_n`, `gsm_7bit_decode_n_ussd`, `gsm_7bit_decode_n_hdr`; see below for what's left out | `src/gsm/gsm_utils.c` | `include/osmocom/gsm/gsm_utils.h` |
 | `tlv` | `tlv_parse_one`, `tlv_parse`, `tlv_parse2`, `tlv_def_patch`, `tlv_encode_one`, `tlv_encode`, `tlv_encode_ordered`, `osmo_tlvp_merge`, `osmo_tlvp_copy`, `osmo_shift_v_fixed`, `osmo_match_shift_tv_fixed`, `osmo_shift_tlv`, `osmo_match_shift_tlv`, `osmo_shift_lv`, `osmo_tlv_prot_msg_name`, `osmo_tlv_prot_ie_name`, `osmo_tlv_prot_validate_tp`, `osmo_tlv_prot_parse`, `osmo_tlv_prot_msgt_flags`, `tlvp_val8`, `tlvp_val16be`, `tlvp_val32be`, `tlvp_val16_unal`, `tlvp_val32_unal`, `TLVP_*`, `*_GROSS_LEN`, `msgb_*` TLV helpers; not `tlv_dump` or the raw-pointer `*_put` writers | `src/gsm/tlv_parser.c` | `include/osmocom/gsm/tlv.h` |
 | `prbs` | `osmo_prbs7`, `osmo_prbs9`, `osmo_prbs11`, `osmo_prbs15`, `osmo_prbs_state_init`, `osmo_prbs_get_ubit`, `osmo_prbs_get_ubits` | `src/core/prbs.c` | `include/osmocom/core/prbs.h` |
@@ -281,15 +282,15 @@ be added if a consumer needs it.
 
 ### C APIs left out of `comp128` and `auth`
 
-These are in `comp128.h`, `comp128v23.h` or `auth.h`. The UMTS algorithms and the rest of
-the auth core are planned; the others can be added if a consumer needs them.
+These are in `comp128.h`, `comp128v23.h`, `auth.h` or `milenage/milenage.h`. TUAK is
+planned; the others can be added if a consumer needs them.
 
 | C API | Why it's left out |
 | --- | --- |
 | `comp128` | Deprecated wrapper for `comp128v1` |
-| `osmo_auth_gen_vec2` for UMTS subscribers, `osmo_auth_gen_vec_auts2`, `osmo_auth_c2`, `osmo_auth_c3`, `osmo_auth_alg_name`, `osmo_auth_alg_parse`, `osmo_sub_auth_type_names` | Come with Milenage and XOR-3G |
+| `osmo_auth_gen_vec2` and `osmo_auth_gen_vec_auts2` for TUAK | TUAK comes in a later step. `compat::auth` returns `-ENOENT` for it |
 | `osmo_auth_gen_vec`, `osmo_auth_gen_vec_auts` | Deprecated forms taking `osmo_sub_auth_data` |
-| `osmo_auth_register`, `osmo_auth_load`, `osmo_auth_supported` | C selects algorithms through registered plugins. Rust has no plugins, and every algorithm in `GsmAlgorithm` is always there |
+| `osmo_auth_register`, `osmo_auth_load`, `osmo_auth_supported` | C selects algorithms through registered plugins. Rust has no plugins: every algorithm is always there, and Milenage with the `auth` feature |
 
 ### C APIs left out of `gsm_utils`
 

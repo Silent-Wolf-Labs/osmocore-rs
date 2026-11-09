@@ -44,7 +44,8 @@ Functional modules are grouped like libosmocore's sources.
 - `gsm0502`: GSM frame numbers, burst sizes, block mapping, hopping and paging groups.
 - `gsm_utils`: GSM bands, ARFCNs, power levels, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and SMS and USSD 7-bit coding.
 - `a5`: the A5/0, A5/1 and A5/2 cipher streams.
-- `auth`, `comp128`: GSM authentication with COMP128 v1, v2 and v3 and XOR-2G.
+- `auth`, `comp128`, `milenage`: GSM and UMTS authentication with COMP128 v1, v2 and v3,
+  XOR-2G, XOR-3G and, with the `auth` feature, Milenage.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 
 `coding`, for C's `src/coding`:
@@ -152,6 +153,7 @@ It sends to `127.0.0.1:4729` by default. To watch the blocks arrive, run the gsm
 workbench with `GSMTAP_LISTEN=127.0.0.1:4729`, or capture loopback in Wireshark with the
 `gsmtap` filter.
 
-Default features are empty (`default = []`). `tracing`, `net` and `runtime`
-are independently selectable, including every combination. `compat::<subsystem>`
+Default features are empty (`default = []`). `tracing`, `net`, `runtime` and `auth`
+are independently selectable, including every combination. `auth` adds Milenage, on
+the RustCrypto `aes` crate. `compat::<subsystem>`
 adapters are always compiled and are not a Cargo feature.
