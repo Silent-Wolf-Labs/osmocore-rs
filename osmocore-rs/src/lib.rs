@@ -13,7 +13,8 @@
 //! application-owned subscribers and filters. See [`diagnostics`] for event
 //! fields, levels, context propagation and a runnable configuration example.
 //! The [diagnostics architecture](https://github.com/Silent-Wolf-Labs/osmocore-rs/blob/main/docs/README.md#features-and-structured-diagnostics)
-//! explains feature relationships and design boundaries.
+//! explains feature relationships and design boundaries. The optional `auth` feature
+//! adds Milenage UMTS authentication.
 //!
 //! ```
 //! use osmocore_rs::base::{base64, bitvec::BitVec, msgb::Msgb};

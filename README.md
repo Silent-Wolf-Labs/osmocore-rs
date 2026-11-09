@@ -21,8 +21,9 @@ C contracts use always-compiled `compat::<subsystem>` adapters.
 | `tracing` | Structured diagnostics with application-owned subscribers, filters and output |
 | `net` | TCP/UDP establishment, explicit resolution, local binding and pre-bind options |
 | `runtime` | Mio readiness, bounded output, typed commands/drivers and coordinated shutdown |
+| `auth` | Milenage authentication, on the RustCrypto `aes` crate |
 
-Default features are empty. All three features select independently.
+Default features are empty. All four features select independently.
 
 ## Usage
 
@@ -31,7 +32,7 @@ Add the crate from crates.io, selecting optional features as needed:
 ```toml
 [dependencies]
 osmocore-rs = "0.2"
-# osmocore-rs = { version = "0.2", features = ["net", "runtime", "tracing"] }
+# osmocore-rs = { version = "0.2", features = ["net", "runtime", "tracing", "auth"] }
 ```
 
 ```rust

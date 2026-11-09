@@ -8,6 +8,9 @@
 /// Recorded A5 cipher compatibility contracts.
 pub mod a5;
 
+/// Recorded authentication compatibility contracts.
+pub mod auth;
+
 /// Recorded base64 compatibility contracts.
 pub mod base64;
 

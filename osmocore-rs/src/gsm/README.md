@@ -7,8 +7,9 @@
 | [gsm0502](gsm0502.rs) | TDMA frame arithmetic, burst sizes, block starts, hopping and paging |
 | [gsm_utils](gsm_utils/mod.rs) | Bands, ARFCNs, power, GSM time, TLLIs, classmarks, RACH and 7-bit coding |
 | [a5](a5.rs) | A5/0, A5/1 and A5/2 cipher streams |
-| [auth](auth.rs) | GSM authentication: key types, SRES and Kc, and XOR-2G |
+| [auth](auth/mod.rs) | GSM and UMTS authentication: key types, vectors, SQN, resync, XOR-2G and XOR-3G |
 | [comp128](comp128/mod.rs) | COMP128 v1, v2 and v3 |
+| [milenage](milenage.rs) | Milenage f1 to f5*, AUTS and the USIM's AUTN check (`auth` feature) |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -125,24 +126,45 @@ publicly broken, so use them to interoperate with GSM networks, not to protect d
 The ciphers load only the low 22 bits of the count, as in C, so a frame number past the
 hyperframe can give the same stream as a smaller one.
 
-## GSM authentication
+## GSM and UMTS authentication
 
-[auth.rs](auth.rs) computes SRES and Kc for a GSM subscriber from Ki and RAND.
-`GsmAlgorithm` selects COMP128 v1, v2 or v3 ([comp128](comp128/mod.rs)) or XOR-2G, and
-`GsmAlgorithm::vector` gives the result C's `osmo_auth_gen_vec2` gives for a GSM
-subscriber. Results match C. COMP128v1 is broken and XOR-2G is a test algorithm, so use
-them to interoperate with networks and SIMs, not to protect anything.
+[auth](auth/mod.rs) computes GSM and UMTS authentication vectors. Results match C.
 
-`Ki` and `Kc` wrap their bytes, and their `Debug` output doesn't show them. Nothing runs in
-constant time, and keys aren't cleared from memory when dropped, as in C.
+- **GSM:** `GsmAlgorithm::vector` gives SRES and Kc from Ki and RAND with COMP128 v1, v2
+  or v3 ([comp128](comp128/mod.rs)), XOR-2G or XOR-3G.
+- **UMTS:** `UmtsSubscriber` holds K, OP or OPc, AMF, SQN and IND. `vector` gives AUTN,
+  RES, CK, IK and the derived SRES and Kc with Milenage or XOR-3G, and `resync` takes a
+  USIM's AUTS first.
+- **Conversions:** `c2` to `c5` derive GSM values from UMTS ones and back, and `Algorithm`
+  gives libosmocore's names.
+
+[milenage](milenage.rs), with the `auth` feature, gives the Milenage functions themselves:
+f1 to f5*, OPc from OP, AUTS for both sides and the USIM's AUTN check. It uses AES-128
+from the RustCrypto `aes` crate.
+
+Milenage moves SQN on by one SEQ for each vector and sets this client's IND, as C does.
+XOR-3G uses SQN as it is, and resync makes it the USIM's SQN. Key types wrap their bytes,
+and their `Debug` output doesn't show them. Nothing claims to run in constant time, and
+keys aren't cleared from memory when dropped, as in C. COMP128v1 is broken and the XOR
+algorithms are for test SIMs, so use them to interoperate, not to protect anything.
 
 | Input | C | Rust |
 | --- | --- | --- |
-| COMP128 with a UMTS subscriber | Reads Ki from the UMTS fields, which share its memory | `GsmAlgorithm::vector` takes a `Ki`, so there's no UMTS subscriber to pass |
-| XOR-2G with a UMTS subscriber | Returns `-ENOTSUP` | `GsmAlgorithm::vector` takes a `Ki`, so there's no UMTS subscriber to pass |
+| COMP128 or XOR-2G with a UMTS subscriber | Reads Ki from the UMTS fields, which share its memory, or returns `-ENOTSUP` | `GsmAlgorithm::vector` takes a `Ki`, so there's no UMTS subscriber to pass |
+| Milenage with a K, OP or OPc other than 16 bytes, or IND out of range | Returns `-EINVAL`, -2 or -3 | `AuthError`, and nothing changes |
+| A RES length other than 4 or 8 for Milenage | Returns `-EINVAL` | `ResLength` has only those two |
+| Resync with AUTS that matches, then an IND out of range | Moves SQN to the USIM's, then fails | Checks IND first, fails and changes nothing. `compat::auth` keeps C's result |
+| Resync with a bad AUTS and IND out of range | -1 | `AuthError::IndRange` |
+| XOR-3G resync | Checks AUTS against RAND, not the RAND it was made for | The same |
+| The USIM's AUTN check | Compares SQN before the MAC, with no IND or age limit | The same, documented on `Milenage::check` |
+
+C keeps GSM and UMTS subscriber data in a union. `compat::auth` keeps them apart, so where
+C would read the other part's memory, it reads its own fields instead. Those cases aren't
+recorded.
 
 COMP128's substitution tables are part of the algorithm, so the crate holds the same
 values. They come from the public descriptions of COMP128 recovered from SIMs.
+Milenage's rotations and constants come from 3GPP TS 35.206.
 
 ## TLV
 

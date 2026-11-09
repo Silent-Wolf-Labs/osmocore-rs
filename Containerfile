@@ -41,7 +41,7 @@ RUN find ../scripts ../.githooks -type f \( -name '*.sh' -o -name pre-commit \) 
         -print0 | xargs -0 -r shellcheck \
     && ../scripts/ci/test-release-gate.sh
 RUN cargo fmt --check
-RUN for features in '' tracing net net,tracing runtime runtime,tracing runtime,net runtime,net,tracing; do \
+RUN for features in '' tracing net net,tracing runtime runtime,tracing runtime,net runtime,net,tracing auth auth,runtime,net,tracing; do \
         cargo clippy --locked --all-targets --no-default-features --features "$features" -- -D warnings \
         && RUSTDOCFLAGS='-D warnings' cargo doc --locked --no-deps --no-default-features --features "$features" \
         || exit 1; \
@@ -50,7 +50,7 @@ RUN for features in '' tracing net net,tracing runtime runtime,tracing runtime,n
 RUN CARGO_TARGET_DIR=/tmp/bench-target cargo bench --locked -- --test \
     && rm -rf /tmp/bench-target
 RUN cargo deny --locked --all-features check licenses sources
-RUN for features in runtime runtime,tracing; do \
+RUN for features in runtime runtime,tracing auth; do \
         cargo deny --locked --no-default-features --features "$features" --exclude-dev check bans \
         || exit 1; \
     done
