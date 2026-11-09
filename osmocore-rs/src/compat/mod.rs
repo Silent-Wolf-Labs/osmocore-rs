@@ -18,6 +18,8 @@ pub mod base64;
 pub mod bcd;
 
 /// Recorded GSM 05.02 compatibility contracts.
+pub mod gea;
+
 pub mod gsm0502;
 
 /// Recorded GSM 05.03 compatibility contracts.
@@ -25,6 +27,8 @@ pub mod gsm0503;
 
 /// Recorded gsm_utils compatibility contracts.
 pub mod gsm_utils;
+
+pub mod kasumi;
 
 /// Recorded TLV compatibility contracts.
 pub mod tlv;

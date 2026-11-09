@@ -30,7 +30,7 @@ fn frame_counts_match_c() {
 
 #[test]
 fn streams_match_c() {
-    let mut seen = [0; 3];
+    let mut seen = [0; 5];
     for record in records() {
         let Record::Stream {
             n,
@@ -46,8 +46,10 @@ fn streams_match_c() {
         seen[usize::from(n)] += 1;
         let stream = match n {
             0 => a5_0(),
-            1 => a5_1(&key, frame),
-            2 => a5_2(&key, frame),
+            1 => a5_1(key[..].try_into().unwrap(), frame),
+            2 => a5_2(key[..].try_into().unwrap(), frame),
+            3 => a5_3(key[..].try_into().unwrap(), frame),
+            4 => a5_4(key[..].try_into().unwrap(), frame),
             _ => unreachable!("the reader rejects other ciphers"),
         };
         assert_eq!(stream.downlink[..], downlink, "A5/{n} {key:02x?} {frame}");
@@ -70,7 +72,7 @@ fn streams_match_c() {
 
 #[test]
 fn results_match_c() {
-    let key = [0; KEY_BYTES];
+    let key = [0; A5_4_KEY_BYTES];
     for record in records() {
         if let Record::Result { n, rc } = record {
             let mut dl = [2; STREAM_BITS];

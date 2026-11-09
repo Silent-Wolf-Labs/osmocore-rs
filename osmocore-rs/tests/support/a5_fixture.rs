@@ -1,11 +1,11 @@
 //! Shared fixture reader for the A5 cipher streams. Checks the shape of the C
 //! observations; the expected results come only from the recording.
 
-pub const FINGERPRINT: u64 = 0x172077c448e72cbc;
+pub const FINGERPRINT: u64 = 0x682665bc712e72e1;
 pub const COMMIT: &str = "950430e829a3dc1d162aa241bc0505745c5a7311";
 pub const STREAM_BITS: usize = 114;
 /// Record counts in file order. Each kind has one contiguous section.
-pub const SECTIONS: &[(&str, usize)] = &[("fn_count", 77), ("stream", 459), ("result", 11)];
+pub const SECTIONS: &[(&str, usize)] = &[("fn_count", 77), ("stream", 927), ("result", 13)];
 pub const UPSTREAM_STREAMS: usize = 3;
 pub const ENOTSUP_RESULT: i32 = -95;
 
@@ -18,7 +18,8 @@ pub enum Record {
     Stream {
         upstream: bool,
         n: u8,
-        key: [u8; 8],
+        /// 16 bytes for A5/4, 8 for the others.
+        key: Vec<u8>,
         frame: u32,
         downlink: Vec<u8>,
         uplink: Vec<u8>,
@@ -73,20 +74,20 @@ fn parsed<T: std::str::FromStr + ToString>(value: &str) -> Result<T, String> {
     }
 }
 
-fn key(value: &str) -> Result<[u8; 8], String> {
-    let mut key = [0; 8];
-    if value.len() != 16
+fn key(value: &str) -> Result<Vec<u8>, String> {
+    if !matches!(value.len(), 16 | 32)
         || !value
             .bytes()
             .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
     {
         return Err(format!("bad key {value}"));
     }
-    for (index, byte) in key.iter_mut().enumerate() {
-        *byte = u8::from_str_radix(&value[index * 2..index * 2 + 2], 16)
-            .map_err(|_| format!("bad key {value}"))?;
-    }
-    Ok(key)
+    (0..value.len() / 2)
+        .map(|index| {
+            u8::from_str_radix(&value[index * 2..index * 2 + 2], 16)
+                .map_err(|_| format!("bad key {value}"))
+        })
+        .collect()
 }
 
 fn bits(value: &str) -> Result<Vec<u8>, String> {
@@ -136,7 +137,10 @@ fn record(line: &str) -> Result<Record, String> {
 
 fn check(record: &Record) -> Result<(), String> {
     match record {
-        Record::Stream { n, .. } if *n > 2 => Err(format!("unexpected cipher A5/{n}")),
+        Record::Stream { n, .. } if *n > 4 => Err(format!("unexpected cipher A5/{n}")),
+        Record::Stream { n, key, .. } if key.len() != if *n == 4 { 16 } else { 8 } => {
+            Err(format!("A5/{n} with a {}-byte key", key.len()))
+        }
         Record::Stream {
             n: 0,
             downlink,
@@ -146,7 +150,7 @@ fn check(record: &Record) -> Result<(), String> {
             Err("A5/0 stream isn't zero".to_owned())
         }
         Record::Result { n, rc } => {
-            let expected = if (0..=2).contains(n) {
+            let expected = if (0..=4).contains(n) {
                 0
             } else {
                 ENOTSUP_RESULT
@@ -163,7 +167,7 @@ fn check(record: &Record) -> Result<(), String> {
 
 pub fn parse(text: &str) -> Result<Vec<Record>, String> {
     let mut lines = text.lines();
-    let metadata = format!(r#"{{"schema":"a5-v1","libosmocore_commit":"{COMMIT}"}}"#);
+    let metadata = format!(r#"{{"schema":"a5-v2","libosmocore_commit":"{COMMIT}"}}"#);
     if lines.next() != Some(metadata.as_str()) {
         return Err("metadata must name the schema and pinned revision".to_owned());
     }
@@ -211,7 +215,7 @@ pub fn check_corruptions(text: &str) {
     let truncated = lines[..lines.len() - 1].join("\n");
     let extended = format!("{text}{}\n", lines[lines.len() - 1]);
     for corrupt in [
-        replace("a5-v1", "a5-v2"),
+        replace("a5-v2", "a5-v3"),
         replace(COMMIT, "0000000000000000000000000000000000000000"),
         replace(r#""kind":"fn_count""#, r#""kind":"other""#),
         replace(r#""kind":"result""#, r#""kind":"fn_count""#),
@@ -219,13 +223,15 @@ pub fn check_corruptions(text: &str) {
         replace(r#""fn":1,"count":33"#, r#""fm":1,"count":33"#),
         replace(r#""source":"upstream""#, r#""source":"sweep""#),
         replace(r#""source":"sweep""#, r#""source":"other""#),
-        replace(r#""n":1,"key""#, r#""n":3,"key""#),
+        replace(r#""n":1,"key""#, r#""n":5,"key""#),
+        replace(r#""n":1,"key""#, r#""n":4,"key""#),
         replace(r#""key":"0123456789abcdef""#, r#""key":"0123456789abcde""#),
         replace(r#""key":"0123456789abcdef""#, r#""key":"0123456789abcdeg""#),
         replace(r#""dl":"000"#, r#""dl":"100"#),
         replace(r#""dl":"000"#, r#""dl":"00"#),
         replace(r#""dl":"000"#, r#""dl":"002"#),
         replace(r#""n":5,"rc":-95"#, r#""n":5,"rc":0"#),
+        replace(r#""n":4,"rc":0"#, r#""n":4,"rc":-95"#),
         truncated,
         extended,
     ] {
