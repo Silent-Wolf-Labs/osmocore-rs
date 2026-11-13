@@ -5,10 +5,15 @@
 //! subscriber data.
 //!
 //! C keeps a subscriber's GSM and UMTS data in a union. `OsmoSubAuthData2` keeps them
-//! apart, so a GSM algorithm reads `gsm.ki` and Milenage reads the `umts` fields whatever
-//! the type, where C reads whatever the union holds. Milenage is available only with the
-//! `auth` feature, and returns `-ENOENT` without it, as C does for an algorithm it has no
-//! implementation of. TUAK isn't implemented yet and also returns `-ENOENT`.
+//! apart, so a GSM algorithm reads `gsm.ki` and Milenage and TUAK read the `umts` fields
+//! whatever the type, where C reads whatever the union holds. Milenage and TUAK are
+//! available only with the `auth` feature, and return `-ENOENT` without it, as C does for
+//! an algorithm it has no implementation of.
+//!
+//! As in C, a TUAK resync checks AUTS with all 32 bytes of `umts.k`, whatever `k_len`
+//! says, so it rejects the AUTS of a USIM with a 16-byte K. The preferred
+//! [`UmtsSubscriber::resync`](crate::gsm::auth::UmtsSubscriber::resync) uses K as long as
+//! it is.
 
 use crate::gsm::auth::{
     Algorithm, Kc, Ki, SresDerivation, c2_bytes, c3, c4, c5, xor_2g, xor_3g_auts_sqn,
@@ -113,7 +118,7 @@ pub struct OsmoAuthVector {
 }
 
 /// Generates a vector into `vec` and returns 0, or returns a negative code and leaves
-/// `vec` alone. Milenage also stores the new SQN in `aud.umts.sqn`.
+/// `vec` alone. Milenage and TUAK also store the new SQN in `aud.umts.sqn`.
 pub fn osmo_auth_gen_vec2(
     vec: &mut OsmoAuthVector,
     aud: &mut OsmoSubAuthData2,
@@ -128,7 +133,7 @@ pub fn osmo_auth_gen_vec2(
 }
 
 /// Checks a USIM's AUTS and generates a vector after its SQN, as
-/// [`osmo_auth_gen_vec2`] does. Only Milenage and XOR-3G support this.
+/// [`osmo_auth_gen_vec2`] does. Only Milenage, TUAK and XOR-3G support this.
 ///
 /// When AUTS matches, `aud.umts.sqn_ms` and `aud.umts.sqn` take the USIM's SQN before
 /// the vector is generated, so they stay changed if that then fails.
@@ -143,6 +148,8 @@ pub fn osmo_auth_gen_vec_auts2(
         OSMO_AUTH_ALG_XOR_3G => xor_3g_auts(vec, aud, auts, rand),
         #[cfg(feature = "auth")]
         OSMO_AUTH_ALG_MILENAGE => milenage::gen_vec_auts(vec, aud, auts, rand_auts, rand),
+        #[cfg(feature = "auth")]
+        OSMO_AUTH_ALG_TUAK => tuak::gen_vec_auts(vec, aud, auts, rand_auts, rand),
         _ => {
             let _ = rand_auts;
             ENOENT
@@ -166,6 +173,8 @@ fn gen_vec(vec: &mut OsmoAuthVector, aud: &mut OsmoSubAuthData2, rand: &[u8; 16]
         OSMO_AUTH_ALG_XOR_3G => return xor_3g(vec, aud, rand),
         #[cfg(feature = "auth")]
         OSMO_AUTH_ALG_MILENAGE => return milenage::gen_vec(vec, aud, rand),
+        #[cfg(feature = "auth")]
+        OSMO_AUTH_ALG_TUAK => return tuak::gen_vec(vec, aud, rand),
         _ => return ENOENT,
     };
     vec.sres = gsm.sres;
@@ -288,6 +297,81 @@ mod milenage {
             Err(rc) => return rc,
         };
         let Ok(sqn) = milenage.auts_sqn(rand_auts, auts) else {
+            return -1;
+        };
+        aud.umts.sqn_ms = sqn_value(&sqn);
+        aud.umts.sqn = aud.umts.sqn_ms;
+        gen_vec(vec, aud, rand)
+    }
+}
+
+#[cfg(feature = "auth")]
+mod tuak {
+    use super::*;
+    use crate::gsm::auth::{AuthError, K, ResLength, next_sqn, sqn_value, tuak_vector};
+    use crate::gsm::tuak::{Tuak, topc_from_top};
+    use std::num::NonZeroU32;
+
+    /// K, of `k_len` bytes, and TOPc, derived from OP for a UMTS subscriber.
+    fn keys(aud: &OsmoSubAuthData2) -> Result<(K, [u8; 32]), i32> {
+        if !matches!(aud.umts.k_len, 16 | 32) || aud.umts.opc_len != 32 {
+            return Err(EINVAL);
+        }
+        let k = K::new(&aud.umts.k[..usize::from(aud.umts.k_len)]).expect("16 or 32 bytes");
+        let mut topc = aud.umts.opc;
+        if aud.auth_type == OSMO_AUTH_TYPE_UMTS && aud.umts.opc_is_op != 0 {
+            topc = topc_from_top(&k, &topc, NonZeroU32::MIN);
+        }
+        Ok((k, topc))
+    }
+
+    pub(super) fn gen_vec(
+        vec: &mut OsmoAuthVector,
+        aud: &mut OsmoSubAuthData2,
+        rand: &[u8; 16],
+    ) -> i32 {
+        let res_length = match vec.res_len {
+            4 => ResLength::Four,
+            8 => ResLength::Eight,
+            16 => ResLength::Sixteen,
+            _ => return EINVAL,
+        };
+        let (k, topc) = match keys(aud) {
+            Ok(keys) => keys,
+            Err(rc) => return rc,
+        };
+        let next = match next_sqn(aud.umts.sqn, aud.umts.ind_bitlen, aud.umts.ind) {
+            Ok(next) => next,
+            Err(AuthError::IndBitlen(_)) => return -2,
+            Err(_) => return -3,
+        };
+        let vector = tuak_vector(&Tuak::new(&k, &topc), &aud.umts.amf, next, rand, res_length);
+        vec.autn = vector.autn;
+        vec.ik = *vector.ik.as_bytes();
+        vec.ck = *vector.ck.as_bytes();
+        // C writes RES only as long as asked, and leaves the length as given.
+        vec.res[..res_length.bytes()].copy_from_slice(vector.res.as_bytes());
+        vec.kc = *vector.kc.as_bytes();
+        vec.sres = vector.sres;
+        vec.auth_types = (OSMO_AUTH_TYPE_GSM | OSMO_AUTH_TYPE_UMTS) as u32;
+        aud.umts.sqn = next;
+        0
+    }
+
+    pub(super) fn gen_vec_auts(
+        vec: &mut OsmoAuthVector,
+        aud: &mut OsmoSubAuthData2,
+        auts: &[u8; 14],
+        rand_auts: &[u8; 16],
+        rand: &[u8; 16],
+    ) -> i32 {
+        let topc = match keys(aud) {
+            Ok((_, topc)) => topc,
+            Err(rc) => return rc,
+        };
+        // C passes the size of the key buffer, not k_len.
+        let whole_buffer = K::new(&aud.umts.k).expect("32 bytes");
+        let Ok(sqn) = Tuak::new(&whole_buffer, &topc).auts_sqn(rand_auts, auts) else {
             return -1;
         };
         aud.umts.sqn_ms = sqn_value(&sqn);

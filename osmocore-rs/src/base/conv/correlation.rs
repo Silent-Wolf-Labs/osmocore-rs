@@ -289,9 +289,9 @@ impl CorrelationDecoder {
             }
         }
         if maximum < 0 && term != Termination::FLUSH {
-            for candidate in 0..self.states {
-                if i32::from(self.sums[candidate]) > maximum {
-                    maximum = i32::from(self.sums[candidate]);
+            for (candidate, &sum) in self.sums[..self.states].iter().enumerate() {
+                if i32::from(sum) > maximum {
+                    maximum = i32::from(sum);
                     state = candidate;
                 }
             }

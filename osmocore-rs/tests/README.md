@@ -49,6 +49,7 @@ contents where those are part of the API contract.
 | `gea` | GEA3 and GEA4 keystreams, UI and I frame inputs, algorithm names, key lengths and C's results |
 | `comp128` | COMP128 v1, v2 and v3 and XOR-2G SRES and Kc |
 | `auth` | Authentication core, Milenage and XOR-3G vectors, resync, names and key conversions |
+| `tuak` | The TUAK functions, and TUAK vectors and resync through the preferred and compat APIs |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
@@ -979,7 +980,25 @@ the `auth` feature; without it, the tests check that `compat::auth` reports Mile
 missing. Regenerate it from `gsmtap-rs` with `reference/auth/run_auth_vector.sh`.
 
 `auth/behavior.rs` covers what the recording can't: the C2 inputs C aborts on, key and RES
-lengths, hidden keys, IND being checked before AUTS, and TUAK, which isn't implemented yet.
+lengths, hidden keys and IND being checked before AUTS.
+
+## TUAK observations
+
+`tuak/tuak_vectors.ndjson` records direct calls into `libosmogsm`'s internal archive,
+since the TUAK functions aren't exported: TOPc, f1, f1*, f2 to f5 and f5* for upstream's
+six test sets, every output and key length TUAK defines, the lengths C rejects, more than
+one Keccak run and random inputs. It also records `osmo_auth_gen_vec2` and
+`osmo_auth_gen_vec_auts2` for TUAK across SQN, IND, RES, key and OPc lengths, OP and
+subscriber type, with valid and corrupted AUTS. The harness replays upstream's
+`tuak_test` output. `tuak/reference_vectors.rs` replays the records against `gsm::tuak`,
+`compat::auth` and, where the preferred API can express the inputs, `UmtsSubscriber`.
+With a 16-byte K, C checks AUTS with all 32 bytes of its key buffer; the test checks that
+the preferred resync accepts the AUTS C rejects and gives the vector C gives for the
+other. Without the `auth` feature, the tests check that `compat::auth` reports TUAK as
+missing. Regenerate it from `gsmtap-rs` with `reference/tuak/run_tuak_vector.sh`.
+
+`tuak/behavior.rs` covers what the recording can't: operator key and RES lengths, OP
+against its TOPc, extra Keccak runs, and compat's AUTS check with the whole key buffer.
 
 ## GSM 05.03 xCCH observations
 

@@ -1,7 +1,7 @@
-//! Results the C recording can't hold: inputs where C aborts, Rust types C doesn't have,
-//! and TUAK, which isn't implemented yet.
+//! Results the C recording can't hold: inputs where C aborts, and Rust types C doesn't
+//! have. TUAK's are in `tests/tuak`.
 
-use osmocore_rs::compat::auth::{self as compat, OsmoAuthVector, OsmoSubAuthData2};
+use osmocore_rs::compat::auth as compat;
 use osmocore_rs::gsm::auth::{
     AuthError, K, KeyLengthError, Opc, OperatorKey, Res, ResLength, UmtsAlgorithm, UmtsSubscriber,
     next_sqn,
@@ -65,23 +65,6 @@ fn xor_3g_keeps_sqn_and_ignores_the_res_length() {
     let vector = subscriber.vector(&[2; 16], ResLength::Four).unwrap();
     assert_eq!(vector.res.len(), 16);
     assert_eq!(subscriber.sqn, 41);
-}
-
-#[test]
-fn compat_reports_tuak_as_missing() {
-    // C has TUAK; it comes in a later step.
-    let mut aud = OsmoSubAuthData2 {
-        auth_type: compat::OSMO_AUTH_TYPE_UMTS,
-        algo: compat::OSMO_AUTH_ALG_TUAK,
-        ..OsmoSubAuthData2::default()
-    };
-    let mut vec = OsmoAuthVector::default();
-    assert_eq!(compat::osmo_auth_gen_vec2(&mut vec, &mut aud, &[0; 16]), -2);
-    assert_eq!(
-        compat::osmo_auth_gen_vec_auts2(&mut vec, &mut aud, &[0; 14], &[0; 16], &[0; 16]),
-        -2
-    );
-    assert_eq!(vec, OsmoAuthVector::default());
 }
 
 #[cfg(feature = "auth")]

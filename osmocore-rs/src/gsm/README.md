@@ -12,6 +12,7 @@
 | [auth](auth/mod.rs) | GSM and UMTS authentication: key types, vectors, SQN, resync, XOR-2G and XOR-3G |
 | [comp128](comp128/mod.rs) | COMP128 v1, v2 and v3 |
 | [milenage](milenage.rs) | Milenage f1 to f5*, AUTS and the USIM's AUTN check (`auth` feature) |
+| [tuak](tuak.rs) | TUAK f1 to f5*, TOPc and AUTS (`auth` feature) |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -175,8 +176,8 @@ GEA2, and nor does this crate.
 - **GSM:** `GsmAlgorithm::vector` gives SRES and Kc from Ki and RAND with COMP128 v1, v2
   or v3 ([comp128](comp128/mod.rs)), XOR-2G or XOR-3G.
 - **UMTS:** `UmtsSubscriber` holds K, OP or OPc, AMF, SQN and IND. `vector` gives AUTN,
-  RES, CK, IK and the derived SRES and Kc with Milenage or XOR-3G, and `resync` takes a
-  USIM's AUTS first.
+  RES, CK, IK and the derived SRES and Kc with Milenage, TUAK or XOR-3G, and `resync`
+  takes a USIM's AUTS first.
 - **Conversions:** `c2` to `c5` derive GSM values from UMTS ones and back, and `Algorithm`
   gives libosmocore's names.
 
@@ -184,7 +185,14 @@ GEA2, and nor does this crate.
 f1 to f5*, OPc from OP, AUTS for both sides and the USIM's AUTN check. It uses AES-128
 from the RustCrypto `aes` crate.
 
-Milenage moves SQN on by one SEQ for each vector and sets this client's IND, as C does.
+[tuak](tuak.rs), also with the `auth` feature, gives the TUAK functions: f1 to f5* with
+every output length TUAK defines, TOPc from TOP, AUTS for both sides and more than one
+Keccak run per function. The lengths are const parameters, so a length TUAK doesn't
+define doesn't compile. It takes a 16 or 32-byte K and uses Keccak-f\[1600\] from the
+RustCrypto `keccak` crate.
+
+Milenage and TUAK move SQN on by one SEQ for each vector and set this client's IND, as C
+does.
 XOR-3G uses SQN as it is, and resync makes it the USIM's SQN. Key types wrap their bytes,
 and their `Debug` output doesn't show them. Nothing claims to run in constant time, and
 keys aren't cleared from memory when dropped, as in C. COMP128v1 is broken and the XOR
@@ -194,7 +202,10 @@ algorithms are for test SIMs, so use them to interoperate, not to protect anythi
 | --- | --- | --- |
 | COMP128 or XOR-2G with a UMTS subscriber | Reads Ki from the UMTS fields, which share its memory, or returns `-ENOTSUP` | `GsmAlgorithm::vector` takes a `Ki`, so there's no UMTS subscriber to pass |
 | Milenage with a K, OP or OPc other than 16 bytes, or IND out of range | Returns `-EINVAL`, -2 or -3 | `AuthError`, and nothing changes |
-| A RES length other than 4 or 8 for Milenage | Returns `-EINVAL` | `ResLength` has only those two |
+| TUAK with an OP or OPc other than 32 bytes | Returns `-EINVAL` | `AuthError::OperatorKeyLength`. `K` holds only 16 or 32 bytes |
+| A RES length other than 4 or 8 for Milenage, or 4, 8 or 16 for TUAK | Returns `-EINVAL` | `ResLength` has only those three, and Milenage returns `AuthError::ResLength` for 16 |
+| TUAK resync for a 16-byte K | Checks AUTS with all 32 bytes of the key buffer, so it rejects the USIM's AUTS | Checks AUTS with K as it is. `compat::auth` keeps C's result |
+| A TUAK output length TUAK doesn't define, or a K of another length | Returns `-EINVAL` | Doesn't compile, or `K::new` fails |
 | Resync with AUTS that matches, then an IND out of range | Moves SQN to the USIM's, then fails | Checks IND first, fails and changes nothing. `compat::auth` keeps C's result |
 | Resync with a bad AUTS and IND out of range | -1 | `AuthError::IndRange` |
 | XOR-3G resync | Checks AUTS against RAND, not the RAND it was made for | The same |
@@ -206,7 +217,8 @@ recorded.
 
 COMP128's substitution tables are part of the algorithm, so the crate holds the same
 values. They come from the public descriptions of COMP128 recovered from SIMs.
-Milenage's rotations and constants come from 3GPP TS 35.206.
+Milenage's rotations and constants come from 3GPP TS 35.206, and TUAK's input layout,
+INSTANCE values and ALGONAME from 3GPP TS 35.231.
 
 ## TLV
 

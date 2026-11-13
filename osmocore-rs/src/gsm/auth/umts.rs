@@ -23,6 +23,10 @@ pub enum UmtsAlgorithm {
     /// Milenage (3GPP TS 35.206). Needs the `auth` feature.
     #[cfg(feature = "auth")]
     Milenage,
+    /// TUAK (3GPP TS 35.231), with a 16 or 32-byte K and a 32-byte operator key. Needs the
+    /// `auth` feature.
+    #[cfg(feature = "auth")]
+    Tuak,
     /// XOR-3G, the test algorithm of 3GPP TS 34.108 section 8.1.2. It ignores the operator
     /// key, and uses SQN as given, without incrementing it.
     Xor3g,
@@ -47,13 +51,16 @@ impl OperatorKey {
     }
 }
 
-/// How long RES is. Milenage gives 4 or 8 bytes; XOR-3G always gives 16.
+/// How long RES is. Milenage gives 4 or 8 bytes and TUAK 4, 8 or 16; XOR-3G always gives
+/// 16.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ResLength {
     /// 32 bits.
     Four,
     /// 64 bits.
     Eight,
+    /// 128 bits, for TUAK.
+    Sixteen,
 }
 
 impl ResLength {
@@ -62,6 +69,7 @@ impl ResLength {
         match self {
             Self::Four => 4,
             Self::Eight => 8,
+            Self::Sixteen => 16,
         }
     }
 }
@@ -138,10 +146,12 @@ pub struct Resync {
 /// Why a UMTS vector can't be generated.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AuthError {
-    /// The algorithm needs a 16-byte K.
+    /// Milenage and XOR-3G need a 16-byte K.
     KeyLength,
-    /// Milenage needs a 16-byte OP or OPc.
+    /// Milenage needs a 16-byte OP or OPc, and TUAK a 32-byte one.
     OperatorKeyLength,
+    /// Milenage gives RES of at most 8 bytes.
+    ResLength(ResLength),
     /// The IND length is above [`MAX_IND_BITLEN`].
     IndBitlen(u32),
     /// IND doesn't fit in its length.
@@ -159,7 +169,12 @@ impl fmt::Display for AuthError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::KeyLength => f.write_str("the algorithm needs a 16-byte K"),
-            Self::OperatorKeyLength => f.write_str("Milenage needs a 16-byte OP or OPc"),
+            Self::OperatorKeyLength => {
+                f.write_str("the operator key has the wrong length for the algorithm")
+            }
+            Self::ResLength(length) => {
+                write!(f, "the algorithm has no {}-byte RES", length.bytes())
+            }
             Self::IndBitlen(bits) => {
                 write!(
                     f,
@@ -190,10 +205,11 @@ pub struct UmtsSubscriber {
     pub operator: OperatorKey,
     /// The authentication management field, which goes in AUTN.
     pub amf: [u8; 2],
-    /// The last SQN used. Milenage uses the next one for each vector and stores it here.
+    /// The last SQN used. Milenage and TUAK use the next one for each vector and store it
+    /// here.
     pub sqn: u64,
-    /// How many low bits of SQN are IND, the slot each client gets. 0 makes Milenage add
-    /// 1 to SQN for each vector.
+    /// How many low bits of SQN are IND, the slot each client gets. 0 makes Milenage and
+    /// TUAK add 1 to SQN for each vector.
     pub ind_bitlen: u32,
     /// This client's IND slot.
     pub ind: u32,
@@ -213,37 +229,46 @@ impl UmtsSubscriber {
         }
     }
 
-    /// Generates a vector for a challenge. Milenage moves `sqn` on to the next value with
-    /// this client's IND, and uses that; XOR-3G uses `sqn` as it is, and always gives a
-    /// 16-byte RES.
-    // Only Milenage uses the RES length.
+    /// Generates a vector for a challenge. Milenage and TUAK move `sqn` on to the next
+    /// value with this client's IND, and use that; XOR-3G uses `sqn` as it is, and always
+    /// gives a 16-byte RES. TUAK runs Keccak once per function, as C does.
+    // Only Milenage and TUAK use the RES length.
     #[cfg_attr(not(feature = "auth"), allow(unused_variables))]
     pub fn vector(
         &mut self,
         rand: &[u8; RAND_BYTES],
         res_length: ResLength,
     ) -> Result<UmtsVector, AuthError> {
-        let k = &self.k_128()?.clone();
         match self.algorithm {
             #[cfg(feature = "auth")]
             UmtsAlgorithm::Milenage => {
-                let milenage = self.milenage(k)?;
+                let milenage = self.milenage(res_length)?;
                 let next = next_sqn(self.sqn, self.ind_bitlen, self.ind)?;
                 let vector = milenage_vector(&milenage, &self.amf, next, rand, res_length);
                 self.sqn = next;
                 Ok(vector)
             }
-            UmtsAlgorithm::Xor3g => Ok(xor_3g(k, rand, self.sqn, &self.amf)),
+            #[cfg(feature = "auth")]
+            UmtsAlgorithm::Tuak => {
+                let tuak = self.tuak()?;
+                let next = next_sqn(self.sqn, self.ind_bitlen, self.ind)?;
+                let vector = tuak_vector(&tuak, &self.amf, next, rand, res_length);
+                self.sqn = next;
+                Ok(vector)
+            }
+            UmtsAlgorithm::Xor3g => Ok(xor_3g(self.k_128()?, rand, self.sqn, &self.amf)),
         }
     }
 
     /// Resynchronizes from a USIM's AUTS, which it computed for `rand_auts`, then
-    /// generates a vector for `rand`. Milenage sets `sqn` to the USIM's and moves on from
-    /// there, as [`UmtsSubscriber::vector`] does. XOR-3G checks AUTS against `rand`, not
-    /// `rand_auts`, as in C, and uses the USIM's SQN itself in the vector.
+    /// generates a vector for `rand`. Milenage and TUAK set `sqn` to the USIM's and move
+    /// on from there, as [`UmtsSubscriber::vector`] does. XOR-3G checks AUTS against
+    /// `rand`, not `rand_auts`, as in C, and uses the USIM's SQN itself in the vector.
     ///
-    /// Unlike C, this checks K, the operator key and IND before AUTS, and changes
-    /// nothing when it fails.
+    /// Unlike C, this checks K, the operator key, the RES length and IND before AUTS, and
+    /// changes nothing when it fails. TUAK checks AUTS with K as long as it is, where C
+    /// always takes 32 bytes of its key buffer, so C rejects the AUTS of a USIM with a
+    /// 16-byte K.
     #[cfg_attr(not(feature = "auth"), allow(unused_variables))]
     pub fn resync(
         &mut self,
@@ -252,11 +277,10 @@ impl UmtsSubscriber {
         rand: &[u8; RAND_BYTES],
         res_length: ResLength,
     ) -> Result<Resync, AuthError> {
-        let k = &self.k_128()?.clone();
         match self.algorithm {
             #[cfg(feature = "auth")]
             UmtsAlgorithm::Milenage => {
-                let milenage = self.milenage(k)?;
+                let milenage = self.milenage(res_length)?;
                 // Checked before AUTS, so nothing changes when it fails.
                 next_sqn(0, self.ind_bitlen, self.ind)?;
                 let sqn = milenage
@@ -268,7 +292,21 @@ impl UmtsSubscriber {
                 self.sqn = next;
                 Ok(Resync { sqn_ms, vector })
             }
+            #[cfg(feature = "auth")]
+            UmtsAlgorithm::Tuak => {
+                let tuak = self.tuak()?;
+                next_sqn(0, self.ind_bitlen, self.ind)?;
+                let sqn = tuak
+                    .auts_sqn(rand_auts, auts)
+                    .map_err(|_| AuthError::AutsMismatch)?;
+                let sqn_ms = sqn_value(&sqn);
+                let next = next_sqn(sqn_ms, self.ind_bitlen, self.ind)?;
+                let vector = tuak_vector(&tuak, &self.amf, next, rand, res_length);
+                self.sqn = next;
+                Ok(Resync { sqn_ms, vector })
+            }
             UmtsAlgorithm::Xor3g => {
+                let k = &self.k_128()?.clone();
                 let sqn_ms = xor_3g_auts_sqn(k, rand, auts).ok_or(AuthError::AutsMismatch)?;
                 self.sqn = sqn_ms;
                 Ok(Resync {
@@ -284,14 +322,30 @@ impl UmtsSubscriber {
     }
 
     #[cfg(feature = "auth")]
-    fn milenage(&self, k: &[u8; 16]) -> Result<crate::gsm::milenage::Milenage, AuthError> {
+    fn milenage(&self, res_length: ResLength) -> Result<crate::gsm::milenage::Milenage, AuthError> {
         use crate::gsm::milenage::Milenage;
+        let k = self.k_128()?;
         if self.operator.len() != 16 {
             return Err(AuthError::OperatorKeyLength);
+        }
+        if res_length == ResLength::Sixteen {
+            return Err(AuthError::ResLength(res_length));
         }
         Ok(match &self.operator {
             OperatorKey::Op(op) => Milenage::with_op(k, op.as_128().expect("16 bytes")),
             OperatorKey::Opc(opc) => Milenage::new(k, opc.as_128().expect("16 bytes")),
+        })
+    }
+
+    #[cfg(feature = "auth")]
+    fn tuak(&self) -> Result<crate::gsm::tuak::Tuak, AuthError> {
+        use crate::gsm::tuak::Tuak;
+        let wide = |bytes: &[u8]| -> Result<[u8; 32], AuthError> {
+            bytes.try_into().map_err(|_| AuthError::OperatorKeyLength)
+        };
+        Ok(match &self.operator {
+            OperatorKey::Op(op) => Tuak::with_top(&self.k, &wide(op.as_bytes())?),
+            OperatorKey::Opc(opc) => Tuak::new(&self.k, &wide(opc.as_bytes())?),
         })
     }
 }
@@ -337,6 +391,41 @@ pub(crate) fn milenage_vector(
         kc: c3(&outputs.ck, &outputs.ik),
         ck: outputs.ck,
         ik: outputs.ik,
+        res,
+    }
+}
+
+#[cfg(feature = "auth")]
+pub(crate) fn tuak_vector(
+    tuak: &crate::gsm::tuak::Tuak,
+    amf: &[u8; 2],
+    sqn: u64,
+    rand: &[u8; RAND_BYTES],
+    res_length: ResLength,
+) -> UmtsVector {
+    let sqn = sqn_bytes(sqn);
+    let (autn, res, ck, ik) = match res_length {
+        ResLength::Four => {
+            let (autn, out) = tuak.generate::<4>(rand, &sqn, amf);
+            (autn, Res::new(&out.res), out.ck, out.ik)
+        }
+        ResLength::Eight => {
+            let (autn, out) = tuak.generate::<8>(rand, &sqn, amf);
+            (autn, Res::new(&out.res), out.ck, out.ik)
+        }
+        ResLength::Sixteen => {
+            let (autn, out) = tuak.generate::<16>(rand, &sqn, amf);
+            (autn, Res::new(&out.res), out.ck, out.ik)
+        }
+    };
+    let res = res.expect("4 to 16 bytes");
+    let (ck, ik) = (Ck::new(ck), Ik::new(ik));
+    UmtsVector {
+        autn,
+        sres: c2(&res, SresDerivation::Fold),
+        kc: c3(&ck, &ik),
+        ck,
+        ik,
         res,
     }
 }
