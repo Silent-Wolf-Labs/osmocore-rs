@@ -21,6 +21,10 @@
   generates them too.
 - `gsm::gea`: the GEA3 and GEA4 GPRS ciphers, the UI and I frame inputs and
   `GprsAlgorithm`. Also `compat::gea` with C's `gprs_cipher_run` and helpers.
+- `gsm::tuak`: the TUAK functions f1 to f5*, with every output length TUAK defines,
+  TOPc derivation and AUTS. `UmtsAlgorithm::Tuak` and `compat::auth` generate TUAK
+  vectors and resync, and `ResLength::Sixteen` gives TUAK's 16-byte RES. The `auth`
+  feature now also adds the RustCrypto `keccak` crate.
 
 ### Changed
 

@@ -29,10 +29,11 @@ default = []
 tracing = ["dep:tracing"]
 net = ["dep:socket2"]
 runtime = ["dep:mio"]
-auth = ["dep:aes"]
+auth = ["dep:aes", "dep:keccak"]
 
 [dependencies]
 aes = { version = "0.9.3", optional = true, default-features = false }
+keccak = { version = "0.2.2", optional = true, default-features = false }
 mio = { version = "=1.2.4", optional = true, default-features = false, features = ["os-poll", "net"] }
 socket2 = { version = "0.6.5", optional = true, default-features = false, features = ["all"] }
 tracing = { version = "0.1.44", optional = true, default-features = false, features = ["std"] }

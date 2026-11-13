@@ -10,7 +10,7 @@
 //! In UMTS (AKA), a [`UmtsSubscriber`] also holds a sequence number, and each challenge
 //! gives an authentication token (AUTN) for the mobile to check, its expected response
 //! (RES), cipher and integrity keys (CK and IK), and the GSM SRES and Kc derived from them.
-//! [`UmtsAlgorithm`] selects Milenage, with the `auth` feature, or XOR-3G.
+//! [`UmtsAlgorithm`] selects Milenage or TUAK, with the `auth` feature, or XOR-3G.
 //!
 //! COMP128v1 is broken, since a SIM's Ki can be recovered from its answers, and XOR-2G and
 //! XOR-3G are meant only for test SIMs. Use them to interoperate with networks and SIMs,
@@ -36,7 +36,7 @@ pub use umts::{
     UmtsAlgorithm, UmtsSubscriber, UmtsVector, next_sqn,
 };
 #[cfg(feature = "auth")]
-pub(crate) use umts::{milenage_vector, sqn_value};
+pub(crate) use umts::{milenage_vector, sqn_value, tuak_vector};
 pub(crate) use umts::{xor_3g, xor_3g_auts_sqn, xor_3g_outputs};
 
 use crate::gsm::comp128;
@@ -126,7 +126,7 @@ pub enum Algorithm {
     Milenage,
     /// XOR-2G.
     Xor2g,
-    /// TUAK. Not implemented yet.
+    /// TUAK.
     Tuak,
 }
 
@@ -206,6 +206,8 @@ impl From<UmtsAlgorithm> for Algorithm {
         match algorithm {
             #[cfg(feature = "auth")]
             UmtsAlgorithm::Milenage => Self::Milenage,
+            #[cfg(feature = "auth")]
+            UmtsAlgorithm::Tuak => Self::Tuak,
             UmtsAlgorithm::Xor3g => Self::Xor3g,
         }
     }

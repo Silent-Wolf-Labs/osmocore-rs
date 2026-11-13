@@ -19,6 +19,7 @@ component "auth" as auth
 component "socket2\npre-bind configuration" as socket2
 component "mio\nreadiness and wakeup" as mio
 component "aes\nMilenage" as aes
+component "keccak\nTUAK" as keccak
 component "tracing crate\nno library-installed subscriber" as library
 component "osmocore_rs::fsm\nosmocore_rs::timer" as coretargets
 component "osmocore_rs::net\nestablishment" as nettarget
@@ -27,6 +28,7 @@ component "osmocore_rs::gsmtap\nprepare_datagram" as gsmtap
 net --> socket2
 runtime --> mio
 auth --> aes
+auth --> keccak
 tracing --> library
 tracing --> coretargets : tracing
 net ..> nettarget : net + tracing

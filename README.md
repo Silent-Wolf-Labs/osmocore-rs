@@ -21,7 +21,7 @@ C contracts use always-compiled `compat::<subsystem>` adapters.
 | `tracing` | Structured diagnostics with application-owned subscribers, filters and output |
 | `net` | TCP/UDP establishment, explicit resolution, local binding and pre-bind options |
 | `runtime` | Mio readiness, bounded output, typed commands/drivers and coordinated shutdown |
-| `auth` | Milenage authentication, on the RustCrypto `aes` crate |
+| `auth` | Milenage and TUAK authentication, on the RustCrypto `aes` and `keccak` crates |
 
 Default features are empty. All four features select independently.
 

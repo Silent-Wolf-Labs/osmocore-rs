@@ -316,7 +316,7 @@ feature and target selection.
 Default features are empty. `net`, `runtime`, `tracing` and `auth` select
 independently, and every combination is supported. Compatibility adapters are always
 compiled. `net` selects socket2 for establishment; `runtime` selects Mio for readiness;
-`auth` selects the RustCrypto `aes` crate for Milenage. No feature enables another.
+`auth` selects the RustCrypto `aes` and `keccak` crates for Milenage and TUAK. No feature enables another.
 With features disabled there are no normal/build dependencies.
 
 ![Independent features and diagnostic targets](architecture/diagrams/generated/features-diagnostics.svg)
@@ -597,7 +597,7 @@ where it deliberately differs, they record the Rust safety difference.
 | IP addresses as text | An address as text with a port, converted to and from addresses as C on glibc does | The preferred API takes its family from the text, rejects text C would keep with an error and compares by text; `compat::sockaddr_str` keeps C's struct, results, partial writes and comparison |
 | String ringbuffers | A ring of recent strings with C's length limit | The preferred API takes the number of strings to hold and returns nothing past the newest; `compat::strrb` keeps C's size, slots and index results except where C crashes |
 | Use counts | Named counters with C's entry order and reuse, text and range checks | The preferred API reports each change instead of running a callback, and owns its tokens; `compat::use_count` runs C's callback without its source file and line, and has no talloc parent or entry pointers |
-| GSM and UMTS authentication | SRES and Kc from COMP128 v1, v2 and v3, XOR-2G and XOR-3G; UMTS vectors and resync from Milenage (`auth` feature) and XOR-3G, with SQN and IND handling; the Milenage functions; C2 to C5 | No TUAK yet; no constant-time claim or key clearing, as in C; the preferred resync checks its inputs before AUTS and changes nothing when it fails, and `compat::auth` keeps C's codes and SQN changes |
+| GSM and UMTS authentication | SRES and Kc from COMP128 v1, v2 and v3, XOR-2G and XOR-3G; UMTS vectors and resync from Milenage and TUAK (`auth` feature) and XOR-3G, with SQN and IND handling; the Milenage and TUAK functions; C2 to C5 | No constant-time claim or key clearing, as in C; the preferred resync checks its inputs before AUTS and changes nothing when it fails, and checks a TUAK AUTS with K as long as it is, where C always takes 32 bytes; `compat::auth` keeps C's codes, SQN changes and TUAK AUTS check |
 | A5 ciphers | A5/0 to A5/4 cipher streams and frame counts, and A5/3 and A5/4 from a raw count | `compat::a5` keeps C's results except where C crashes, overflows or reads past the key |
 | KASUMI | Subkeys, block encryption and the KGCORE keystream | No constant-time claim or key clearing, as in C; the preferred API takes a 5-bit bearer and a 1-bit direction and fills any length, and `compat::kasumi` keeps C's inputs and length in bits |
 | GEA ciphers | GEA3 and GEA4 keystreams, UI and I frame inputs, algorithm names and key lengths | No GEA1 or GEA2, which libosmocore doesn't implement, and no cipher plugins; the preferred API fills any length and rejects SAPIs past 15, and `compat::gea` keeps C's codes and 1,523-byte limit except where C reads or writes out of bounds |
