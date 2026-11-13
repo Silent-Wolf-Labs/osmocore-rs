@@ -186,9 +186,9 @@ fn stage7_complete_direct_c_replay() {
                 let v = row.b as u64;
                 c.current = v;
                 c.previous = v.wrapping_add(13);
-                for j in 0..4 {
-                    c.intv[j].last = v.wrapping_add(j as u64 + 1);
-                    c.intv[j].rate = 100 + j as u64;
+                for (j, interval) in (0u64..).zip(c.intv.iter_mut()) {
+                    interval.last = v.wrapping_add(j + 1);
+                    interval.rate = 100 + j;
                 }
             }
             "add" => r
