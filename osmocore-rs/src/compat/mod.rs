@@ -30,6 +30,10 @@ pub mod gsm_utils;
 
 pub mod kasumi;
 
+/// Recorded key derivation compatibility contracts.
+#[cfg(feature = "auth")]
+pub mod kdf;
+
 /// Recorded TLV compatibility contracts.
 pub mod tlv;
 

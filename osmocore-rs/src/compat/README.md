@@ -16,6 +16,7 @@ C library and export no C ABI.
 | --- | --- | --- |
 | [a5.rs](a5.rs) | Cipher numbers as integers, -95 and -22 results, an optional key of any length, optional output directions | [a5](../gsm/a5.rs) |
 | [auth.rs](auth.rs) | C's subscriber and vector structs, integer algorithms and results, SQN changes on a failed resync, names for unknown values | [auth](../gsm/auth/mod.rs), [milenage](../gsm/milenage.rs), [tuak](../gsm/tuak.rs) |
+| [kdf.rs](kdf.rs) | C's argument order and output buffers, SQN and AK apart, any NAS algorithm type byte (`auth` feature) | [kdf](../gsm/kdf.rs) |
 | [base64.rs](base64.rs) | Integer statuses, output lengths, termination and nullable size probes | [base64](../base/base64.rs) |
 | [bcd.rs](bcd.rs) | Signed lengths, terminated inputs/outputs and buffer mutation | [bcd](../base/bcd.rs) |
 | [bitvec.rs](bitvec.rs) | Cursor, buffer, sentinel and partial-progress operations | [bitvec](../base/bitvec/mod.rs) |

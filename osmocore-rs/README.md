@@ -47,6 +47,7 @@ Functional modules are grouped like libosmocore's sources.
 - `kasumi`, `gea`: the KASUMI block cipher, its KGCORE keystream, and the GEA3 and GEA4 GPRS ciphers.
 - `auth`, `comp128`, `milenage`, `tuak`: GSM and UMTS authentication with COMP128 v1, v2
   and v3, XOR-2G, XOR-3G and, with the `auth` feature, Milenage and TUAK.
+- `kdf`: with the `auth` feature, Kc128 and the LTE K_ASME, K_eNB, NH and NAS keys.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 
 `coding`, for C's `src/coding`:
@@ -155,6 +156,6 @@ workbench with `GSMTAP_LISTEN=127.0.0.1:4729`, or capture loopback in Wireshark 
 `gsmtap` filter.
 
 Default features are empty (`default = []`). `tracing`, `net`, `runtime` and `auth`
-are independently selectable, including every combination. `auth` adds Milenage and TUAK,
-on the RustCrypto `aes` and `keccak` crates. `compat::<subsystem>`
+are independently selectable, including every combination. `auth` adds Milenage, TUAK and
+key derivation, on the RustCrypto `aes`, `keccak`, `hmac` and `sha2` crates. `compat::<subsystem>`
 adapters are always compiled and are not a Cargo feature.

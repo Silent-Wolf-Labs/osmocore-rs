@@ -50,6 +50,7 @@ contents where those are part of the API contract.
 | `comp128` | COMP128 v1, v2 and v3 and XOR-2G SRES and Kc |
 | `auth` | Authentication core, Milenage and XOR-3G vectors, resync, names and key conversions |
 | `tuak` | The TUAK functions, and TUAK vectors and resync through the preferred and compat APIs |
+| `kdf` | Kc128, K_ASME, K_eNB, NH and NAS keys through the preferred and compat APIs |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
@@ -999,6 +1000,21 @@ missing. Regenerate it from `gsmtap-rs` with `reference/tuak/run_tuak_vector.sh`
 
 `tuak/behavior.rs` covers what the recording can't: operator key and RES lengths, OP
 against its TOPc, extra Keccak runs, and compat's AUTS check with the whole key buffer.
+
+## Key derivation observations
+
+`kdf/kdf_vectors.ndjson` records direct calls to `osmo_kdf_kc128`, `osmo_kdf_kasme`,
+`osmo_kdf_enb`, `osmo_kdf_nh` and `osmo_kdf_nas`, which libosmocore doesn't test itself:
+fixed patterns, one concealed SQN given three ways, the edges of the uplink NAS count,
+an NH chain from K_eNB, every NAS algorithm type from 0 to 7 with every identity from 0
+to 15, the edges of both bytes, and random inputs. `kdf/reference_vectors.rs` replays
+every record against `compat::kdf`, and against `gsm::kdf` for all but the NAS types
+other than encryption and integrity, which the preferred API doesn't take. Without the
+`auth` feature, only the fixture's shape is checked. Regenerate it from `gsmtap-rs` with
+`reference/kdf/run_kdf_vector.sh`.
+
+`kdf/behavior.rs` covers K_ASME from a Milenage vector's AUTN, Kc128 as an A5/4 key, the
+NAS key type values and hidden keys.
 
 ## GSM 05.03 xCCH observations
 

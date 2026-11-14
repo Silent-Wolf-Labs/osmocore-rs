@@ -30,6 +30,8 @@
 mod keys;
 mod umts;
 
+#[cfg(feature = "auth")]
+pub(crate) use keys::fixed_key;
 pub use keys::{Ck, Ik, K, Kc, KeyLengthError, Ki, Op, Opc};
 pub use umts::{
     AUTN_BYTES, AUTS_BYTES, AuthError, MAX_IND_BITLEN, OperatorKey, Res, ResLength, Resync,

@@ -25,6 +25,9 @@
   TOPc derivation and AUTS. `UmtsAlgorithm::Tuak` and `compat::auth` generate TUAK
   vectors and resync, and `ResLength::Sixteen` gives TUAK's 16-byte RES. The `auth`
   feature now also adds the RustCrypto `keccak` crate.
+- `gsm::kdf`: Kc128 for A5/4 and GEA4, and the LTE K_ASME, K_eNB, NH and NAS keys, on
+  the 3GPP generic key derivation function. Also `compat::kdf` with C's `osmo_kdf_*`. The
+  `auth` feature now also adds the RustCrypto `hmac` and `sha2` crates.
 
 ### Changed
 

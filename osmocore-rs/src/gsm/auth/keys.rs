@@ -35,6 +35,8 @@ macro_rules! fixed_key {
         }
     };
 }
+#[cfg(feature = "auth")]
+pub(crate) use fixed_key;
 
 fixed_key!(
     /// A GSM subscriber's secret key.

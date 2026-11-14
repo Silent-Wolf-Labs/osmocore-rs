@@ -316,7 +316,7 @@ feature and target selection.
 Default features are empty. `net`, `runtime`, `tracing` and `auth` select
 independently, and every combination is supported. Compatibility adapters are always
 compiled. `net` selects socket2 for establishment; `runtime` selects Mio for readiness;
-`auth` selects the RustCrypto `aes` and `keccak` crates for Milenage and TUAK. No feature enables another.
+`auth` selects the RustCrypto `aes` and `keccak` crates for Milenage and TUAK, and `hmac` and `sha2` for key derivation. No feature enables another.
 With features disabled there are no normal/build dependencies.
 
 ![Independent features and diagnostic targets](architecture/diagrams/generated/features-diagnostics.svg)
@@ -601,6 +601,7 @@ where it deliberately differs, they record the Rust safety difference.
 | A5 ciphers | A5/0 to A5/4 cipher streams and frame counts, and A5/3 and A5/4 from a raw count | `compat::a5` keeps C's results except where C crashes, overflows or reads past the key |
 | KASUMI | Subkeys, block encryption and the KGCORE keystream | No constant-time claim or key clearing, as in C; the preferred API takes a 5-bit bearer and a 1-bit direction and fills any length, and `compat::kasumi` keeps C's inputs and length in bits |
 | GEA ciphers | GEA3 and GEA4 keystreams, UI and I frame inputs, algorithm names and key lengths | No GEA1 or GEA2, which libosmocore doesn't implement, and no cipher plugins; the preferred API fills any length and rejects SAPIs past 15, and `compat::gea` keeps C's codes and 1,523-byte limit except where C reads or writes out of bounds |
+| Key derivation | Kc128 for A5/4 and GEA4, and the LTE K_ASME, K_eNB, NH and NAS keys (`auth` feature) | No constant-time claim or key clearing, as in C; the preferred API takes SQN xor AK and only the two NAS key types, and `compat::kdf` keeps C's separate SQN and AK and any type byte |
 | TLV | Borrowed parsing, encoding, `Msgb` methods, shifting and protocol validation | Preferred API rejects lengths C truncates or can't parse back; `compat::tlv` keeps C's results, including its merge and copy |
 | Message buffers and primitives | Owned buffers, layer helpers, resize/copy, queues, formatting and primitive metadata | No talloc contexts, pointer/layout or allocator-failure parity |
 | Time, timers and TDef | Clock values/overrides, explicit scheduler, timeout tables and FSM bridge | No general native select/timerfd integration; nested scheduler updates follow the documented Rust policy |
