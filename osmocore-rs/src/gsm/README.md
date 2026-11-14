@@ -13,6 +13,7 @@
 | [comp128](comp128/mod.rs) | COMP128 v1, v2 and v3 |
 | [milenage](milenage.rs) | Milenage f1 to f5*, AUTS and the USIM's AUTN check (`auth` feature) |
 | [tuak](tuak.rs) | TUAK f1 to f5*, TOPc and AUTS (`auth` feature) |
+| [kdf](kdf.rs) | Kc128, and the LTE K_ASME, K_eNB, NH and NAS keys (`auth` feature) |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -219,6 +220,29 @@ COMP128's substitution tables are part of the algorithm, so the crate holds the 
 values. They come from the public descriptions of COMP128 recovered from SIMs.
 Milenage's rotations and constants come from 3GPP TS 35.206, and TUAK's input layout,
 INSTANCE values and ALGONAME from 3GPP TS 35.231.
+
+## Key derivation
+
+[kdf](kdf.rs), with the `auth` feature, derives keys with the generic key derivation
+function of 3GPP TS 33.220 Annex B: HMAC-SHA-256 over a function code and each parameter
+with its length, using the RustCrypto `hmac` and `sha2` crates. Results match C.
+
+- `kc128` gives the 128-bit Kc for A5/4 and GEA4 from CK and IK (3GPP TS 33.102).
+- `kasme` gives K_ASME from CK, IK, the serving network's PLMN identity and SQN xor AK,
+  the first six bytes of the vector's AUTN (3GPP TS 33.401).
+- `kenb`, `nh` and `knas` give K_eNB, each next NH and the NAS encryption and integrity
+  keys from K_ASME.
+
+The keys are `Kc128`, `Kasme`, `Kenb`, `Nh` and `Knas`, which hide their bytes like the
+authentication keys.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| K_ASME's SQN and AK | Takes them apart and XORs them | Takes SQN xor AK, as AUTN carries it. `compat::kdf` takes them apart |
+| A NAS algorithm type other than encryption or integrity | Takes any byte | `NasKey` has only the two NAS types. `compat::kdf` takes any byte |
+| A NAS algorithm identity past four bits | Takes any byte | The same |
+
+The function codes come from 3GPP TS 33.102 Annex B.5 and TS 33.401 Annex A.
 
 ## TLV
 

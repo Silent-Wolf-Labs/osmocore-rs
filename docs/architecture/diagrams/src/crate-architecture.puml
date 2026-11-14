@@ -18,7 +18,7 @@ component "Always compiled compat adapters\nstatus, buffer and sentinel contract
 component "base: utilities\nbits / bitvec / prbs / base64 / bcd / hexparse\ncrc / conv / strrb / use_count / sockaddr_str" as utilities
 component "base: messages\nmsgb / prim / gsmtap" as messages
 component "base: time and state\ntime / timer / tdef / time_accounting\nfsm / rate_ctr" as components
-component "gsm and coding\ngsm0502 / gsm_utils / tlv\na5 / kasumi / gea\nauth / comp128 / milenage / tuak\ngsm0503 xCCH coding" as gsm
+component "gsm and coding\ngsm0502 / gsm_utils / tlv\na5 / kasumi / gea\nauth / comp128 / milenage / tuak / kdf\ngsm0503 xCCH coding" as gsm
 }
 package "Independent optional features: default = []" {
 component "net\nresolution and completed TCP/UDP setup\nsocket2" as net

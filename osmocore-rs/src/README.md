@@ -229,6 +229,7 @@ the family names below also cover preferred methods in the functional modules.
 | `auth` | `osmo_auth_gen_vec2` and `osmo_auth_gen_vec_auts2` for COMP128 v1 to v3, XOR-2G, XOR-3G, Milenage and TUAK, `osmo_auth_c2`, `osmo_auth_c3`, `osmo_c4`, `osmo_auth_3g_from_2g`, `osmo_auth_alg_name`, `osmo_auth_alg_parse`, `osmo_sub_auth_type_names`; see below for what's left out | `src/gsm/auth_core.c`, `auth_comp128v1.c`, `auth_comp128v23.c`, `auth_xor_2g.c`, `auth_xor.c`, `auth_milenage.c`, `auth_tuak.c` | `include/osmocom/crypt/auth.h` |
 | `milenage` (`auth` feature) | `milenage_opc_gen`, `milenage_f1`, `milenage_f2345`, `milenage_generate`, `milenage_auts`, `milenage_check`, `gsm_milenage` | `src/gsm/milenage/milenage.c` | none: exported, but declared only in the uninstalled `milenage/milenage.h` |
 | `tuak` (`auth` feature) | `tuak_opc_gen`, `tuak_f1`, `tuak_f1star`, `tuak_f2345`, `tuak_f5star`, `tuak_generate`, `tuak_auts`; `tuak_set_keccak_iterations` as `Tuak::with_iterations`; see below for what's left out | `src/gsm/tuak/tuak.c` | none: internal to libosmogsm, declared only in the uninstalled `tuak/tuak.h` |
+| `kdf` (`auth` feature) | `osmo_kdf_kc128`, `osmo_kdf_kasme`, `osmo_kdf_enb`, `osmo_kdf_nh`, `osmo_kdf_nas`; see below for what's left out | `src/gsm/kdf.c` | `include/osmocom/crypt/kdf.h` |
 | `gsm_utils` | `gsm_band_name`, `gsm_band_parse`, `ms_class_gmsk_dbm`, `ms_pwr_ctl_lvl`, `ms_pwr_dbm`, `rxlev2dbm`, `dbm2rxlev`, `gsm_arfcn2band_rc`, `gsm_arfcn2freq10`, `gsm_freq102arfcn`, `gsm_fn2gsmtime`, `gsm_gsmtime2fn`, `gsm_fn_as_gsmtime_str`, `osmo_dump_gsmtime`, `gsm_rfn2fn`, `gsm_fn2rfn`, `gprs_tlli_type`, `gprs_tlli2tmsi`, `gprs_tmsi2tlli`, `ms_cm2_a5n_support`, `ms_cm3_a5n_support`, `rach_max_trans_val2raw`, `rach_max_trans_raw2val`, `rach_tx_integer_raw2val`, `gsm_get_octet_len`, `gsm_septet_encode`, `gsm_septet_pack`, `gsm_7bit_encode_n`, `gsm_7bit_encode_n_ussd`, `gsm_7bit_decode_n`, `gsm_7bit_decode_n_ussd`, `gsm_7bit_decode_n_hdr`; see below for what's left out | `src/gsm/gsm_utils.c` | `include/osmocom/gsm/gsm_utils.h` |
 | `tlv` | `tlv_parse_one`, `tlv_parse`, `tlv_parse2`, `tlv_def_patch`, `tlv_encode_one`, `tlv_encode`, `tlv_encode_ordered`, `osmo_tlvp_merge`, `osmo_tlvp_copy`, `osmo_shift_v_fixed`, `osmo_match_shift_tv_fixed`, `osmo_shift_tlv`, `osmo_match_shift_tlv`, `osmo_shift_lv`, `osmo_tlv_prot_msg_name`, `osmo_tlv_prot_ie_name`, `osmo_tlv_prot_validate_tp`, `osmo_tlv_prot_parse`, `osmo_tlv_prot_msgt_flags`, `tlvp_val8`, `tlvp_val16be`, `tlvp_val32be`, `tlvp_val16_unal`, `tlvp_val32_unal`, `TLVP_*`, `*_GROSS_LEN`, `msgb_*` TLV helpers; not `tlv_dump` or the raw-pointer `*_put` writers | `src/gsm/tlv_parser.c` | `include/osmocom/gsm/tlv.h` |
 | `prbs` | `osmo_prbs7`, `osmo_prbs9`, `osmo_prbs11`, `osmo_prbs15`, `osmo_prbs_state_init`, `osmo_prbs_get_ubit`, `osmo_prbs_get_ubits` | `src/core/prbs.c` | `include/osmocom/core/prbs.h` |
@@ -302,6 +303,14 @@ These are in `comp128.h`, `comp128v23.h`, `auth.h`, `milenage/milenage.h` or
 | `osmo_auth_gen_vec`, `osmo_auth_gen_vec_auts` | Deprecated forms taking `osmo_sub_auth_data` |
 | `osmo_auth_register`, `osmo_auth_load`, `osmo_auth_supported` | C selects algorithms through registered plugins. Rust has no plugins: every algorithm is always there, and Milenage and TUAK with the `auth` feature |
 | `Keccak_f_64`, `Keccak_f_32`, `Keccak_f_8` | The 3GPP copy of the Keccak-f\[1600\] permutation. `tuak` uses the RustCrypto `keccak` crate's |
+
+### C APIs left out of `kdf`
+
+These are in `src/gsm/kdf/` and aren't exported by libosmogsm.
+
+| C API | Why it's left out |
+| --- | --- |
+| `hmac_sha256`, `sha256_vector`, `hmac_sha1`, `sha1_vector` and the other SHA-1 and SHA-256 helpers in `src/gsm/kdf/` | libosmocore's own hashes and HMAC, which `kdf.c` uses only when built without GnuTLS. `kdf` uses the RustCrypto `hmac` and `sha2` crates |
 
 ### C APIs left out of `gsm_utils`
 
