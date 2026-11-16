@@ -155,6 +155,18 @@ It sends to `127.0.0.1:4729` by default. To watch the blocks arrive, run the gsm
 workbench with `GSMTAP_LISTEN=127.0.0.1:4729`, or capture loopback in Wireshark with the
 `gsmtap` filter.
 
+## Authentication vector example
+
+`examples/osmo_auc_gen.rs` does what libosmocore's `osmo-auc-gen` utility does, with the
+same options, output and exit statuses. It prints a GSM or UMTS vector with COMP128, XOR,
+Milenage or TUAK, or resynchronizes from a USIM's AUTS first:
+
+```sh
+cargo run --features auth --example osmo_auc_gen -- -3 -a milenage -k K -o OPC [-s SQN] [-A AUTS]
+```
+
+`--help` lists the options. The tests compare it with recordings of the C program.
+
 Default features are empty (`default = []`). `tracing`, `net`, `runtime` and `auth`
 are independently selectable, including every combination. `auth` adds Milenage, TUAK and
 key derivation, on the RustCrypto `aes`, `keccak`, `hmac` and `sha2` crates. `compat::<subsystem>`

@@ -26,7 +26,7 @@ FROM toolchain AS deps
 WORKDIR /src/osmocore-rs
 COPY osmocore-rs/Cargo.toml osmocore-rs/Cargo.lock ./
 RUN mkdir -p src examples \
-    && touch src/lib.rs examples/runtime_service.rs \
+    && touch src/lib.rs examples/runtime_service.rs examples/osmo_auc_gen.rs \
     && cargo fetch --locked \
     && rm -rf src examples
 
@@ -70,6 +70,10 @@ RUN cargo build --locked --no-default-features --features runtime --example runt
     && timeout 30 target/debug/examples/runtime_service
 RUN cargo build --locked --example xcch_demo \
     && timeout 30 target/debug/examples/xcch_demo --blocks 3
+RUN cargo build --locked --features auth --example osmo_auc_gen \
+    && timeout 30 target/debug/examples/osmo_auc_gen -3 -a milenage \
+        -k EB215756028D60E3275E613320AEC880 -o FB2A3D1B360F599ABAB99DB8669F8308 \
+        -r 39fa2f4e3d523d8619a73b4f65c3e14d -A 979498b1f72d3e28c59fa2e72f9c
 RUN cargo build --release --locked --all-features \
     && cargo package --locked
 
