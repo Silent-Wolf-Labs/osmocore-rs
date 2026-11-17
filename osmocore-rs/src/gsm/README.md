@@ -221,6 +221,28 @@ values. They come from the public descriptions of COMP128 recovered from SIMs.
 Milenage's rotations and constants come from 3GPP TS 35.206, and TUAK's input layout,
 INSTANCE values and ALGONAME from 3GPP TS 35.231.
 
+### The `osmo_auc_gen` example
+
+[`examples/osmo_auc_gen.rs`](../../examples/osmo_auc_gen.rs), with the `auth` feature, does
+what libosmocore's `osmo-auc-gen` utility does with `gsm::auth`: it prints a GSM or UMTS
+vector for given keys, or resynchronizes from AUTS first, sets SQN, IND and the RES length,
+and can print a strongswan `triplets.dat` line. It parses its options as glibc's
+`getopt_long()` does, and SQN, IND and lengths as C's `strtoull()` and `atoi()` do. For
+every recorded run of the C program, it gives the same exit status, stdout and stderr,
+apart from:
+
+| Input | C | Rust |
+| --- | --- | --- |
+| Any run | Prints C's banner, and C's help text for `--help` and option errors | Prints its own banner and help text, and its own heading for the list of algorithms |
+| `-k`, `-o` or `-O`, then a later `-2` or `-3` | The key stays in the union member it was written to, so the other type reads it as its own key | Keys stay with the type they were given for, so the other type has none |
+| `-3` with COMP128 | Reads Ki from the first 16 bytes of the OPc | `error generating auth vector` |
+| `-A`, then `-2` with XOR-3G | Resynchronizes the GSM subscriber with its Ki | `AUTS from MS seems incorrect` |
+| `--ind` with an IND length of 31 bits or more, or any run with 64 bits or more | Shifts by the length, which is undefined | Checks in 64 bits, and fails as an IND length past 28 does |
+| No `-r` | RAND from `osmo_get_rand_id()` | RAND from `/dev/urandom`, so the example needs a Unix system for it |
+
+The harness records none of these inputs, and `tests/osmo_auc_gen/behavior.rs` checks the
+example's results for them.
+
 ## Key derivation
 
 [kdf](kdf.rs), with the `auth` feature, derives keys with the generic key derivation
