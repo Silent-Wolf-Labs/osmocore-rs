@@ -49,6 +49,10 @@ tracing-subscriber = { version = "0.3.23", default-features = false, features = 
 name = "runtime_service"
 required-features = ["runtime"]
 
+[[example]]
+name = "osmo_auc_gen"
+required-features = ["auth"]
+
 # Keep scoped tracing subscribers isolated from uninstrumented test threads.
 [[test]]
 name = "net_diagnostics"

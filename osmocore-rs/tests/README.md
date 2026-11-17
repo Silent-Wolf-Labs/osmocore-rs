@@ -51,6 +51,7 @@ contents where those are part of the API contract.
 | `auth` | Authentication core, Milenage and XOR-3G vectors, resync, names and key conversions |
 | `tuak` | The TUAK functions, and TUAK vectors and resync through the preferred and compat APIs |
 | `kdf` | Kc128, K_ASME, K_eNB, NH and NAS keys through the preferred and compat APIs |
+| `osmo_auc_gen` | The `osmo_auc_gen` example against recorded runs of the C `osmo-auc-gen` utility |
 | `gsm23003` | 3GPP TS 23.003 identity checks, MCC and MNC parsing, names, order and domain names through the preferred and compat APIs |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
@@ -1016,6 +1017,22 @@ other than encryption and integrity, which the preferred API doesn't take. Witho
 
 `kdf/behavior.rs` covers K_ASME from a Milenage vector's AUTN, Kc128 as an A5/4 key, the
 NAS key type values and hidden keys.
+
+## osmo-auc-gen observations
+
+`osmo-auc-gen/osmo_auc_gen_vectors.ndjson` records runs of libosmocore's `osmo-auc-gen`
+utility, built from the checkout: the exit status, stdout and stderr of every command of
+its test script, then of the harness's cases for each algorithm, SQN and IND forms, RES
+lengths, resync, wrong lengths, option forms and option errors. The harness checks that
+its upstream records rebuild the script's expected output. `osmo_auc_gen/reference_vectors.rs`
+includes `examples/osmo_auc_gen.rs` and runs it with every recorded command, comparing
+exit status, stdout and stderr. Each side's banner, the text before the first empty line
+of stdout, is skipped, and where help was printed, so are the help text and the heading of
+the list of algorithms. Without the `auth` feature, only the fixture's shape is checked.
+Regenerate it from `gsmtap-rs` with `reference/osmo-auc-gen/run_osmo_auc_gen_vector.sh`.
+
+`osmo_auc_gen/behavior.rs` covers a random RAND and the inputs where the example
+deliberately differs from C, which the harness doesn't record.
 
 ## 3GPP TS 23.003 identity observations
 

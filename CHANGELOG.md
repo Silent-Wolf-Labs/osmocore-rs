@@ -28,6 +28,9 @@
 - `gsm::kdf`: Kc128 for A5/4 and GEA4, and the LTE K_ASME, K_eNB, NH and NAS keys, on
   the 3GPP generic key derivation function. Also `compat::kdf` with C's `osmo_kdf_*`. The
   `auth` feature now also adds the RustCrypto `hmac` and `sha2` crates.
+- `osmo_auc_gen` example, which prints authentication vectors and resynchronizes from
+  AUTS as libosmocore's `osmo-auc-gen` utility does, with the same options and output.
+  It needs the `auth` feature.
 - `gsm::gsm23003`: the identities of 3GPP TS 23.003. IMSI, MSISDN and IMEI checks, the
   `Mcc`, `Mnc`, `Plmn`, `Lai`, `Rai`, `Cgi`, `CgiPs`, `Sai`, `RncId`, `MmeId` and `Gummei`
   types with libosmocore's names and order, and the home network and MME domain names.
