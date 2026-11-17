@@ -15,6 +15,7 @@
 | [tuak](tuak.rs) | TUAK f1 to f5*, TOPc and AUTS (`auth` feature) |
 | [kdf](kdf.rs) | Kc128, and the LTE K_ASME, K_eNB, NH and NAS keys (`auth` feature) |
 | [gsm23003](gsm23003.rs) | 3GPP TS 23.003 identities: IMSI, MSISDN and IMEI checks, PLMN, area, cell and MME identities, and domain names |
+| [gsm48](gsm48.rs) | 3GPP TS 24.008 identity encodings: the PLMN in BCD, LAI and RAI bytes, and the Mobile Identity |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -304,6 +305,43 @@ C's `osmo_gen_home_network_domain` asks for a buffer of at least 33 bytes, but w
 with the NUL. `compat::gsm23003` takes a 34-byte array, and the MME domain functions an
 array of `GSM23003_MME_DOMAIN_LEN`, so neither can overflow. libosmogsm doesn't export
 `osmo_sai_name` and its variants, though `gsm23003.h` declares them.
+
+## Identity encodings
+
+[gsm48.rs](gsm48.rs) holds the identity encodings of 3GPP TS 24.008:
+
+- **PLMN:** `Plmn::to_bcd` and `Plmn::from_bcd`, in `gsm23003`, give the three bytes of
+  section 10.5.1.3, with F as a two-digit MNC's third digit. `gsm::kdf::kasme` takes
+  this form.
+- **Areas:** `Lai::to_bytes` and `from_bytes` add the LAC, and `Rai`'s add the RAC.
+- **Mobile Identity:** `MobileIdentity` is an `Imsi`, `Imei`, `Imeisv` or TMSI. It
+  encodes and decodes the value of section 10.5.1.4, prints as libosmocore names it, such
+  as `IMSI-262420123456789` and `TMSI-0x00C0FFEE`, and orders as C's
+  `osmo_mobile_identity_cmp`: by type, then by digits as text or by TMSI.
+  `MobileIdentity::from_l3` finds one in a Complete Layer 3 message.
+
+An `Imsi` has 6 to 15 digits, an `Imei` 14 or 15, whose check digit isn't checked since
+24.008 sends it as a spare digit, and an `Imeisv` 16. Each parses from text with
+`FromStr`.
+
+Results match C, with these differences in the preferred API. `compat::gsm48` and
+`compat::gsm23003` keep C's behavior for each of them.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| A PLMN in BCD with a hex nibble, or an F other than the MNC's third digit | Weighs each nibble by its decimal place, so `aaaaaa` gives 1110-1110 | `IdentityError::Bcd` |
+| An MCC or MNC past 999 to encode | Encodes its last three digits | The types hold none |
+| A Mobile Identity with hex digits | Decodes and encodes them with `allow_hex` | `MobileIdentityError::Malformed` to decode, and `MobileIdentityError::Digits` to parse |
+| An identity of type NONE or an unknown type | Holds any type byte; decoding returns `-EINVAL` and encoding `-ENOTSUP` | No such identity: `MobileIdentityError::UnknownType` |
+| Digits of the wrong length for the type | Encoding returns `-EINVAL` | `MobileIdentityError::Digits` when parsed |
+| A failed decode | Leaves type NONE and a TMSI of 0, though C documents `GSM_RESERVED_TMSI` | Returns only the error |
+| Two identities' digits compared | `strncmp`'s result: glibc gives the difference of the first differing bytes, though C documents -1, 0 or 1 | `Ord` |
+| The legacy `gsm48_generate_mid`, `osmo_mi_name` and `gsm48_mi_to_string` | Don't check the length, filler or digits, and encode any other character as 0 | In `compat::gsm48` only; the TMSI in decimal of `gsm48_mi_to_string` too |
+| Identity text with no NUL in C's union | `strlen` reads past the union | `compat::gsm48`'s text ends with the union |
+
+The encodings and identity types come from 3GPP TS 24.008 sections 10.5.1.3, 10.5.1.4 and
+10.5.5.15, and the message layouts `from_l3` reads from TS 24.008 section 9.2 and TS
+44.018 section 9.1.
 
 ## TLV
 

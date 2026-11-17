@@ -132,7 +132,9 @@ pub fn kc128(ck: &Ck, ik: &Ik) -> Kc128 {
 }
 
 /// K_ASME from CK, IK, the serving network's PLMN identity and SQN xor AK (3GPP TS 33.401
-/// Annex A.2). SQN xor AK is the first six bytes of the vector's AUTN.
+/// Annex A.2). The PLMN identity is its BCD form, which
+/// [`Plmn::to_bcd`](crate::gsm::gsm23003::Plmn::to_bcd) gives. SQN xor AK is the first six
+/// bytes of the vector's AUTN.
 pub fn kasme(
     ck: &Ck,
     ik: &Ik,
