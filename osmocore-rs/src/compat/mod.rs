@@ -25,6 +25,9 @@ pub mod gsm0502;
 /// Recorded GSM 05.03 compatibility contracts.
 pub mod gsm0503;
 
+/// Recorded 3GPP TS 23.003 identity compatibility contracts.
+pub mod gsm23003;
+
 /// Recorded gsm_utils compatibility contracts.
 pub mod gsm_utils;
 

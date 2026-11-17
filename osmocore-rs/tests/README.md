@@ -52,6 +52,7 @@ contents where those are part of the API contract.
 | `tuak` | The TUAK functions, and TUAK vectors and resync through the preferred and compat APIs |
 | `kdf` | Kc128, K_ASME, K_eNB, NH and NAS keys through the preferred and compat APIs |
 | `osmo_auc_gen` | The `osmo_auc_gen` example against recorded runs of the C `osmo-auc-gen` utility |
+| `gsm23003` | 3GPP TS 23.003 identity checks, MCC and MNC parsing, names, order and domain names through the preferred and compat APIs |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
@@ -1032,6 +1033,23 @@ Regenerate it from `gsmtap-rs` with `reference/osmo-auc-gen/run_osmo_auc_gen_vec
 
 `osmo_auc_gen/behavior.rs` covers a random RAND and the inputs where the example
 deliberately differs from C, which the harness doesn't record.
+
+## 3GPP TS 23.003 identity observations
+
+`gsm23003/gsm23003_vectors.ndjson` records direct calls to libosmogsm's `gsm23003.h` API,
+starting with upstream's `gsm23003_test` replayed: IMSI, MSISDN and IMEI checks on digit
+strings of every length and with non-digits, MCC and MNC parsing into junk results, every
+name of each identity, names in short buffers, comparisons over pairs that differ in each
+field, and domain names generated and parsed, including the loose forms C's `sscanf`
+accepts. `gsm23003/reference_vectors.rs` replays every record against
+`compat::gsm23003`, and against `gsm::gsm23003` wherever the MCC and MNC are up to 999 and
+the text is UTF-8 with no NUL. The preferred domain parsers must accept exactly the
+domains C accepts that are in the form the generators write. Regenerate it from
+`gsmtap-rs` with `reference/gsm23003/run_gsm23003_vector.sh`.
+
+`gsm23003/behavior.rs` covers text with a NUL and NULL text, values past three digits,
+the MNC flag from 100 on, domain round trips, the loose domains only C accepts and the
+home network domain's NUL.
 
 ## GSM 05.03 xCCH observations
 

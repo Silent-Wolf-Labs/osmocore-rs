@@ -48,6 +48,8 @@ Functional modules are grouped like libosmocore's sources.
 - `auth`, `comp128`, `milenage`, `tuak`: GSM and UMTS authentication with COMP128 v1, v2
   and v3, XOR-2G, XOR-3G and, with the `auth` feature, Milenage and TUAK.
 - `kdf`: with the `auth` feature, Kc128 and the LTE K_ASME, K_eNB, NH and NAS keys.
+- `gsm23003`: 3GPP TS 23.003 identities: IMSI, MSISDN and IMEI checks, MCC, MNC, PLMN,
+  LAI, RAI, CGI, CGI-PS, SAI, RNC ID and GUMMEI, and home network and MME domain names.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 
 `coding`, for C's `src/coding`:

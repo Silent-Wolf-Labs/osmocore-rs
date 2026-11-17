@@ -14,6 +14,7 @@
 | [milenage](milenage.rs) | Milenage f1 to f5*, AUTS and the USIM's AUTN check (`auth` feature) |
 | [tuak](tuak.rs) | TUAK f1 to f5*, TOPc and AUTS (`auth` feature) |
 | [kdf](kdf.rs) | Kc128, and the LTE K_ASME, K_eNB, NH and NAS keys (`auth` feature) |
+| [gsm23003](gsm23003.rs) | 3GPP TS 23.003 identities: IMSI, MSISDN and IMEI checks, PLMN, area, cell and MME identities, and domain names |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -265,6 +266,44 @@ authentication keys.
 | A NAS algorithm identity past four bits | Takes any byte | The same |
 
 The function codes come from 3GPP TS 33.102 Annex B.5 and TS 33.401 Annex A.
+
+## Subscriber and network identities
+
+[gsm23003.rs](gsm23003.rs) holds the identities of 3GPP TS 23.003:
+
+- **Digit checks:** `is_valid_imsi`, `is_valid_msisdn`, `is_valid_imei`, which also checks
+  the Luhn check digit, and `is_valid_imei_without_check_digit`.
+- **Identities:** `Mcc`, `Mnc`, `Plmn`, `Lai`, `Rai`, `Cgi`, `CgiPs`, `Sai`, `RncId`,
+  `MmeId` and `Gummei`. Each prints as libosmocore names it, such as `262-42-1-2` for a
+  CGI and `901-70-a123-b1` for a GUMMEI, and orders field by field as C's `osmo_*_cmp`
+  does. `Sai` has no order, since C has none. `Mcc` and `Mnc` parse from one to three
+  digits.
+- **Domain names:** `Plmn::home_network_domain`, `Plmn::mme_group_domain` and
+  `Gummei::mme_domain` write the names of TS 23.003 section 19, and
+  `Plmn::from_home_network_domain` and `Gummei::from_mme_domain` parse them.
+
+An `Mnc` keeps whether it has three digits, since `01` and `001` are different MNCs. From
+100 on it always has three, so `Eq`, `Hash` and `Ord` agree with C's `osmo_mnc_cmp`, which
+ignores the flag there. A domain name always has three MNC digits, so parsing one gives a
+two-digit MNC under 100, as in C.
+
+Results match C, with these differences in the preferred API. `compat::gsm23003` keeps
+C's behavior for each of them.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| An MCC or MNC past 999 | Names and compares any 16-bit value. The domain generators return `-EINVAL` | `Mcc::new` and `Mnc::new` return `None` |
+| An MNC from 100 with the two-digit flag | Keeps the flag, which names and comparisons ignore | `Mnc` always has three digits from 100 |
+| Text with a NUL in it | Ends at the NUL | Not a digit, so the text is invalid |
+| A domain with another suffix or none, or digits after the MCC | Parsed, and the rest ignored | `IdentityError::Domain` |
+| A domain field that's short, signed, has leading spaces or, for hex, a `0x` prefix | Parsed by `sscanf`, so `mnc-1` gives MNC 65535 | `IdentityError::Domain` |
+| A domain that ends before its first field | Returns -1, `sscanf`'s `EOF` | `IdentityError::Domain` |
+| A domain that fails after some fields | Returns `-EINVAL`, and the fields read so far keep their values | Returns only the error |
+
+C's `osmo_gen_home_network_domain` asks for a buffer of at least 33 bytes, but writes 34
+with the NUL. `compat::gsm23003` takes a 34-byte array, and the MME domain functions an
+array of `GSM23003_MME_DOMAIN_LEN`, so neither can overflow. libosmogsm doesn't export
+`osmo_sai_name` and its variants, though `gsm23003.h` declares them.
 
 ## TLV
 
