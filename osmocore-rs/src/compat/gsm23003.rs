@@ -95,7 +95,7 @@ pub struct OsmoGummei {
 }
 
 /// The text C sees: up to the first NUL.
-fn c_text(text: &[u8]) -> &[u8] {
+pub(crate) fn c_text(text: &[u8]) -> &[u8] {
     text.iter()
         .position(|&byte| byte == 0)
         .map_or(text, |end| &text[..end])
@@ -234,7 +234,7 @@ pub fn osmo_gummei_name(gummei: &OsmoGummei) -> String {
 
 /// Writes text as `snprintf` does: as much as fits before a NUL, and nothing into an empty
 /// buffer. The bytes after the NUL are left as they were.
-fn write_truncated(buf: &mut [u8], text: &str) {
+pub(crate) fn write_truncated(buf: &mut [u8], text: &str) {
     if let Some(room) = buf.len().checked_sub(1) {
         let len = text.len().min(room);
         buf[..len].copy_from_slice(&text.as_bytes()[..len]);
@@ -568,5 +568,38 @@ pub fn osmo_parse_mme_domain(out: &mut OsmoGummei, input: &[u8]) -> i32 {
         EOF => EOF,
         4 => 0,
         _ => -EINVAL,
+    }
+}
+
+/// The last three decimal digits of a value, hundreds first, as C's encoders take them.
+fn last_three_digits(value: u16) -> [u8; 3] {
+    [value / 100 % 10, value / 10 % 10, value % 10].map(|digit| digit as u8)
+}
+
+/// `osmo_plmn_to_bcd`: 3GPP TS 24.008's three bytes. An MNC from 100 on has three digits
+/// whatever the flag says, and a value past 999 gives its last three digits.
+pub fn osmo_plmn_to_bcd(bcd_dst: &mut [u8; 3], plmn: &OsmoPlmnId) {
+    let [mcc1, mcc2, mcc3] = last_three_digits(plmn.mcc);
+    let [mnc1, mnc2, mnc3] = last_three_digits(plmn.mnc);
+    *bcd_dst = if plmn.mnc > 99 || plmn.mnc_3_digits {
+        [mcc2 << 4 | mcc1, mnc3 << 4 | mcc3, mnc2 << 4 | mnc1]
+    } else {
+        [mcc2 << 4 | mcc1, 0xf0 | mcc3, mnc3 << 4 | mnc2]
+    };
+}
+
+/// `osmo_plmn_from_bcd`: each nibble weighted by its decimal place, unchecked, so hex
+/// nibbles give values past 999. An MNC's third digit other than F sets the three-digit
+/// flag.
+pub fn osmo_plmn_from_bcd(bcd_src: &[u8; 3], plmn: &mut OsmoPlmnId) {
+    let low = |byte: u8| u16::from(byte & 0x0f);
+    let high = |byte: u8| u16::from(byte >> 4);
+    plmn.mcc = low(bcd_src[0]) * 100 + high(bcd_src[0]) * 10 + low(bcd_src[1]);
+    if high(bcd_src[1]) == 0x0f {
+        plmn.mnc = low(bcd_src[2]) * 10 + high(bcd_src[2]);
+        plmn.mnc_3_digits = false;
+    } else {
+        plmn.mnc = low(bcd_src[2]) * 100 + high(bcd_src[2]) * 10 + high(bcd_src[1]);
+        plmn.mnc_3_digits = true;
     }
 }

@@ -51,6 +51,8 @@ pub enum IdentityError {
     Digits,
     /// A domain name that isn't in the form 3GPP TS 23.003 gives.
     Domain,
+    /// An encoded PLMN with a nibble that isn't a decimal digit where one must be.
+    Bcd,
 }
 
 impl fmt::Display for IdentityError {
@@ -58,6 +60,7 @@ impl fmt::Display for IdentityError {
         formatter.write_str(match self {
             Self::Digits => "MCC or MNC is not one to three decimal digits",
             Self::Domain => "not a 3GPP TS 23.003 domain name",
+            Self::Bcd => "encoded PLMN digit is not decimal",
         })
     }
 }
@@ -264,6 +267,45 @@ impl Plmn {
     pub fn mme_group_domain(&self, group_id: u16) -> String {
         format!("mmegi{group_id:04x}.mme.{}", self.home_network_domain())
     }
+
+    /// The three bytes of 3GPP TS 24.008 section 10.5.1.3, low nibble first: MCC digits 1 and
+    /// 2, MCC digit 3 and MNC digit 3, then MNC digits 1 and 2. A two-digit MNC has F as its
+    /// third digit. C's `osmo_plmn_to_bcd`.
+    pub fn to_bcd(&self) -> [u8; PLMN_BCD_BYTES] {
+        let [mcc1, mcc2, mcc3] = decimal_digits(self.mcc.0);
+        let [mnc1, mnc2, mnc3] = decimal_digits(self.mnc.value);
+        if self.mnc.three_digits {
+            [mcc2 << 4 | mcc1, mnc3 << 4 | mcc3, mnc2 << 4 | mnc1]
+        } else {
+            [mcc2 << 4 | mcc1, 0xf0 | mcc3, mnc3 << 4 | mnc2]
+        }
+    }
+
+    /// Decodes [`to_bcd`](Self::to_bcd)'s form. An MNC whose third digit isn't F has three
+    /// digits. Every other nibble must be a decimal digit, where C's `osmo_plmn_from_bcd`
+    /// takes any.
+    pub fn from_bcd(bcd: &[u8; PLMN_BCD_BYTES]) -> Result<Self, IdentityError> {
+        let nibble = |index: usize| bcd[index / 2] >> (index % 2 * 4) & 0x0f;
+        let digit = |index: usize| match nibble(index) {
+            digit @ 0..=9 => Ok(u16::from(digit)),
+            _ => Err(IdentityError::Bcd),
+        };
+        let mcc = digit(0)? * 100 + digit(1)? * 10 + digit(2)?;
+        let mnc = if nibble(3) == 0x0f {
+            Mnc::new(digit(4)? * 10 + digit(5)?, false)
+        } else {
+            Mnc::new(digit(4)? * 100 + digit(5)? * 10 + digit(3)?, true)
+        };
+        Ok(Self::new(Mcc(mcc), mnc.expect("three decimal digits")))
+    }
+}
+
+/// The length of a PLMN in BCD.
+pub const PLMN_BCD_BYTES: usize = 3;
+
+/// The hundreds, tens and units of a value up to 999.
+fn decimal_digits(value: u16) -> [u8; 3] {
+    [value / 100, value / 10 % 10, value % 10].map(|digit| digit as u8)
 }
 
 impl fmt::Display for Plmn {

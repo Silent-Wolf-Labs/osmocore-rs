@@ -53,6 +53,7 @@ contents where those are part of the API contract.
 | `kdf` | Kc128, K_ASME, K_eNB, NH and NAS keys through the preferred and compat APIs |
 | `osmo_auc_gen` | The `osmo_auc_gen` example against recorded runs of the C `osmo-auc-gen` utility |
 | `gsm23003` | 3GPP TS 23.003 identity checks, MCC and MNC parsing, names, order and domain names through the preferred and compat APIs |
+| `gsm48` | 3GPP TS 24.008 PLMN, LAI, RAI and Mobile Identity encodings, the legacy routing area and Mobile Identity functions, and Complete Layer 3 messages through the preferred and compat APIs |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
 | `strrb` | Ring of recent strings, its length limit and C's slot and index results |
@@ -1050,6 +1051,26 @@ domains C accepts that are in the form the generators write. Regenerate it from
 `gsm23003/behavior.rs` covers text with a NUL and NULL text, values past three digits,
 the MNC flag from 100 on, domain round trips, the loose domains only C accepts and the
 home network domain's NUL.
+
+## 3GPP TS 24.008 identity encoding observations
+
+`gsm48/gsm48_vectors.ndjson` records direct calls to libosmogsm's identity encodings,
+starting with upstream's Mobile Identity, routing area and LAI tests from `gsm0408_test`
+replayed: the PLMN to and from BCD, including every combination of the nibbles 0, 9, A
+and F; LAIs and RAIs encoded into short and long buffers and decoded from short and long
+input; the legacy routing area functions; encoded Mobile Identities of every type nibble
+and length through the names, the legacy string and the decoder; the legacy generators;
+encoding into short and long buffers; text, comparisons; and Complete Layer 3 messages cut
+at every length, with every first byte and message type. `gsm48/reference_vectors.rs`
+replays every record against `compat::gsm48` and `compat::gsm23003`, and against
+`gsm::gsm48` and `Plmn`'s BCD form wherever the values are valid. The preferred decoders
+must accept exactly what C accepts without hex digits, and round-trip it. Regenerate it
+from `gsmtap-rs` with `reference/gsm48/run_gsm48_vector.sh`.
+
+`gsm48/behavior.rs` covers every PLMN's round trip through BCD, every identity length's
+round trip, hex BCD digits and hex identity digits only C takes, the unchecked IMEI check
+digit, C's NONE type, the order of identities, a union with no NUL, the TMSI a failed
+decode leaves, `strncmp`'s byte differences and messages that carry no identity.
 
 ## GSM 05.03 xCCH observations
 

@@ -2,6 +2,7 @@ use osmocore_rs::gsm::a5;
 use osmocore_rs::gsm::auth::{
     Ck, Ik, K, Opc, OperatorKey, ResLength, UmtsAlgorithm, UmtsSubscriber,
 };
+use osmocore_rs::gsm::gsm23003::Plmn;
 use osmocore_rs::gsm::kdf::{self, NasKey};
 
 #[test]
@@ -37,6 +38,12 @@ fn a_vector_gives_the_lte_keys() {
     // AUTN starts with SQN xor AK, which is what K_ASME takes.
     let concealed = vector.autn[..6].try_into().unwrap();
     let kasme = kdf::kasme(&vector.ck, &vector.ik, &[0x62, 0xf2, 0x24], &concealed);
+    // A PLMN gives its BCD form for the identity.
+    let plmn = Plmn::new("262".parse().unwrap(), "42".parse().unwrap());
+    assert_eq!(
+        kdf::kasme(&vector.ck, &vector.ik, &plmn.to_bcd(), &concealed),
+        kasme
+    );
     // Another network, or another vector, gives another K_ASME.
     assert_ne!(
         kasme,

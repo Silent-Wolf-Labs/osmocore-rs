@@ -35,6 +35,12 @@
   `Mcc`, `Mnc`, `Plmn`, `Lai`, `Rai`, `Cgi`, `CgiPs`, `Sai`, `RncId`, `MmeId` and `Gummei`
   types with libosmocore's names and order, and the home network and MME domain names.
   Also `compat::gsm23003` with C's structs, names, comparisons and domain functions.
+- `gsm::gsm48`: the identity encodings of 3GPP TS 24.008. The PLMN in BCD, the LAI and RAI
+  as bytes, and `MobileIdentity`, an IMSI, IMEI, IMEISV or TMSI that encodes, decodes,
+  prints and orders as libosmocore's, and is found in Complete Layer 3 messages. Also
+  `compat::gsm48` with C's legacy routing area, Mobile Identity struct and functions, and
+  `osmo_plmn_to_bcd` and `osmo_plmn_from_bcd` in `compat::gsm23003`. `gsm::kdf::kasme`
+  takes a PLMN's `Plmn::to_bcd`.
 
 ### Changed
 
