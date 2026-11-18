@@ -31,6 +31,9 @@ pub mod gsm23003;
 /// Recorded 3GPP TS 24.008 identity encoding compatibility contracts.
 pub mod gsm48;
 
+/// Recorded 3GPP TS 24.008 BCD number compatibility contracts.
+pub mod gsm48_ie;
+
 /// Recorded gsm_utils compatibility contracts.
 pub mod gsm_utils;
 

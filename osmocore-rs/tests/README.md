@@ -53,6 +53,7 @@ contents where those are part of the API contract.
 | `kdf` | Kc128, K_ASME, K_eNB, NH and NAS keys through the preferred and compat APIs |
 | `osmo_auc_gen` | The `osmo_auc_gen` example against recorded runs of the C `osmo-auc-gen` utility |
 | `gsm23003` | 3GPP TS 23.003 identity checks, MCC and MNC parsing, names, order and domain names through the preferred and compat APIs |
+| `gsm48_ie` | 3GPP TS 24.008 BCD numbers: encoding, decoding and the legacy decoder through the preferred and compat APIs |
 | `gsm48` | 3GPP TS 24.008 PLMN, LAI, RAI and Mobile Identity encodings, the legacy routing area and Mobile Identity functions, and Complete Layer 3 messages through the preferred and compat APIs |
 | `gsm_utils` | Bands, power, ARFCNs, GSM time, reduced frame numbers, TLLIs, classmarks, RACH parameters and 7-bit coding |
 | `sockaddr_str` | IP addresses as text: family, conversions both ways, C's errors and comparison |
@@ -1071,6 +1072,24 @@ from `gsmtap-rs` with `reference/gsm48/run_gsm48_vector.sh`.
 round trip, hex BCD digits and hex identity digits only C takes, the unchecked IMEI check
 digit, C's NONE type, the order of identities, a union with no NUL, the TMSI a failed
 decode leaves, `strncmp`'s byte differences and messages that carry no identity.
+
+## 3GPP TS 24.008 BCD number observations
+
+`gsm48_ie/gsm48_ie_vectors.ndjson` records direct calls to libosmogsm's BCD number
+functions, starting with upstream's `test_bcd_number_encode_decode` from `gsm0408_test`
+replayed: encoding every digit and filler character, invalid characters in each position
+and numbers up to 21 digits with headers of 0 to 4 bytes and limits around the length
+byte, and numbers of 506 to 600 digits where the length byte wraps; decoding every byte as
+a digit byte, fillers in each position, every output length, header lengths past the IE,
+input lengths and the longest IE; and the legacy decoder on the same inputs.
+`gsm48_ie/reference_vectors.rs` replays every record against `compat::gsm48_ie`, checking
+each byte of the output buffers, and against `BcdNumber` wherever C succeeds or runs out of
+room. Regenerate it from `gsmtap-rs` with `reference/gsm48_ie/run_gsm48_ie_vector.sh`.
+
+`gsm48_ie/behavior.rs` covers every digit's round trip with headers, the filler, the
+characters only C rejects, the 255-byte length limit and C's wrap, fillers before the end,
+headers and bytes past the IE, `max_len` bounding the length byte, and where
+`compat::gsm48_ie` stops instead of writing or reading past a buffer as C does.
 
 ## GSM 05.03 xCCH observations
 
