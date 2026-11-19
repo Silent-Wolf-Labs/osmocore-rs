@@ -52,6 +52,8 @@ Functional modules are grouped like libosmocore's sources.
   LAI, RAI, CGI, CGI-PS, SAI, RNC ID and GUMMEI, and home network and MME domain names.
 - `gsm48`: 3GPP TS 24.008 identity encodings: the PLMN in BCD, LAI and RAI bytes, and the
   Mobile Identity, also from Complete Layer 3 messages.
+- `gsm48_ie`: 3GPP TS 24.008 BCD numbers, as in the called, calling and connected party
+  numbers.
 - `tlv`: borrowed parsing and `Msgb` encoding of tag-length-value elements, and protocol validation.
 
 `coding`, for C's `src/coding`:

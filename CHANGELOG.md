@@ -41,6 +41,11 @@
   `compat::gsm48` with C's legacy routing area, Mobile Identity struct and functions, and
   `osmo_plmn_to_bcd` and `osmo_plmn_from_bcd` in `compat::gsm23003`. `gsm::kdf::kasme`
   takes a PLMN's `Plmn::to_bcd`.
+- `gsm::gsm48_ie`: the BCD numbers of 3GPP TS 24.008, as in the called, calling and
+  connected party numbers. `BcdNumber` holds the digits, `*`, `#`, `a`, `b` and `c`, and
+  encodes and decodes the IE's length byte, header and digits as libosmocore does. Also
+  `compat::gsm48_ie` with C's `gsm48_encode_bcd_number`, `gsm48_decode_bcd_number2` and
+  `gsm48_decode_bcd_number`.
 
 ### Changed
 

@@ -16,6 +16,7 @@
 | [kdf](kdf.rs) | Kc128, and the LTE K_ASME, K_eNB, NH and NAS keys (`auth` feature) |
 | [gsm23003](gsm23003.rs) | 3GPP TS 23.003 identities: IMSI, MSISDN and IMEI checks, PLMN, area, cell and MME identities, and domain names |
 | [gsm48](gsm48.rs) | 3GPP TS 24.008 identity encodings: the PLMN in BCD, LAI and RAI bytes, and the Mobile Identity |
+| [gsm48_ie](gsm48_ie.rs) | 3GPP TS 24.008 BCD numbers: the called, calling and connected party numbers |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
 
 ## GSM 05.02
@@ -342,6 +343,45 @@ Results match C, with these differences in the preferred API. `compat::gsm48` an
 The encodings and identity types come from 3GPP TS 24.008 sections 10.5.1.3, 10.5.1.4 and
 10.5.5.15, and the message layouts `from_l3` reads from TS 24.008 section 9.2 and TS
 44.018 section 9.1.
+
+## BCD numbers
+
+[gsm48_ie.rs](gsm48_ie.rs) holds the BCD numbers of 3GPP TS 24.008 section 10.5.4.7, the
+layout of the called, calling and connected party numbers and the IEs that share it. A
+`BcdNumber` holds the digits: decimal digits, `*`, `#`, `a`, `b` and `c`, in lowercase as
+libosmocore prints them, and parses from text with `FromStr`.
+
+- **Encoding:** `BcdNumber::encode(header)` gives the IE's value: the length byte, the
+  header, then two digits per byte, low nibble first, with an F filler after an odd count.
+  The header is the IE's own, such as the type of number and numbering plan, and the
+  caller supplies it. `encoded_len` gives the size first.
+- **Decoding:** `BcdNumber::decode(lv, header_len)` reads the digits after the header. Bytes
+  past the ones the length byte counts are ignored, a header past them gives no digits, and
+  the number ends at the first filler, where C's text ends.
+
+Results match C, with these differences in the preferred API. `compat::gsm48_ie` keeps C's
+behavior for each of them.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| The header bytes | Left as they were, for the caller to write | `encode` writes the ones it's given |
+| A header and digits of more than 255 bytes | Writes the length byte modulo 256 and every digit: 511 digits give a length of 0 and write 257 bytes | `BcdNumberError::TooLong` |
+| A length byte equal to `max_len` | Writes `max_len + 1` bytes, one past a buffer of `max_len` bytes | No `max_len`: `encode` returns a `Vec` |
+| An invalid character | Returns `-EINVAL` after the length byte and the digits before it | `BcdNumberError::Digits` when parsed, and nothing written |
+| A filler before the last nibble | Writes a NUL there, then the digits after it | The number ends there |
+| An output buffer too short | Writes the digits that fit and returns `-ENOSPC` | No output buffer |
+| `gsm48_decode_bcd_number` on an input shorter than its length byte | Reads past the input | `compat::gsm48_ie` decodes only the input and returns `-EINVAL` |
+
+`compat::gsm48_ie::gsm48_encode_bcd_number` returns -5 with only the length byte written
+where C would write past the buffer it's given.
+
+libosmogsm's own callers pass the size of their buffer as `max_len`.
+`gsm48_encode_callerid` does it with a buffer of 13 bytes for calling and connected numbers
+and of 18 for redirecting ones, and `gsm0808_enc_msisdn` with 11, so numbers long enough
+for a length byte of exactly that size write one byte past the buffer. `BcdNumber` has no
+such limit to get wrong.
+
+The layout and digits come from 3GPP TS 24.008 section 10.5.4.7 and table 10.5.118.
 
 ## TLV
 

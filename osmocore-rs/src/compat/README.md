@@ -18,6 +18,7 @@ C library and export no C ABI.
 | [auth.rs](auth.rs) | C's subscriber and vector structs, integer algorithms and results, SQN changes on a failed resync, names for unknown values | [auth](../gsm/auth/mod.rs), [milenage](../gsm/milenage.rs), [tuak](../gsm/tuak.rs) |
 | [kdf.rs](kdf.rs) | C's argument order and output buffers, SQN and AK apart, any NAS algorithm type byte (`auth` feature) | [kdf](../gsm/kdf.rs) |
 | [gsm23003.rs](gsm23003.rs) | C's identity structs with any 16-bit MCC and MNC, NUL-ended and NULL text, -22 and -1 results, `snprintf` truncation and the domain parsers' `sscanf` matching | [gsm23003](../gsm/gsm23003.rs) |
+| [gsm48_ie.rs](gsm48_ie.rs) | C's output buffers, `max_len` that bounds the length byte, the length byte modulo 256, partial writes before -22, NUL fillers mid-number, -5, -22 and -28 results | [gsm48_ie](../gsm/gsm48_ie.rs) |
 | [gsm48.rs](gsm48.rs) | C's legacy `gprs_ra_id` and Mobile Identity struct with its union, packed structs as byte arrays, hex digits, unchecked legacy functions, -5, -22, -28, -74 and -95 results and `strncmp` byte differences | [gsm48](../gsm/gsm48.rs) |
 | [base64.rs](base64.rs) | Integer statuses, output lengths, termination and nullable size probes | [base64](../base/base64.rs) |
 | [bcd.rs](bcd.rs) | Signed lengths, terminated inputs/outputs and buffer mutation | [bcd](../base/bcd.rs) |
