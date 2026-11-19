@@ -15,6 +15,7 @@
 | [tuak](tuak.rs) | TUAK f1 to f5*, TOPc and AUTS (`auth` feature) |
 | [kdf](kdf.rs) | Kc128, and the LTE K_ASME, K_eNB, NH and NAS keys (`auth` feature) |
 | [gsm23003](gsm23003.rs) | 3GPP TS 23.003 identities: IMSI, MSISDN and IMEI checks, PLMN, area, cell and MME identities, and domain names |
+| [gsm23236](gsm23236.rs) | 3GPP TS 23.236 Network Resource Indicators: the NRI in a TMSI, NRI range lists, and TMSIs with an NRI of the list |
 | [gsm48](gsm48.rs) | 3GPP TS 24.008 identity encodings: the PLMN in BCD, LAI and RAI bytes, and the Mobile Identity |
 | [gsm48_ie](gsm48_ie.rs) | 3GPP TS 24.008 BCD numbers: the called, calling and connected party numbers |
 | [tlv](tlv/mod.rs) | Tag-length-value parsing, encoding and validation |
@@ -382,6 +383,44 @@ for a length byte of exactly that size write one byte past the buffer. `BcdNumbe
 such limit to get wrong.
 
 The layout and digits come from 3GPP TS 24.008 section 10.5.4.7 and table 10.5.118.
+
+## Network Resource Indicators
+
+[gsm23236.rs](gsm23236.rs) holds the Network Resource Indicators (NRI) of 3GPP TS 23.236,
+which say which MSC or SGSN of a pool gave out a TMSI or P-TMSI.
+
+- **In a TMSI:** the NRI is the TMSI's bits from bit 23 down, as many as an `NriBitlen` of
+  1 to 15 says (TS 23.003 allows up to 10). `tmsi_nri` reads it and `set_tmsi_nri` writes it.
+- **Ranges:** an `NriRange` holds the values from its first to its last, up to `NRI_MAX`
+  (32767, which C keeps in an `int16_t`). `NriRange::parse` takes the VTY's `nri add` and
+  `nri del` arguments, decimal or `0x` and hexadecimal.
+- **Lists:** `NriRanges` keeps its ranges sorted, joining those that overlap or touch, as
+  C's list does. `add`, `remove`, `contains` and `overlaps` match C's functions, and
+  `Display` writes `empty` or ranges like `23..42,123..142`.
+- **Making TMSIs:** `NriRanges::limit` picks one of the list's values that fit in the bit
+  length, the one at its argument modulo their number, and `limit_tmsi` puts it in a TMSI.
+  A node calls it on a random TMSI to give it one of its NRIs.
+
+Results match C, with these differences in the preferred API. `compat::gsm23236` keeps C's
+behavior for each of them.
+
+| Input | C | Rust |
+| --- | --- | --- |
+| `osmo_nri_v_limit_by_ranges` where no value of the list fits in the bit length: an empty list, ranges all past it, or a bit length past 15 | Divides by zero: the process ends by `SIGFPE` | `limit` returns `None`; `compat` returns -1 |
+| The list's text, `osmo_nri_ranges_to_str_buf` and `osmo_nri_ranges_to_str_c` | Its documentation says `23..42,123..142`, but it writes no commas: `23..42123..142` | `Display` writes the commas; `compat` writes C's text |
+| An NRI too large for the bit length, in `osmo_tmsi_nri_v_set` | Keeps its low bits | `NriError::TooLarge` |
+| NRI text with leading whitespace or a sign, like ` 5`, `+5` or `-0` | Taken, as `strtoll` takes it | `NriError::Syntax` |
+| A negative value, or a range whose first value is past its last | Rejected by the functions, but `osmo_nri_range_overlaps_ranges` takes such a range as overlapping a range that holds one of its ends | Can't be built |
+| A bit length of 0, or past 15 | Taken by the functions that check values: a value fits nothing at 0 bits, and only its sign is checked from 15 on | `NriBitlen::new` returns `None` |
+
+libosmocore's own pooling code reaches the division by zero. osmo-msc's VTY takes
+`nri bitlen 8` and `nri add 300 400` with only a warning that the range passes the bit
+length, and its VLR then calls `osmo_tmsi_nri_v_limit_by_ranges` for each new TMSI. It
+checks only that the list isn't empty.
+
+The NRI's place in the TMSI comes from 3GPP TS 23.003 section 2.4, which gives it 0 to 10
+bits from bit 23 down, 0 meaning no pool. libosmocore takes 1 to 15 bits, and so does
+`NriBitlen`. Pooling itself is 3GPP TS 23.236.
 
 ## TLV
 
