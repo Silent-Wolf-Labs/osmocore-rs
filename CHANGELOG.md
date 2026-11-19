@@ -46,6 +46,12 @@
   encodes and decodes the IE's length byte, header and digits as libosmocore does. Also
   `compat::gsm48_ie` with C's `gsm48_encode_bcd_number`, `gsm48_decode_bcd_number2` and
   `gsm48_decode_bcd_number`.
+- `gsm::gsm23236`: the Network Resource Indicators of 3GPP TS 23.236, for MSC and SGSN
+  pooling. `tmsi_nri` and `set_tmsi_nri` read and write the NRI in a TMSI, `NriRanges`
+  keeps a node's NRI ranges as libosmocore's list does, and `limit_tmsi` gives a TMSI one
+  of its NRIs. Where no NRI of the list fits the bit length, `limit` returns `None`, and
+  the list's text has the commas libosmocore's leaves out. Also `compat::gsm23236` with
+  C's functions, its VTY parsers and its text.
 
 ### Changed
 

@@ -28,6 +28,9 @@ pub mod gsm0503;
 /// Recorded 3GPP TS 23.003 identity compatibility contracts.
 pub mod gsm23003;
 
+/// Recorded 3GPP TS 23.236 NRI compatibility contracts.
+pub mod gsm23236;
+
 /// Recorded 3GPP TS 24.008 identity encoding compatibility contracts.
 pub mod gsm48;
 
