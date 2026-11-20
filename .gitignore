@@ -3,7 +3,6 @@ libosmocore/
 .agents/
 .codex/
 # Local agent guidance (may contain machine-specific or private context)
-AGENT.md
 AGENTS.md
 target/
 
