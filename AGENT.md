@@ -12,7 +12,7 @@ Project identity: `osmocore-rs`, hosted at
 `osmocore-rs` and Rust imports use `osmocore_rs`. The repository checkout
 retains its local `libosmocore-rs` name; the nested crate is `osmocore-rs/`.
 
-- Repository root: `/home/jshilts-test-env/RustroverProjects/libosmocore-rs`.
+- Paths are relative to this repository's root unless stated otherwise.
 - Rust crate: `osmocore-rs/` within this repository. Its manifest is
   `osmocore-rs/Cargo.toml`; implementation is in `osmocore-rs/src/`.
   Functional modules are grouped like libosmocore's sources: `src/base/` for C's
@@ -22,10 +22,9 @@ retains its local `libosmocore-rs` name; the nested crate is `osmocore-rs/`.
   `compat::<subsystem>` stays flat. Large modules split into private files without
   changing their public path.
   Target current stable Rust, edition 2024, without a declared MSRV.
-- **Required C reference:** `libosmocore/` within this repository, at
-  `/home/jshilts-test-env/RustroverProjects/libosmocore-rs/libosmocore`.
-- Testing utility and reference harness project: `~/RustroverProjects/gsmtap-rs`
-  (`/home/jshilts-test-env/RustroverProjects/gsmtap-rs`). This is a separate
+- **Required C reference:** `libosmocore/` within this repository.
+- Testing utility and reference harness project: `../gsmtap-rs`, a sibling
+  checkout next to this repository. This is a separate
   repository that must be kept up to date as the Rust conversion progresses.
 - Rust compatibility tests: `osmocore-rs/tests/`; committed C observations:
   `osmocore-rs/tests/compatibility/vectors/`.
@@ -101,7 +100,7 @@ cargo fmt --manifest-path osmocore-rs/Cargo.toml --check
 cargo test --manifest-path osmocore-rs/Cargo.toml
 ```
 
-When updating the testing utility, run from `~/RustroverProjects/gsmtap-rs`:
+When updating the testing utility, run from `../gsmtap-rs`:
 
 ```bash
 cargo fmt --check
