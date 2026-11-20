@@ -2,8 +2,6 @@ libosmocore/
 .idea
 .agents/
 .codex/
-# Local agent guidance (may contain machine-specific or private context)
-AGENTS.md
 target/
 
 # Local release/compliance audit archive
