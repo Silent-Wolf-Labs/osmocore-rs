@@ -156,7 +156,7 @@ rewriting generator merely to check documentation or module moves.
 
 ## Remaining work and fundamental differences
 
-Channel coding and interleaving beyond [`gsm0503`](../../coding/gsm0503.rs) xCCH,
+Channel coding and interleaving beyond [`gsm0503`](../../coding/gsm0503/mod.rs) xCCH,
 AMR/DTX, protocol parity definitions and generated GSM/GMR/WiMax catalogues,
 Rust SIMD selection and NEON parity require separate scope and evidence.
 Allocation failure is checked where fallible reservation is used but was not
