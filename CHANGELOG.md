@@ -52,6 +52,10 @@
   of its NRIs. Where no NRI of the list fits the bit length, `limit` returns `None`, and
   the list's text has the commas libosmocore's leaves out. Also `compat::gsm23236` with
   C's functions, its VTY parsers and its text.
+- `coding::gsm0503::Gsm0503Code`: all 45 convolutional codes of GSM 05.03, for TCH,
+  CSD, RACH, SCH, GPRS, AMR and EGPRS, as `base::conv` codes that encode and decode as
+  libosmocore's do. Also the parity codes `CS234_CRC16`, `MCS_CRC8_HDR`, `MCS_CRC12`,
+  `RACH_CRC6`, `SCH_CRC10`, `TCH_FR_CRC3`, `TCH_EFR_CRC8`, `AMR_CRC6` and `AMR_CRC14`.
 
 ### Changed
 

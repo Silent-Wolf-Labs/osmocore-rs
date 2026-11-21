@@ -1,25 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! GSM 05.03 (3GPP TS 45.003) channel coding for SACCH, SDCCH and BCCH blocks.
-//!
-//! [`xcch_encode`] turns a 23-byte L2 frame into four bursts of unpacked bits, and
-//! [`xcch_decode`] recovers the frame from soft bits. Soft bits run from -127 to
-//! 127: positive means 0, negative means 1 and 0 means unknown.
-//!
-//! ```
-//! use osmocore_rs::coding::gsm0503::{xcch_decode, xcch_encode};
-//! let frame = [0x2b; 23];
-//! let soft = xcch_encode(&frame).map(|bit| if bit == 0 { 127 } else { -127 });
-//! let decoded = xcch_decode(&soft);
-//! assert_eq!(decoded.data, Some(frame));
-//! assert_eq!(decoded.bit_errors, 0);
-//! ```
+//! xCCH encoding and decoding.
 
+use super::codes::Gsm0503Code;
+use super::interleaving::{xcch_deinterleave, xcch_interleave};
+use super::mapping::{xcch_burst_map, xcch_burst_unmap};
+use super::parity::FIRE_CRC40;
 use crate::base::bits::{pack_into_offset, unpack_into_offset};
-use crate::base::conv::{self, ConvCode, ConvCodeSpec, Termination};
-use crate::base::crc::Crc64Code;
+use crate::base::conv::{self, ConvCode};
 use crate::gsm::gsm0502::NB_GMSK_PAYLOAD_BITS;
-use std::sync::OnceLock;
 
 /// Bytes in an L2 frame.
 pub const XCCH_L2_BYTES: usize = 23;
@@ -36,90 +25,15 @@ pub const XCCH_CODED_BITS: usize = 4 * XCCH_BURST_DATA_BITS;
 pub const XCCH_STEALING_FLAG_OFFSETS: [usize; 2] = [HALF_BURST, HALF_BURST + 1];
 
 const L2_BITS: usize = 8 * XCCH_L2_BYTES;
-const PARITY_BITS: usize = 40;
+const PARITY_BITS: usize = FIRE_CRC40.bits as usize;
 const UNCODED_BITS: usize = L2_BITS + PARITY_BITS;
 /// Where each half of a burst's data sits around the stealing flags.
-const HALF_BURST: usize = XCCH_BURST_DATA_BITS / 2;
+pub(super) const HALF_BURST: usize = XCCH_BURST_DATA_BITS / 2;
 
-/// The Fire code protecting an xCCH block, g(D) = (D^23 + 1)(D^17 + D^3 + 1), with
-/// inverted parity.
-pub const FIRE_CRC40: Crc64Code = Crc64Code {
-    bits: PARITY_BITS as i32,
-    poly: 0x00_0482_0009,
-    init: 0,
-    remainder: 0xff_ffff_ffff,
-};
-
-/// Returns the xCCH convolutional code: rate 1/2, constraint length 5, with
-/// G0 = 1 + D^3 + D^4 and G1 = 1 + D + D^3 + D^4.
+/// Returns the xCCH convolutional code, [`Gsm0503Code::Xcch`]: rate 1/2, constraint
+/// length 5, with G0 = 1 + D^3 + D^4 and G1 = 1 + D + D^3 + D^4.
 pub fn xcch_code() -> &'static ConvCode {
-    static CODE: OnceLock<ConvCode> = OnceLock::new();
-    CODE.get_or_init(|| {
-        let transitions = |function: fn(u8, u8) -> u8| {
-            (0..16)
-                .map(|state| [function(state, 0), function(state, 1)])
-                .collect::<Vec<_>>()
-        };
-        ConvCode::new(ConvCodeSpec {
-            n: 2,
-            k: 5,
-            len: UNCODED_BITS as i32,
-            term: Termination::FLUSH,
-            next_output: transitions(|state, input| {
-                let shared = input ^ (state >> 2 & 1) ^ (state >> 3 & 1);
-                shared << 1 | (shared ^ (state & 1))
-            }),
-            next_state: transitions(|state, input| (state << 1 | input) & 15),
-            next_term_output: None,
-            next_term_state: None,
-            puncture: None,
-        })
-        .expect("the xCCH code tables are valid")
-    })
-}
-
-/// Returns where coded bit `k` goes in the interleaved block.
-const fn interleaved_position(k: usize) -> usize {
-    (k & 3) * XCCH_BURST_DATA_BITS + 2 * ((49 * k) % 57) + ((k & 7) >> 2)
-}
-
-/// Spreads a coded block across four bursts' worth of data bits.
-pub fn xcch_interleave<T: Copy>(coded: &[T; XCCH_CODED_BITS]) -> [T; XCCH_CODED_BITS] {
-    let mut interleaved = *coded;
-    for (k, bit) in coded.iter().enumerate() {
-        interleaved[interleaved_position(k)] = *bit;
-    }
-    interleaved
-}
-
-/// Reverses [`xcch_interleave`].
-pub fn xcch_deinterleave<T: Copy>(interleaved: &[T; XCCH_CODED_BITS]) -> [T; XCCH_CODED_BITS] {
-    std::array::from_fn(|k| interleaved[interleaved_position(k)])
-}
-
-/// Writes a burst's data bits around its stealing flags. A flag of `None` leaves
-/// that position in `burst` unchanged.
-pub fn xcch_burst_map(
-    data: &[u8; XCCH_BURST_DATA_BITS],
-    burst: &mut [u8; XCCH_BURST_BITS],
-    hl: Option<u8>,
-    hn: Option<u8>,
-) {
-    burst[..HALF_BURST].copy_from_slice(&data[..HALF_BURST]);
-    burst[HALF_BURST + 2..].copy_from_slice(&data[HALF_BURST..]);
-    if let Some(hl) = hl {
-        burst[HALF_BURST] = hl;
-    }
-    if let Some(hn) = hn {
-        burst[HALF_BURST + 1] = hn;
-    }
-}
-
-/// Splits a burst of soft bits into its data bits and its `hl` and `hn` flags.
-pub fn xcch_burst_unmap(burst: &[i8; XCCH_BURST_BITS]) -> ([i8; XCCH_BURST_DATA_BITS], i8, i8) {
-    let data =
-        std::array::from_fn(|index| burst[if index < HALF_BURST { index } else { index + 2 }]);
-    (data, burst[HALF_BURST], burst[HALF_BURST + 1])
+    Gsm0503Code::Xcch.code()
 }
 
 /// Encodes an L2 frame into four bursts of unpacked bits, with the stealing flags set.

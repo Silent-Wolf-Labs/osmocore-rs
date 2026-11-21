@@ -29,7 +29,7 @@ C library and export no C ABI.
 | [fsm.rs](fsm.rs) | Integer error mapping, names and identifier-formatting adapters | [FSMs](../base/fsm/README.md) |
 | [gea.rs](gea.rs) | Integer algorithms and directions, -34 and -22 results, C's 1,523-byte limit, names for C's table, wrapping SAPI arithmetic | [gea](../gsm/gea.rs) |
 | [gsm0502.rs](gsm0502.rs) | Integer comparison, input-returning remap, negative CCCH codes and wrapping paging values | [gsm0502](../gsm/gsm0502.rs) |
-| [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../coding/gsm0503.rs) |
+| [gsm0503.rs](gsm0503.rs) | Integer status and output parameters for xCCH coding | [gsm0503](../coding/gsm0503/mod.rs) |
 | [gsm_utils.rs](gsm_utils.rs) | Integer band and type values, -22 and 0xffff error results, `gsm_time` fields that can disagree, bounded and NUL-terminated 7-bit buffers, wrapped header lengths | [gsm_utils](../gsm/gsm_utils/mod.rs) |
 | [kasumi.rs](kasumi.rs) | Eight separate subkey arrays, KGCORE's length in bits, whole-byte bearer and direction inputs | [kasumi](../gsm/kasumi/mod.rs) |
 | [sockaddr_str.rs](sockaddr_str.rs) | C's struct with any family, errno results, writes made before a failure, glibc's address text, Linux socket address layouts, comparison that falls back to text | [sockaddr_str](../base/sockaddr_str.rs) |
