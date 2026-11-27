@@ -15,7 +15,8 @@ exclusions. Durable API details and runnable examples belong in module Rustdoc.
 | --- | --- |
 | [Core utilities](base/README.md) | The `base` group, C's `src/core`: bits, encodings, CRCs, messages, time, FSMs, counters and small utilities |
 | [GSM utilities](gsm/README.md) | The `gsm` group, C's `src/gsm`: TDMA frames, bands and power, A5, KASUMI and GEA ciphers, GSM authentication, subscriber and network identities, 7-bit coding and TLV |
-| [Channel coding](coding/README.md) | The `coding` group, C's `src/coding`: GSM 05.03 xCCH |
+| [Speech codecs](codec/README.md) | The `codec` group, C's `src/codec`: FR and EFR frame sizes and bit orders |
+| [Channel coding](coding/README.md) | The `coding` group, C's `src/coding`: GSM 05.03 xCCH, TCH/F speech and FACCH/F |
 | [Convolutional coding](base/conv/README.md) | Checked descriptors, encoding, stateful decoding, portable correlation and dispatch |
 | [FSMs](base/fsm/README.md) | Owned registry/runtime, hierarchy, transitions, termination and timer/TDef integration |
 | [I/O runtime](runtime/README.md) | Optional Mio readiness, bounded TCP/UDP, typed commands/drivers and coordinated shutdown |
@@ -34,9 +35,9 @@ differences.
 
 ## Public API and architecture
 
-Functional modules are grouped as `base`, `gsm` and `coding`, following libosmocore's
-`src/core`, `src/gsm` and `src/coding`; `runtime`, `net`, `diagnostics` and `compat` stay at
-the crate root. There is no root type glob. Prefer methods on owned `Msgb`, `FsmRuntime`, `TimerScheduler`
+Functional modules are grouped as `base`, `gsm`, `codec` and `coding`, following
+libosmocore's `src/core`, `src/gsm`, `src/codec` and `src/coding`; `runtime`, `net`,
+`diagnostics` and `compat` stay at the crate root. There is no root type glob. Prefer methods on owned `Msgb`, `FsmRuntime`, `TimerScheduler`
 and `RateCtrRuntime`, and on caller-backed `BitVec`. Shared types stay in their
 functional modules. Clocks, application context and scheduler ownership are
 explicit; handles reject foreign owners and stale lifetimes.
@@ -110,6 +111,7 @@ and describes the ones without a folder of their own:
 
 - [Core utilities](base/README.md): `base`, for C's `src/core`.
 - [GSM utilities](gsm/README.md): `gsm`, for C's `src/gsm`.
+- [Speech codecs](codec/README.md): `codec`, for C's `src/codec`.
 - [Channel coding](coding/README.md): `coding`, for C's `src/coding`.
 
 ## Testing and evidence
@@ -217,7 +219,8 @@ the family names below also cover preferred methods in the functional modules.
 | `bitvec` (buffer and text adapters) | `bitvec_pack`, `bitvec_unpack`, `bitvec_unhex`, `bitvec_to_string_r` | `src/core/bitvec.c`; hex loading calls `osmo_hexparse` in `src/core/utils.c` | `include/osmocom/core/bitvec.h` |
 | `msgb` | `msgb_put_u8`, `msgb_put_u16`, `msgb_put_u32`, `msgb_push_u8`, `msgb_push_u16`, `msgb_push_u32`, `msgb_get_u8`, `msgb_get_u16`, `msgb_get_u32`, `msgb_pull_u8`, `msgb_pull_u16`, `msgb_pull_u32`, `msgb_l1`, `msgb_l2`, `msgb_l3`, `msgb_l4`, `msgb_sms`, `msgb_l1len`, `msgb_l2len`, `msgb_l3len`, `msgb_l4len`, `msgb_pull_to_l2`, `msgb_pull_to_l3`, `msgb_l3trim`, `msgb_push_tl` | Inline/macro operations in `msgb.h`; endian operations in generated headers | `include/osmocom/core/msgb.h`, `bit16gen.h`, `bit32gen.h` |
 | `hexparse` | `osmo_hexparse` | `src/core/utils.c` | `include/osmocom/core/utils.h` |
-| `gsm0503` | `gsm0503_xcch_encode`, `gsm0503_xcch_decode`, `gsm0503_xcch_interleave`, `gsm0503_xcch_deinterleave`, `gsm0503_xcch_burst_map`, `gsm0503_xcch_burst_unmap`; all 45 `gsm0503_*` convolutional codes as `Gsm0503Code` (`gsm0503_xcch` also as `xcch_code`); the `gsm0503_parity` descriptors `gsm0503_fire_crc40`, `gsm0503_cs234_crc16`, `gsm0503_mcs_crc8_hdr`, `gsm0503_mcs_crc12`, `gsm0503_rach_crc6`, `gsm0503_sch_crc10`, `gsm0503_tch_fr_crc3`, `gsm0503_tch_efr_crc8`, `gsm0503_amr_crc6`, `gsm0503_amr_crc14` as constants; channels other than xCCH aren't implemented yet | `src/coding/gsm0503_coding.c`, `gsm0503_interleaving.c`, `gsm0503_mapping.c`, `gsm0503_parity.c`, generated `src/gsm/gsm0503_conv.c` | `include/osmocom/coding/gsm0503_*.h`, `include/osmocom/gsm/gsm0503.h` |
+| `gsm0503` | `gsm0503_xcch_encode`, `gsm0503_xcch_decode`, `gsm0503_xcch_interleave`, `gsm0503_xcch_deinterleave`, `gsm0503_xcch_burst_map`, `gsm0503_xcch_burst_unmap`; `gsm0503_tch_fr_encode`, `gsm0503_tch_fr_decode` (`net_order` as `FrBitOrder`, `efr` as `TchFrCodec`), `gsm0503_tch_fr_facch_encode`, `gsm0503_tch_fr_facch_decode`, `gsm0503_tch_fr_interleave`, `gsm0503_tch_fr_deinterleave`, `gsm0503_tch_burst_map`, `gsm0503_tch_burst_unmap`; `gsm0503_gsm_fr_map` and `gsm0503_gsm_efr_protected_bits` as private tables; all 45 `gsm0503_*` convolutional codes as `Gsm0503Code` (`gsm0503_xcch` also as `xcch_code`); the `gsm0503_parity` descriptors `gsm0503_fire_crc40`, `gsm0503_cs234_crc16`, `gsm0503_mcs_crc8_hdr`, `gsm0503_mcs_crc12`, `gsm0503_rach_crc6`, `gsm0503_sch_crc10`, `gsm0503_tch_fr_crc3`, `gsm0503_tch_efr_crc8`, `gsm0503_amr_crc6`, `gsm0503_amr_crc14` as constants; channels other than xCCH, TCH/F speech and FACCH/F aren't implemented yet | `src/coding/gsm0503_coding.c`, `gsm0503_interleaving.c`, `gsm0503_mapping.c`, `gsm0503_parity.c`, `gsm0503_tables.c`, generated `src/gsm/gsm0503_conv.c` | `include/osmocom/coding/gsm0503_*.h`, `include/osmocom/gsm/gsm0503.h` |
+| `codec` | `gsm610_bitorder`, `gsm660_bitorder`, `GSM_FR_BYTES`, `GSM_EFR_BYTES` | `src/codec/gsm610.c`, `src/codec/gsm660.c` | `include/osmocom/codec/codec.h` |
 | `gsm0502` | `GSM_TDMA_FN_SUM`, `GSM_TDMA_FN_SUB`, `GSM_TDMA_FN_DIFF`, `GSM_TDMA_FN_INC`, `GSM_TDMA_FN_DEC`, `gsm0502_fncmp`, `gsm0502_fn_remap`, `gsm0502_fn2ccch_block`, `gsm0502_hop_seq_gen` (frame-number input, no `gsm_time`), `gsm0502_get_n_pag_blocks`, `gsm0502_get_ccch_group`, `gsm0502_get_paging_group`, `gsm0502_calc_paging_group`, `gsm48_number_of_paging_subchannels`, `rsl_ccch_conf_to_bs_cc_chans`, `GSM_NBITS_*` | `src/gsm/gsm0502.c`, `gsm48.c`, `rsl.c` | `include/osmocom/gsm/gsm0502.h` |
 | `sockaddr_str` | `osmo_ip_str_type`, `osmo_sockaddr_str_is_set`, `osmo_sockaddr_str_is_nonzero`, `osmo_sockaddr_str_cmp`, `osmo_sockaddr_str_from_str`, `osmo_sockaddr_str_from_str2`, `osmo_sockaddr_str_from_in_addr`, `osmo_sockaddr_str_from_in6_addr`, `osmo_sockaddr_str_from_32`, `osmo_sockaddr_str_from_32h`, `osmo_sockaddr_str_from_sockaddr_in`, `osmo_sockaddr_str_from_sockaddr_in6`, `osmo_sockaddr_str_from_sockaddr`, `osmo_sockaddr_str_to_in_addr`, `osmo_sockaddr_str_to_in6_addr`, `osmo_sockaddr_str_to_32`, `osmo_sockaddr_str_to_32h`, `osmo_sockaddr_str_to_sockaddr_in`, `osmo_sockaddr_str_to_sockaddr_in6`, `osmo_sockaddr_str_to_sockaddr`, `OSMO_SOCKADDR_STR_FMT` with `OSMO_SOCKADDR_STR_FMT_ARGS`; see below for what's left out | `src/core/sockaddr_str.c` | `include/osmocom/core/sockaddr_str.h` |
 | `strrb` | `osmo_strrb_create`, `osmo_strrb_is_empty`, `osmo_strrb_get_nth`, `_osmo_strrb_is_bufindex_valid`, `osmo_strrb_elements`, `osmo_strrb_add` | `src/core/strrb.c` | `include/osmocom/core/strrb.h` |

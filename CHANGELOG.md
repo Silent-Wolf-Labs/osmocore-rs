@@ -56,6 +56,12 @@
   CSD, RACH, SCH, GPRS, AMR and EGPRS, as `base::conv` codes that encode and decode as
   libosmocore's do. Also the parity codes `CS234_CRC16`, `MCS_CRC8_HDR`, `MCS_CRC12`,
   `RACH_CRC6`, `SCH_CRC10`, `TCH_FR_CRC3`, `TCH_EFR_CRC8`, `AMR_CRC6` and `AMR_CRC14`.
+- TCH/F speech and FACCH/F channel coding in `coding::gsm0503`: `tch_fr_encode` and
+  `tch_fr_decode` for FR in either bit order, EFR and stolen FACCH blocks, and
+  `tch_fr_facch_encode` and `tch_fr_facch_decode`. Also the TCH/F interleaver and burst
+  mapping on their own. Results match libosmocore.
+- `codec`, for libosmocodec's `src/codec`, with the FR and EFR frame sizes and bit
+  orders.
 
 ### Changed
 

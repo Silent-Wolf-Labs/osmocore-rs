@@ -9,8 +9,9 @@ follow libosmocore's split: [coding.rs](gsm0503/coding.rs) for the channels,
 [codes.rs](gsm0503/codes.rs) for the convolutional codes,
 [interleaving.rs](gsm0503/interleaving.rs), [mapping.rs](gsm0503/mapping.rs),
 [parity.rs](gsm0503/parity.rs) and [tables.rs](gsm0503/tables.rs) for the puncturing
-patterns. Only xCCH (SACCH, SDCCH and BCCH) has channel coding so far. TCH, RACH, SCH,
-PDTCH and AMR aren't implemented.
+patterns and speech bit tables, and [tch_fr.rs](gsm0503/tch_fr.rs) for TCH/F. xCCH
+(SACCH, SDCCH and BCCH), TCH/F speech (FR and EFR) and FACCH/F have channel coding so
+far. TCH/H, CSD, RACH, SCH, PDTCH and AMR aren't implemented.
 
 ### xCCH
 
@@ -22,6 +23,38 @@ are set either way. Slices are fixed-size arrays, so C's unchecked pointer lengt
 have no equivalent, and the C option to pass null count pointers isn't kept.
 `XCCH_STEALING_FLAG_OFFSETS` gives where the `hl` and `hn` flags sit in a burst, which
 C leaves implicit in its burst mapping.
+
+### TCH/F speech and FACCH/F
+
+`tch_fr_encode` encodes a `TchFrFrame` (FR, EFR or a stolen FACCH block) into eight
+bursts, and `tch_fr_decode` decodes soft bits back with the speech codec it is given.
+`tch_fr_facch_encode` and `tch_fr_facch_decode` code FACCH/F on its own. The FR and EFR
+bit orders come from [`codec`](../codec/README.md).
+
+A TCH/F block takes half of each of its eight bursts, and the encoders write only those
+positions and the stealing flags, as C does. The caller keeps one burst buffer and
+encodes each block four bursts after the last. `tch_fr_interleave` writes half of its
+destination in the same way.
+
+Differences from C:
+
+- C picks the frame type from the length, and returns -1 for any other length.
+  `TchFrFrame` makes the type explicit, and `TchFrFrame::from_bytes` keeps C's length
+  rule. C's zero-length frame, which makes the receiver see a bad frame, is `None`.
+- `net_order` is `FrBitOrder`, and `TchFrCodec` combines it with `efr`, since only FR
+  uses the bit order.
+- `tch_fr_decode` returns `frame: None` where C returns -1, and adds `stolen`, which C
+  shows only through `n_bits_total`: 456 for FACCH and 378 for speech. Speech bit errors
+  count only the convolutionally coded bits. Decoded speech gets its codec's RTP
+  signature, as in C.
+- `tch_fr_facch_decode` returns `None` when the stealing flags don't mark FACCH. C then
+  returns -1 and leaves the counts unset.
+- `tch_burst_unmap` always returns the stealing flag and writes the data bits; C lets
+  either pointer be null.
+
+Every TCH/F encode, decode and FACCH/F call the harness records is compared with C,
+including untouched burst positions, along with the interleaver, the burst mapping and
+the bit orders. The FR parameter lengths are a rule rather than a list.
 
 ### Convolutional codes and parity
 

@@ -1,7 +1,35 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! Puncturing patterns from 3GPP TS 45.003, as positions in the unpunctured coded
-//! stream. Regular patterns are rules; the rest are listed.
+//! Tables from 3GPP TS 45.003: puncturing patterns, as positions in the unpunctured
+//! coded stream, and the speech bit tables. Regular tables are rules; the rest are
+//! listed.
+
+/// The bit lengths of the 76 FR codec parameters (GSM 06.10 Table 1.1): eight LARs,
+/// then for each of four subframes the LTP lag, LTP gain, grid position, block
+/// amplitude and 13 pulses.
+pub(super) const FR_PARAMETER_BITS: [u8; 76] = {
+    const LARS: [u8; 8] = [6, 6, 5, 5, 4, 4, 3, 3];
+    const SUBFRAME: [u8; 17] = [7, 2, 2, 6, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3];
+    let mut lengths = [0; 76];
+    let mut index = 0;
+    while index < 76 {
+        lengths[index] = if index < 8 {
+            LARS[index]
+        } else {
+            SUBFRAME[(index - 8) % 17]
+        };
+        index += 1;
+    }
+    lengths
+};
+
+/// The 65 EFR bits the 8-bit CRC protects (GSM 05.03 3.1.1.1), as positions in the
+/// 244-bit frame.
+pub(super) const EFR_PROTECTED_BITS: [u8; 65] = [
+    38, 39, 40, 41, 42, 43, 47, 86, 44, 1, 2, 7, 9, 17, 18, 23, 45, 46, 141, 142, 143, 144, 145,
+    146, 91, 92, 194, 195, 97, 136, 147, 93, 196, 148, 149, 94, 197, 3, 4, 10, 11, 15, 8, 5, 6, 12,
+    16, 19, 95, 198, 0, 13, 14, 20, 24, 25, 27, 150, 200, 189, 239, 87, 137, 190, 240,
+];
 
 /// TCH/F9.6: every 15th bit from 11.
 pub(super) fn tch_f96() -> Vec<i32> {
