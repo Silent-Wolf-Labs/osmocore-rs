@@ -16,7 +16,6 @@ default build with no Cargo features.
 
 <!-- bench-table:begin -->
 | Benchmark | v0.1.0 | v0.1.0 repeat | Decoder saturation fix | Thread-safe handles | xCCH | Conv ACS loop | Timer batch reuse | TLV | gsm_utils 7-bit | A5 | use_count | KASUMI and GEA | Channel coding baseline | GSM 05.03 codes | TCH/F |
-| TCH/F | `e284abb` plus the change | 1.99.0 | 2026-11-21 | Adds the `gsm0503/tch_fr` benches; xCCH now shares its coded-bit helpers with FACCH, and its rows are within 3%. `conv/k7_n3/decode_clean` moved 8% with no conv change, the codegen-unit swing the previous column describes. `msgb/alloc_1500` and the few-nanosecond `fsm` rows are noise, as in earlier columns |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | `a5/a5_1` | - | - | - | - | - | - | - | - | - | 1,092 | 1,100 | 1,100 | 1,092 | 1,099 | 1,087 |
 | `a5/a5_2` | - | - | - | - | - | - | - | - | - | 1,464 | 1,457 | 1,456 | 1,461 | 1,461 | 1,460 |
@@ -101,6 +100,7 @@ default build with no Cargo features.
 | KASUMI and GEA | `634ce4b` plus the change | 1.99.0 | 2026-11-09 | Adds `kasumi` and `gea` benches and `a5/a5_3` and `a5/a5_4`; no existing code path changed, so other rows show only noise |
 | Channel coding baseline | `5c3acea` | 1.99.0 | 2026-11-19 | Before the channel coding work; no bench or measured path changed since the previous column. `conv/k7_n3/decode_clean` and `decode_noisy` are about 15% faster, reproducibly. Rebuilding the merges in between puts the step at `7d33b4a` (gsm48), which doesn't touch `base/`, the benches or Cargo files, so it isn't a decoder change. The next column traces it to codegen-unit partitioning |
 | GSM 05.03 codes | `5c3acea` plus the change | 1.99.0 | 2026-11-19 | Adds the `gsm0503/codes` benches; `xcch_code` now comes from the shared code builder, with the same tables. Other rows are within about 2%, except `conv/k7_n3/decode_clean` and `decode_noisy`, back to their speed before the previous column. No conv code changed: built with `codegen-units = 1`, this tree and the one before it both measure about 3,500 ns, so the swing comes from how the crate is split into codegen units |
+| TCH/F | `e284abb` plus the change | 1.99.0 | 2026-11-21 | Adds the `gsm0503/tch_fr` benches; xCCH now shares its coded-bit helpers with FACCH, and its rows are within 3%. `conv/k7_n3/decode_clean` moved 8% with no conv change, the codegen-unit swing the previous column describes. `msgb/alloc_1500` and the few-nanosecond `fsm` rows are noise, as in earlier columns |
 
 All columns so far were measured on an AMD Ryzen 9 7900X (Linux, `amd-pstate-epp`
 driver, `powersave` governor), pinned to one core.

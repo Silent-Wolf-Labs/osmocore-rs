@@ -35,7 +35,8 @@ const fn tch_burst_position(index: usize) -> usize {
     if index < HALF_BURST { index } else { index + 2 }
 }
 
-/// The stealing flag a TCH burst carries: `hu` in even bursts, `hl` in odd ones.
+/// The stealing flag that goes with a half of a TCH burst's data bits: `hu` with the even
+/// bits, `hl` with the odd ones.
 const fn tch_stealing_flag(odd: bool) -> usize {
     if odd { HALF_BURST } else { HALF_BURST + 1 }
 }

@@ -63,7 +63,7 @@ pub(super) fn xcch_encode_coded(l2: &[u8; XCCH_L2_BYTES]) -> [u8; XCCH_CODED_BIT
     coded
 }
 
-/// The result of [`xcch_decode`].
+/// The result of [`xcch_decode`] and [`tch_fr_facch_decode`](super::tch_fr_facch_decode).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct XcchDecoded {
     /// The L2 frame, or `None` if the parity check failed.
@@ -108,8 +108,13 @@ pub(super) fn xcch_decode_coded(coded: &[i8; XCCH_CODED_BITS]) -> XcchDecoded {
 }
 
 /// Decodes an unpunctured code and counts the coded bits that disagree with the
-/// re-encoded result. A soft bit of 0 counts as an error.
+/// re-encoded result. A soft bit of 0 counts as an error. The re-encoding uses a
+/// 456-bit buffer, so this takes codes of at most [`XCCH_CODED_BITS`] coded bits.
 pub(super) fn decode_counting_errors(code: &ConvCode, coded: &[i8], uncoded: &mut [u8]) -> u32 {
+    assert!(
+        coded.len() <= XCCH_CODED_BITS,
+        "decode_counting_errors takes at most {XCCH_CODED_BITS} coded bits"
+    );
     conv::decode(code, coded, uncoded).expect("the sizes are fixed");
     let mut recoded = [0u8; XCCH_CODED_BITS];
     let len = conv::encode(code, uncoded, &mut recoded).expect("the sizes are fixed");
