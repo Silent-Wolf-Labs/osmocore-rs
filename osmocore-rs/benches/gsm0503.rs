@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//! xCCH block coding, and the GSM 05.03 convolutional codes on their own.
+//! xCCH and TCH/F block coding, and the GSM 05.03 convolutional codes on their own.
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use osmocore_rs::base::conv;
-use osmocore_rs::coding::gsm0503::{Gsm0503Code, XCCH_L2_BYTES, xcch_decode, xcch_encode};
+use osmocore_rs::coding::gsm0503::{
+    FrBitOrder, Gsm0503Code, TCH_FR_BURSTS_BITS, TchFrCodec, TchFrFrame, XCCH_L2_BYTES,
+    tch_fr_decode, tch_fr_encode, xcch_decode, xcch_encode,
+};
 use std::hint::black_box;
 
 fn xcch(c: &mut Criterion) {
@@ -68,5 +71,44 @@ fn codes(c: &mut Criterion) {
     }
 }
 
-criterion_group!(benches, xcch, codes);
+/// FR and EFR speech blocks. Encoding writes half of eight bursts.
+fn tch_fr(c: &mut Criterion) {
+    let mut fr = [0u8; 33];
+    let mut efr = [0u8; 31];
+    for (index, byte) in fr.iter_mut().chain(efr.iter_mut()).enumerate() {
+        *byte = (index * 37) as u8;
+    }
+    fr[0] = 0xd0 | (fr[0] & 0x0f);
+    efr[0] = 0xc0 | (efr[0] & 0x0f);
+    let order = FrBitOrder::Network;
+    for (name, frame, codec) in [
+        ("fr", TchFrFrame::Fr(fr), TchFrCodec::Fr(order)),
+        ("efr", TchFrFrame::Efr(efr), TchFrCodec::Efr),
+    ] {
+        let mut bursts = [0u8; TCH_FR_BURSTS_BITS];
+        tch_fr_encode(&mut bursts, Some(&frame), order);
+        let clean = bursts.map(|bit| if bit == 0 { 127i8 } else { -127 });
+        // Every 16th soft bit is wrong. The protected bits still decode.
+        let mut noisy = clean;
+        for soft in noisy.iter_mut().step_by(16) {
+            *soft = -*soft;
+        }
+        assert_eq!(tch_fr_decode(&clean, codec).frame, Some(frame), "{name}");
+        assert!(tch_fr_decode(&noisy, codec).frame.is_some(), "{name}");
+
+        let mut group = c.benchmark_group(format!("gsm0503/tch_fr/{name}"));
+        group.bench_function("encode", |b| {
+            b.iter(|| tch_fr_encode(&mut bursts, Some(black_box(&frame)), order))
+        });
+        group.bench_function("decode_clean", |b| {
+            b.iter(|| tch_fr_decode(black_box(&clean), codec))
+        });
+        group.bench_function("decode_noisy", |b| {
+            b.iter(|| tch_fr_decode(black_box(&noisy), codec))
+        });
+        group.finish();
+    }
+}
+
+criterion_group!(benches, xcch, tch_fr, codes);
 criterion_main!(benches);

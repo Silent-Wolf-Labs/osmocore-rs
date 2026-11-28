@@ -38,17 +38,7 @@ pub fn xcch_code() -> &'static ConvCode {
 
 /// Encodes an L2 frame into four bursts of unpacked bits, with the stealing flags set.
 pub fn xcch_encode(l2: &[u8; XCCH_L2_BYTES]) -> [u8; XCCH_BURSTS_BITS] {
-    let mut uncoded = [0u8; UNCODED_BITS];
-    let (data, parity) = uncoded.split_at_mut(L2_BITS);
-    unpack_into_offset(data, 0, l2, 0, L2_BITS, true).expect("the sizes are fixed");
-    FIRE_CRC40
-        .set_bits(data, parity)
-        .expect("the sizes are fixed");
-
-    let mut coded = [0u8; XCCH_CODED_BITS];
-    conv::encode(xcch_code(), &uncoded, &mut coded).expect("the sizes are fixed");
-
-    let interleaved = xcch_interleave(&coded);
+    let interleaved = xcch_interleave(&xcch_encode_coded(l2));
     let mut output = [0u8; XCCH_BURSTS_BITS];
     let (bursts, _) = output.as_chunks_mut::<XCCH_BURST_BITS>();
     let (data, _) = interleaved.as_chunks::<XCCH_BURST_DATA_BITS>();
@@ -58,7 +48,22 @@ pub fn xcch_encode(l2: &[u8; XCCH_L2_BYTES]) -> [u8; XCCH_BURSTS_BITS] {
     output
 }
 
-/// The result of [`xcch_decode`].
+/// Adds the Fire code parity to an L2 frame and convolutionally codes it. FACCH uses
+/// the same coding.
+pub(super) fn xcch_encode_coded(l2: &[u8; XCCH_L2_BYTES]) -> [u8; XCCH_CODED_BITS] {
+    let mut uncoded = [0u8; UNCODED_BITS];
+    let (data, parity) = uncoded.split_at_mut(L2_BITS);
+    unpack_into_offset(data, 0, l2, 0, L2_BITS, true).expect("the sizes are fixed");
+    FIRE_CRC40
+        .set_bits(data, parity)
+        .expect("the sizes are fixed");
+
+    let mut coded = [0u8; XCCH_CODED_BITS];
+    conv::encode(xcch_code(), &uncoded, &mut coded).expect("the sizes are fixed");
+    coded
+}
+
+/// The result of [`xcch_decode`] and [`tch_fr_facch_decode`](super::tch_fr_facch_decode).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct XcchDecoded {
     /// The L2 frame, or `None` if the parity check failed.
@@ -78,18 +83,13 @@ pub fn xcch_decode(bursts: &[i8; XCCH_BURSTS_BITS]) -> XcchDecoded {
     for (data, burst) in data.iter_mut().zip(bursts) {
         (*data, _, _) = xcch_burst_unmap(burst);
     }
-    let coded = xcch_deinterleave(&interleaved);
+    xcch_decode_coded(&xcch_deinterleave(&interleaved))
+}
 
+/// Reverses [`xcch_encode_coded`] on soft bits.
+pub(super) fn xcch_decode_coded(coded: &[i8; XCCH_CODED_BITS]) -> XcchDecoded {
     let mut uncoded = [0u8; UNCODED_BITS];
-    conv::decode(xcch_code(), &coded, &mut uncoded).expect("the sizes are fixed");
-
-    let mut recoded = [0u8; XCCH_CODED_BITS];
-    conv::encode(xcch_code(), &uncoded, &mut recoded).expect("the sizes are fixed");
-    let bit_errors = recoded
-        .iter()
-        .zip(&coded)
-        .filter(|(bit, soft)| !matches!((**bit, **soft), (1, ..0) | (0, 1..)))
-        .count() as u32;
+    let bit_errors = decode_counting_errors(xcch_code(), coded, &mut uncoded);
 
     let (data, parity) = uncoded.split_at(L2_BITS);
     let parity_ok = FIRE_CRC40
@@ -105,4 +105,22 @@ pub fn xcch_decode(bursts: &[i8; XCCH_BURSTS_BITS]) -> XcchDecoded {
         bit_errors,
         total_bits: XCCH_CODED_BITS as u32,
     }
+}
+
+/// Decodes an unpunctured code and counts the coded bits that disagree with the
+/// re-encoded result. A soft bit of 0 counts as an error. The re-encoding uses a
+/// 456-bit buffer, so this takes codes of at most [`XCCH_CODED_BITS`] coded bits.
+pub(super) fn decode_counting_errors(code: &ConvCode, coded: &[i8], uncoded: &mut [u8]) -> u32 {
+    assert!(
+        coded.len() <= XCCH_CODED_BITS,
+        "decode_counting_errors takes at most {XCCH_CODED_BITS} coded bits"
+    );
+    conv::decode(code, coded, uncoded).expect("the sizes are fixed");
+    let mut recoded = [0u8; XCCH_CODED_BITS];
+    let len = conv::encode(code, uncoded, &mut recoded).expect("the sizes are fixed");
+    recoded[..len]
+        .iter()
+        .zip(coded)
+        .filter(|(bit, soft)| !matches!((**bit, **soft), (1, ..0) | (0, 1..)))
+        .count() as u32
 }

@@ -3,7 +3,7 @@
 //! Rust-native telecom and core primitives with owned buffers and explicit runtimes.
 //!
 //! Functional modules are grouped like libosmocore's sources: [`base`] for its
-//! `src/core`, [`gsm`] and [`coding`]. The optional `runtime` and `net` modules,
+//! `src/core`, [`gsm`], [`codec`] and [`coding`]. The optional `runtime` and `net` modules,
 //! [`diagnostics`] and [`compat`] have no C directory of their own. Use owned runtimes, explicit
 //! schedulers, stable handles and typed buffer APIs for new code. Distinct C
 //! buffer/status/sentinel contracts and evidence introspection live in [`compat`].
@@ -32,6 +32,7 @@
 pub mod diagnostics;
 
 pub mod base;
+pub mod codec;
 pub mod coding;
 pub mod compat;
 pub mod gsm;
